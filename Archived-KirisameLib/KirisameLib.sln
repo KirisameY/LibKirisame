@@ -1,0 +1,76 @@
+﻿﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Core", "KirisameLib.Core\KirisameLib.Core.csproj", "{FC25113F-3EE5-4B9E-AE3D-D8E54E8C26F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Event.SourceGenerator", "KirisameLib.Event.SourceGenerator\KirisameLib.Event.SourceGenerator.csproj", "{D2E20117-5002-46EF-A770-BB56A5C04812}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Data", "KirisameLib.Data\KirisameLib.Data.csproj", "{DE59AD4B-A5CD-49E4-92A3-E84F45890CE5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Godot", "KirisameLib.Godot\KirisameLib.Godot.csproj", "{8D3D15B8-D305-4012-8155-FE428F48DCA9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Core.Test", "KirisameLib.Core.Test\KirisameLib.Core.Test.csproj", "{A845954B-AA35-4241-939C-5851FCDC0E37}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.GeneratorTools", "KirisameLib.GeneratorTools\KirisameLib.GeneratorTools.csproj", "{9B4CCA53-5A07-44CE-A4DE-EDAF1CD112A6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Logging", "KirisameLib.Logging\KirisameLib.Logging.csproj", "{307BB540-EDEA-4694-8866-0F75B4022F4F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Event", "KirisameLib.Event\KirisameLib.Event.csproj", "{2772649E-FC39-4446-894D-3168B965F4FA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D2E20117-5002-46EF-A770-BB56A5C04812} = {D2E20117-5002-46EF-A770-BB56A5C04812}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Event.Test", "KirisameLib.Event.Test\KirisameLib.Event.Test.csproj", "{81C137B0-FCD6-438B-9EDD-46BC64108813}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D2E20117-5002-46EF-A770-BB56A5C04812} = {D2E20117-5002-46EF-A770-BB56A5C04812}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Asynchronous", "KirisameLib.Asynchronous\KirisameLib.Asynchronous.csproj", "{137518DD-23DB-4377-A38E-C016C5953E90}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+	Debug|Any CPU = Debug|Any CPU
+	Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FC25113F-3EE5-4B9E-AE3D-D8E54E8C26F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC25113F-3EE5-4B9E-AE3D-D8E54E8C26F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC25113F-3EE5-4B9E-AE3D-D8E54E8C26F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC25113F-3EE5-4B9E-AE3D-D8E54E8C26F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2E20117-5002-46EF-A770-BB56A5C04812}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2E20117-5002-46EF-A770-BB56A5C04812}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2E20117-5002-46EF-A770-BB56A5C04812}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2E20117-5002-46EF-A770-BB56A5C04812}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE59AD4B-A5CD-49E4-92A3-E84F45890CE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE59AD4B-A5CD-49E4-92A3-E84F45890CE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE59AD4B-A5CD-49E4-92A3-E84F45890CE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE59AD4B-A5CD-49E4-92A3-E84F45890CE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D3D15B8-D305-4012-8155-FE428F48DCA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D3D15B8-D305-4012-8155-FE428F48DCA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D3D15B8-D305-4012-8155-FE428F48DCA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D3D15B8-D305-4012-8155-FE428F48DCA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A845954B-AA35-4241-939C-5851FCDC0E37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A845954B-AA35-4241-939C-5851FCDC0E37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A845954B-AA35-4241-939C-5851FCDC0E37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A845954B-AA35-4241-939C-5851FCDC0E37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B4CCA53-5A07-44CE-A4DE-EDAF1CD112A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B4CCA53-5A07-44CE-A4DE-EDAF1CD112A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B4CCA53-5A07-44CE-A4DE-EDAF1CD112A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B4CCA53-5A07-44CE-A4DE-EDAF1CD112A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{307BB540-EDEA-4694-8866-0F75B4022F4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{307BB540-EDEA-4694-8866-0F75B4022F4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{307BB540-EDEA-4694-8866-0F75B4022F4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{307BB540-EDEA-4694-8866-0F75B4022F4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2772649E-FC39-4446-894D-3168B965F4FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2772649E-FC39-4446-894D-3168B965F4FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2772649E-FC39-4446-894D-3168B965F4FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2772649E-FC39-4446-894D-3168B965F4FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81C137B0-FCD6-438B-9EDD-46BC64108813}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81C137B0-FCD6-438B-9EDD-46BC64108813}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81C137B0-FCD6-438B-9EDD-46BC64108813}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81C137B0-FCD6-438B-9EDD-46BC64108813}.Release|Any CPU.Build.0 = Release|Any CPU
+		{137518DD-23DB-4377-A38E-C016C5953E90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{137518DD-23DB-4377-A38E-C016C5953E90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{137518DD-23DB-4377-A38E-C016C5953E90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{137518DD-23DB-4377-A38E-C016C5953E90}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
