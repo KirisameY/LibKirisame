@@ -1,30 +1,30 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Core", "KirisameLib.Core\KirisameLib.Core.csproj", "{FC25113F-3EE5-4B9E-AE3D-D8E54E8C26F2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Core", "Archived-KirisameLib\KirisameLib.Core\KirisameLib.Core.csproj", "{FC25113F-3EE5-4B9E-AE3D-D8E54E8C26F2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Event.SourceGenerator", "KirisameLib.Event.SourceGenerator\KirisameLib.Event.SourceGenerator.csproj", "{D2E20117-5002-46EF-A770-BB56A5C04812}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Event.SourceGenerator", "Archived-KirisameLib\KirisameLib.Event.SourceGenerator\KirisameLib.Event.SourceGenerator.csproj", "{D2E20117-5002-46EF-A770-BB56A5C04812}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Data", "KirisameLib.Data\KirisameLib.Data.csproj", "{DE59AD4B-A5CD-49E4-92A3-E84F45890CE5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Data", "Archived-KirisameLib\KirisameLib.Data\KirisameLib.Data.csproj", "{DE59AD4B-A5CD-49E4-92A3-E84F45890CE5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Godot", "KirisameLib.Godot\KirisameLib.Godot.csproj", "{8D3D15B8-D305-4012-8155-FE428F48DCA9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Godot", "Archived-KirisameLib\KirisameLib.Godot\KirisameLib.Godot.csproj", "{8D3D15B8-D305-4012-8155-FE428F48DCA9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Core.Test", "KirisameLib.Core.Test\KirisameLib.Core.Test.csproj", "{A845954B-AA35-4241-939C-5851FCDC0E37}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Core.Test", "Archived-KirisameLib\KirisameLib.Core.Test\KirisameLib.Core.Test.csproj", "{A845954B-AA35-4241-939C-5851FCDC0E37}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.GeneratorTools", "KirisameLib.GeneratorTools\KirisameLib.GeneratorTools.csproj", "{9B4CCA53-5A07-44CE-A4DE-EDAF1CD112A6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.GeneratorTools", "Archived-KirisameLib\KirisameLib.GeneratorTools\KirisameLib.GeneratorTools.csproj", "{9B4CCA53-5A07-44CE-A4DE-EDAF1CD112A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Logging", "KirisameLib.Logging\KirisameLib.Logging.csproj", "{307BB540-EDEA-4694-8866-0F75B4022F4F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Logging", "Archived-KirisameLib\KirisameLib.Logging\KirisameLib.Logging.csproj", "{307BB540-EDEA-4694-8866-0F75B4022F4F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Event", "KirisameLib.Event\KirisameLib.Event.csproj", "{2772649E-FC39-4446-894D-3168B965F4FA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Event", "Archived-KirisameLib\KirisameLib.Event\KirisameLib.Event.csproj", "{2772649E-FC39-4446-894D-3168B965F4FA}"
 	ProjectSection(ProjectDependencies) = postProject
 		{D2E20117-5002-46EF-A770-BB56A5C04812} = {D2E20117-5002-46EF-A770-BB56A5C04812}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Event.Test", "KirisameLib.Event.Test\KirisameLib.Event.Test.csproj", "{81C137B0-FCD6-438B-9EDD-46BC64108813}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Event.Test", "Archived-KirisameLib\KirisameLib.Event.Test\KirisameLib.Event.Test.csproj", "{81C137B0-FCD6-438B-9EDD-46BC64108813}"
 	ProjectSection(ProjectDependencies) = postProject
 		{D2E20117-5002-46EF-A770-BB56A5C04812} = {D2E20117-5002-46EF-A770-BB56A5C04812}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Asynchronous", "KirisameLib.Asynchronous\KirisameLib.Asynchronous.csproj", "{137518DD-23DB-4377-A38E-C016C5953E90}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameLib.Asynchronous", "Archived-KirisameLib\KirisameLib.Asynchronous\KirisameLib.Asynchronous.csproj", "{137518DD-23DB-4377-A38E-C016C5953E90}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Archived-KirisameLib", "Archived-KirisameLib", "{67E439B4-6CAD-47C3-BD6E-FDB599C7CAEB}"
 EndProject
