@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace KirisameY.Relinq.Extensions;
 
@@ -87,13 +85,4 @@ public static class EnumerableExtensions
         [PublicAPI, Pure]
         public IEnumerable<TSource> Flatten() => source.SelectMany(x => x);
     }
-
-    extension(Enumerable)
-    {
-        [PublicAPI, Pure]
-        public static IEnumerable<T> Flatten<T>(params IEnumerable<T>[] source) => source.Flatten();
-    }
-
-    [PublicAPI]
-    public delegate bool WhileSelector<in TSource, TResult>(TSource item, [MaybeNullWhen(false)] out TResult result);
 }
