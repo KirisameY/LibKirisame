@@ -1,16 +1,18 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0.Base", "0.Base", "{BD6448F6-B11C-4B68-AC19-69F610994F42}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "A0.Base", "A0.Base", "{BD6448F6-B11C-4B68-AC19-69F610994F42}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameY.Relinq", "KirisameY.Relinq\KirisameY.Relinq.csproj", "{757C03CC-42D5-4840-A747-0B57B1402AEC}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "10.Frame", "10.Frame", "{9B55E667-5699-4125-BA77-FA9E673E29F4}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "B0.Frame", "B0.Frame", "{9B55E667-5699-4125-BA77-FA9E673E29F4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameY.Registration", "KirisameY.Registration\KirisameY.Registration.csproj", "{9F9D6A93-CF69-44B3-8F4C-391224447C9F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1.FrameExtension", "1.FrameExtension", "{CC8C6BEB-6A70-4BE0-838A-7046D59ACCDA}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "B1.FrameExtension", "B1.FrameExtension", "{CC8C6BEB-6A70-4BE0-838A-7046D59ACCDA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameY.GodotExtra", "KirisameY.GodotExtra\KirisameY.GodotExtra.csproj", "{24FB62FE-AD0F-4393-984A-492270600B0A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KirisameY.NotifiableCollections", "KirisameY.NotifiableCollections\KirisameY.NotifiableCollections.csproj", "{E8841615-F122-44FD-83FD-FDA18E1084AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,10 +32,15 @@ Global
 		{24FB62FE-AD0F-4393-984A-492270600B0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24FB62FE-AD0F-4393-984A-492270600B0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24FB62FE-AD0F-4393-984A-492270600B0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8841615-F122-44FD-83FD-FDA18E1084AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8841615-F122-44FD-83FD-FDA18E1084AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8841615-F122-44FD-83FD-FDA18E1084AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8841615-F122-44FD-83FD-FDA18E1084AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{757C03CC-42D5-4840-A747-0B57B1402AEC} = {BD6448F6-B11C-4B68-AC19-69F610994F42}
 		{9F9D6A93-CF69-44B3-8F4C-391224447C9F} = {9B55E667-5699-4125-BA77-FA9E673E29F4}
 		{24FB62FE-AD0F-4393-984A-492270600B0A} = {CC8C6BEB-6A70-4BE0-838A-7046D59ACCDA}
+		{E8841615-F122-44FD-83FD-FDA18E1084AA} = {BD6448F6-B11C-4B68-AC19-69F610994F42}
 	EndGlobalSection
 EndGlobal
