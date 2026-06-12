@@ -78,11 +78,11 @@ internal class ListItemClearedEventArgs<T>(IReadOnlyList<T> listView, IReadOnlyL
 internal class ListItemReplacedEventArgs<T>(IReadOnlyList<T> listView, IReadOnlyList<T> oldItems, IReadOnlyList<T> newItems, IReadOnlyList<int> indexes)
     : ListUpdateEventArgs<T>(listView), IListItemReplacedEventArgs<T>
 {
-    [PublicAPI] public IReadOnlyList<T> OldItems => oldItems;
-    [PublicAPI] public IReadOnlyList<T> NewItems => newItems;
-    [PublicAPI] public IReadOnlyList<int> Indexes => indexes;
+    public IReadOnlyList<T> OldItems => oldItems;
+    public IReadOnlyList<T> NewItems => newItems;
+    public IReadOnlyList<int> Indexes => indexes;
 
-    [PublicAPI] public IReadOnlyList<IListItemReplaceInfo<T>> ItemChanges => field ??=
+    public IReadOnlyList<IListItemReplaceInfo<T>> ItemChanges => field ??=
     [
         ..Indexes.Zip(OldItems, NewItems)
                  .Select(t => ItemReplaceInfo.From(t.First, t.Second, t.Third))
