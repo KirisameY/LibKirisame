@@ -1,10 +1,10 @@
-﻿namespace KirisameY.NotifiableCollections;
+﻿using KirisameY.NotifiableCollections.EventArgs;
+
+namespace KirisameY.NotifiableCollections.Collections;
 
 public interface ICollectionUpdateNotifier<T>
 {
-    public event EventHandler<CollectionItemAddedEventArgs<T>>? ItemAdded;
-    public event EventHandler<CollectionItemRemovedEventArgs<T>>? ItemRemoved;
-    public event EventHandler<CollectionItemReplacedEventArgs<T>>? ItemReplaced;
+    public event EventHandler<CollectionUpdateEventArgs<T>>? CollectionUpdated;
 }
 
 public interface IReadOnlyNotifiableCollection<T> : IReadOnlyCollection<T>, ICollectionUpdateNotifier<T>;

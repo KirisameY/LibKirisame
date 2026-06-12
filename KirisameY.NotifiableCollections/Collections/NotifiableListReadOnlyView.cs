@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 
+using KirisameY.NotifiableCollections.EventArgs;
+
 namespace KirisameY.NotifiableCollections.Collections;
 
 internal class NotifiableListReadOnlyView<T>(INotifiableList<T> list) : IReadOnlyNotifiableList<T>
@@ -11,24 +13,9 @@ internal class NotifiableListReadOnlyView<T>(INotifiableList<T> list) : IReadOnl
     public T this[int index] => list[index];
 
 
-    public event EventHandler<ListItemAddedEventArgs<T>>? ItemAdded
+    public event EventHandler<ListUpdateEventArgs<T>>? ListUpdated
     {
-        add => list.ItemAdded += value;
-        remove => list.ItemAdded -= value;
-    }
-    public event EventHandler<ListSortedEventArgs<T>>? Sorted
-    {
-        add => list.Sorted += value;
-        remove => list.Sorted -= value;
-    }
-    public event EventHandler<ListItemRemovedEventArgs<T>>? ItemRemoved
-    {
-        add => list.ItemRemoved += value;
-        remove => list.ItemRemoved -= value;
-    }
-    public event EventHandler<ListItemReplacedEventArgs<T>>? ItemReplaced
-    {
-        add => list.ItemReplaced += value;
-        remove => list.ItemReplaced -= value;
+        add => list.ListUpdated += value;
+        remove => list.ListUpdated -= value;
     }
 }

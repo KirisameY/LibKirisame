@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Immutable;
 
+using KirisameY.NotifiableCollections.EventArgs;
+
 namespace KirisameY.NotifiableCollections.Collections;
 
 public class NotifiableList<T> : INotifiableList<T>
@@ -35,21 +37,21 @@ public class NotifiableList<T> : INotifiableList<T>
         {
             var oldValue = _innerList[index];
             _innerList[index] = value;
-            ItemReplaced?.Invoke(this, new([oldValue], [value], [index]));
+            ListUpdated?.Invoke(this, new ListItemReplacedEventArgs<T>(Readonly, [oldValue], [value], [index]));
         }
     }
 
     public void Add(T item)
     {
         _innerList.Add(item);
-        ItemAdded?.Invoke(this, new([item], _innerList.Count - 1));
+        ListUpdated?.Invoke(this, new ListItemAddedEventArgs<T>(Readonly, [item], _innerList.Count - 1));
     }
 
     public void AddRange(ICollection<T> items)
     {
         var fromIndex = _innerList.Count;
         _innerList.AddRange(items);
-        ItemAdded?.Invoke(this, new([..items], fromIndex));
+        ListUpdated?.Invoke(this, new ListItemAddedEventArgs<T>(Readonly, [..items], fromIndex));
     }
 
     public void AddRange(IEnumerable<T> items) => AddRange([..items]);
@@ -57,13 +59,13 @@ public class NotifiableList<T> : INotifiableList<T>
     public void Insert(int index, T item)
     {
         _innerList.Insert(index, item);
-        ItemAdded?.Invoke(this, new([item], index));
+        ListUpdated?.Invoke(this, new ListItemAddedEventArgs<T>(Readonly, [item], index));
     }
 
     public void InsertRange(int index, ICollection<T> items)
     {
         _innerList.InsertRange(index, items);
-        ItemAdded?.Invoke(this, new([..items], index));
+        ListUpdated?.Invoke(this, new ListItemAddedEventArgs<T>(Readonly, [..items], index));
     }
 
     public void InsertRange(int index, IEnumerable<T> items) => InsertRange(index, [..items]);
@@ -72,7 +74,7 @@ public class NotifiableList<T> : INotifiableList<T>
     {
         var before = _innerList.ToImmutableArray();
         _innerList.Clear();
-        ItemRemoved?.Invoke(this, new(before, [..Enumerable.Range(0, before.Length)], true));
+        ListUpdated?.Invoke(this, new ListItemClearedEventArgs<T>(Readonly, before, [..Enumerable.Range(0, before.Length)]));
     }
 
     public bool Remove(T item)
@@ -80,7 +82,7 @@ public class NotifiableList<T> : INotifiableList<T>
         var index = _innerList.IndexOf(item);
         if (index < 0) return false;
         _innerList.RemoveAt(index);
-        ItemRemoved?.Invoke(this, new([item], [index], _innerList.Count == 0));
+        ListUpdated?.Invoke(this, new ListItemRemovedEventArgs<T>(Readonly, [item], [index]));
         return true;
     }
 
@@ -88,7 +90,7 @@ public class NotifiableList<T> : INotifiableList<T>
     {
         var item = _innerList[index];
         _innerList.RemoveAt(index);
-        ItemRemoved?.Invoke(this, new([item], [index], _innerList.Count == 0));
+        ListUpdated?.Invoke(this, new ListItemRemovedEventArgs<T>(Readonly, [item], [index]));
     }
 
     public void RemoveRange(int index, int count)
@@ -96,7 +98,7 @@ public class NotifiableList<T> : INotifiableList<T>
         var removed = _innerList[index..(index + count)];
         var removedIndexes = Enumerable.Range(index, count).ToImmutableList();
         _innerList.RemoveRange(index, count);
-        ItemRemoved?.Invoke(this, new(removed, removedIndexes, _innerList.Count == 0));
+        ListUpdated?.Invoke(this, new ListItemRemovedEventArgs<T>(Readonly, removed, removedIndexes));
     }
 
     public void RemoveAll(Predicate<T> predicate)
@@ -109,48 +111,45 @@ public class NotifiableList<T> : INotifiableList<T>
             _innerList.RemoveAt(i);
             return item;
         }).Reverse().ToImmutableList();
-        ItemRemoved?.Invoke(this, new(items, indexes, _innerList.Count == 0));
+        ListUpdated?.Invoke(this, new ListItemRemovedEventArgs<T>(Readonly, items, indexes));
     }
 
     public void Sort()
     {
         _innerList.Sort();
-        Sorted?.Invoke(this, new(Readonly));
+        ListUpdated?.Invoke(this, new ListSortedEventArgs<T>(Readonly));
     }
 
     public void Sort(Comparison<T> comparison)
     {
         _innerList.Sort(comparison);
-        Sorted?.Invoke(this, new(Readonly));
+        ListUpdated?.Invoke(this, new ListSortedEventArgs<T>(Readonly));
     }
 
     public void Sort(IComparer<T> comparer)
     {
         _innerList.Sort(comparer);
-        Sorted?.Invoke(this, new(Readonly));
+        ListUpdated?.Invoke(this, new ListSortedEventArgs<T>(Readonly));
     }
 
     public void Sort(int index, int count, IComparer<T> comparer)
     {
         _innerList.Sort(index, count, comparer);
-        Sorted?.Invoke(this, new(Readonly));
+        ListUpdated?.Invoke(this, new ListSortedEventArgs<T>(Readonly));
     }
 
     public void Reverse()
     {
         _innerList.Reverse();
-        Sorted?.Invoke(this, new(Readonly));
+        ListUpdated?.Invoke(this, new ListSortedEventArgs<T>(Readonly));
     }
 
     public void Reverse(int index, int count)
     {
         _innerList.Reverse(index, count);
-        Sorted?.Invoke(this, new(Readonly));
+        ListUpdated?.Invoke(this, new ListSortedEventArgs<T>(Readonly));
     }
 
 
-    public event EventHandler<ListItemAddedEventArgs<T>>? ItemAdded;
-    public event EventHandler<ListItemRemovedEventArgs<T>>? ItemRemoved;
-    public event EventHandler<ListItemReplacedEventArgs<T>>? ItemReplaced;
-    public event EventHandler<ListSortedEventArgs<T>>? Sorted;
+    public event EventHandler<ListUpdateEventArgs<T>>? ListUpdated;
 }

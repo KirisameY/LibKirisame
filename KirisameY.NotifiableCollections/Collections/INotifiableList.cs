@@ -1,26 +1,15 @@
-﻿namespace KirisameY.NotifiableCollections.Collections;
+﻿using KirisameY.NotifiableCollections.EventArgs;
+
+namespace KirisameY.NotifiableCollections.Collections;
 
 public interface IListUpdateNotifier<T> : ICollectionUpdateNotifier<T>
 {
-    public new event EventHandler<ListItemAddedEventArgs<T>>? ItemAdded;
-    public new event EventHandler<ListItemRemovedEventArgs<T>>? ItemRemoved;
-    public new event EventHandler<ListItemReplacedEventArgs<T>>? ItemReplaced;
-    public event EventHandler<ListSortedEventArgs<T>>? Sorted;
+    public event EventHandler<ListUpdateEventArgs<T>>? ListUpdated;
 
-    event EventHandler<CollectionItemRemovedEventArgs<T>>? ICollectionUpdateNotifier<T>.ItemRemoved
+    event EventHandler<CollectionUpdateEventArgs<T>>? ICollectionUpdateNotifier<T>.CollectionUpdated
     {
-        add => ItemRemoved += value;
-        remove => ItemRemoved -= value;
-    }
-    event EventHandler<CollectionItemReplacedEventArgs<T>>? ICollectionUpdateNotifier<T>.ItemReplaced
-    {
-        add => ItemReplaced += value;
-        remove => ItemReplaced -= value;
-    }
-    event EventHandler<CollectionItemAddedEventArgs<T>>? ICollectionUpdateNotifier<T>.ItemAdded
-    {
-        add => ItemAdded += value;
-        remove => ItemAdded -= value;
+        add => ListUpdated += value;
+        remove => ListUpdated -= value;
     }
 }
 
