@@ -1,9 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Immutable;
 
-using KirisameY.Relinq.Extensions;
-
-namespace KirisameY.NotifiableCollections;
+namespace KirisameY.NotifiableCollections.Collections;
 
 public class NotifiableList<T> : INotifiableList<T>
 {
@@ -26,13 +24,6 @@ public class NotifiableList<T> : INotifiableList<T>
     public bool IsReadOnly => false;
 
     public int IndexOf(T item) => _innerList.IndexOf(item);
-
-    #endregion
-
-
-    #region Converting
-
-    // AsReadOnly
 
     #endregion
 

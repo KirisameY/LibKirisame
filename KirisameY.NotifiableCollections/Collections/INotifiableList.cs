@@ -1,13 +1,4 @@
-﻿using System.Collections.ObjectModel;
-
-namespace KirisameY.NotifiableCollections;
-
-public interface ICollectionUpdateNotifier<T>
-{
-    public event EventHandler<CollectionItemAddedEventArgs<T>>? ItemAdded;
-    public event EventHandler<CollectionItemRemovedEventArgs<T>>? ItemRemoved;
-    public event EventHandler<CollectionItemReplacedEventArgs<T>>? ItemReplaced;
-}
+﻿namespace KirisameY.NotifiableCollections.Collections;
 
 public interface IListUpdateNotifier<T> : ICollectionUpdateNotifier<T>
 {
@@ -33,19 +24,9 @@ public interface IListUpdateNotifier<T> : ICollectionUpdateNotifier<T>
     }
 }
 
-public interface IReadonlyNotifiableCollection<T> : IReadOnlyCollection<T>, ICollectionUpdateNotifier<T>;
+public interface IReadOnlyNotifiableList<T> : IReadOnlyList<T>, IListUpdateNotifier<T>;
 
-public interface INotifiableCollection<T> : ICollection<T>, IReadonlyNotifiableCollection<T>
-{
-    public new int Count { get; }
-
-    int ICollection<T>.Count => Count;
-    int IReadOnlyCollection<T>.Count => Count;
-}
-
-public interface IReadonlyNotifiableList<T> : IReadOnlyList<T>, IListUpdateNotifier<T>;
-
-public interface INotifiableList<T> : IList<T>, IReadonlyNotifiableList<T>
+public interface INotifiableList<T> : IList<T>, IReadOnlyNotifiableList<T>
 {
     public new int Count { get; }
     public new T this[int index] { get; set; }
