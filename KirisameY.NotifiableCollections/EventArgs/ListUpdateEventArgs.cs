@@ -89,4 +89,4 @@ internal class ListItemReplacedEventArgs<T>(IReadOnlyList<T> listView, IReadOnly
     ];
 }
 
-internal class ListSortedEventArgs<T>(IReadOnlyList<T> listView) : ListUpdateEventArgs<T>(listView);
+internal class ListSortedEventArgs<T>(IReadOnlyList<T> listView) : ListUpdateEventArgs<T>(listView), IListSortedEventArgs<T>;
