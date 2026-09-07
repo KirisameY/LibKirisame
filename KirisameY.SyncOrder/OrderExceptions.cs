@@ -10,3 +10,13 @@ public class OrderConsumedException(Order order) : Exception
         consumed = true;
     }
 }
+
+public class OrderUncompletedException(Order order) : Exception
+{
+    public Order Order => order;
+}
+
+public class OrderAlreadyCompletedException(Order order) : Exception
+{
+    public Order Order => order;
+}
