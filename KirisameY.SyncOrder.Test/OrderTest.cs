@@ -41,31 +41,31 @@ public class OrderTest
         ], list);
     }
 
-    [Fact]
-    public async Task AwaitSubmit()
-    {
-        List<string> list = [];
-
-        var order = new Order(() =>
-        {
-            list.Add("submit");
-            return true;
-        }, out var _);
-
-        list.Add("start");
-
-        await order.ContinueWith(() =>
-        {
-            list.Add("continue");
-        }).SubmitForAwait();
-
-        list.Add("finish");
-
-        Assert.Equal([
-            "start",
-            "submit",
-            "continue",
-            "finish"
-        ], list);
-    }
+    // [Fact]
+    // public async Task AwaitSubmit()
+    // {
+    //     List<string> list = [];
+    //
+    //     var order = new Order(() =>
+    //     {
+    //         list.Add("submit");
+    //         return true;
+    //     }, out var _);
+    //
+    //     list.Add("start");
+    //
+    //     await order.ContinueWith(() =>
+    //     {
+    //         list.Add("continue");
+    //     }).SubmitForAwait();
+    //
+    //     list.Add("finish");
+    //
+    //     Assert.Equal([
+    //         "start",
+    //         "submit",
+    //         "continue",
+    //         "finish"
+    //     ], list);
+    // }
 }

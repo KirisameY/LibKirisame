@@ -4,32 +4,34 @@ using JetBrains.Annotations;
 
 namespace KirisameY.SyncOrder.Await;
 
-public readonly struct OrderAwaiter(Order order, bool autoSubmit = false) : INotifyCompletion
+public readonly struct OrderAwaiter(Order order) : INotifyCompletion, IOrderAwaiter
 {
+    Order IOrderAwaiter.Order => order;
+
     [UsedImplicitly]
-    public bool IsCompleted => order.Completed;
+    public bool IsCompleted => order.IsCompleted;
 
     [UsedImplicitly]
     public void GetResult() { }
 
     public void OnCompleted(Action continuation)
     {
-        var newOrder = order.ContinueWith(continuation);
-        if (autoSubmit) newOrder.Submit();
+        throw new OrderAwaitedNotInOrderMethodException();
     }
 }
 
-public readonly struct OrderAwaiter<T>(Order<T> order, bool autoSubmit = false) : INotifyCompletion
+public readonly struct OrderAwaiter<T>(Order<T> order) : INotifyCompletion, IOrderAwaiter
 {
+    Order IOrderAwaiter.Order => order;
+
     [UsedImplicitly]
-    public bool IsCompleted => order.Completed;
+    public bool IsCompleted => order.IsCompleted;
 
     [UsedImplicitly]
     public T GetResult() => order.Result;
 
     public void OnCompleted(Action continuation)
     {
-        var newOrder = order.ContinueWith(continuation);
-        if (autoSubmit) newOrder.Submit();
+        throw new OrderAwaitedNotInOrderMethodException();
     }
 }
