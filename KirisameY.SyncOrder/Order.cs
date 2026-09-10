@@ -34,8 +34,8 @@ public class Order
     {
         if (_submit is null) throw new OrderDuplicateSubmitException(this);
 
-        var completed = _submit.Invoke();
-        _submit = null;
+        (_submit, var submit) = (null, _submit);
+        var completed = submit.Invoke();
         if (completed) Complete();
 
         return false;
