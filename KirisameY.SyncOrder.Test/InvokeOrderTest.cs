@@ -9,19 +9,24 @@ public class InvokeOrderTest
     {
         List<string> list = [];
 
+        var completionSource = new OrderCompletionSource();
         var order = new Order(() =>
         {
             list.Add("submit");
             list.Add("done");
-            return true;
-        }, out var complete);
+            completionSource.Complete();
+        }, completionSource.Token);
 
         list.Add("start");
 
-        order.ContinueWith(() =>
+        order = order.ContinueWith(() =>
         {
             list.Add("continue");
-        }).ContinueWith(() =>
+        });
+
+        list.Add("add continue 1");
+
+        order.ContinueWith(() =>
         {
             list.Add("continue2");
         }).Submit();
@@ -33,6 +38,49 @@ public class InvokeOrderTest
 
         Assert.Equal([
             "start",
+            "add continue 1",
+            "submit",
+            "done",
+            "continue",
+            "continue2",
+            "finish"
+        ], list);
+    }
+
+    [Fact]
+    public void SubmitAndContinueWithCompleteAction()
+    {
+        List<string> list = [];
+
+        var completionSource = new OrderCompletionSource();
+        var order = new Order(() =>
+        {
+            list.Add("submit");
+            // list.Add("done");
+        }, completionSource.Token);
+
+        list.Add("start");
+
+        order = order.ContinueWith(() =>
+        {
+            list.Add("continue");
+        });
+
+        list.Add("add continue 1");
+
+        order.ContinueWith(() =>
+        {
+            list.Add("continue2");
+        }).Submit();
+
+        list.Add("done");
+        completionSource.Complete();
+
+        list.Add("finish");
+
+        Assert.Equal([
+            "start",
+            "add continue 1",
             "submit",
             "done",
             "continue",

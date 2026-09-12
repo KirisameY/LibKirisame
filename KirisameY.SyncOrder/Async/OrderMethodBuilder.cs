@@ -18,7 +18,7 @@ public readonly struct OrderMethodBuilder()
     private class OrderContainer
     {
         public Order? Order;
-        public Action? Complete;
+        public OrderCompletionSource? CompletionSource;
     }
 
     private readonly OrderContainer _orderContainer = new();
@@ -29,11 +29,8 @@ public readonly struct OrderMethodBuilder()
     {
         IAsyncStateMachine boxed = stateMachine;
 
-        _orderContainer.Order = new(() =>
-        {
-            boxed.MoveNext();
-            return false;
-        }, out _orderContainer.Complete);
+        var completionSource = _orderContainer.CompletionSource = new();
+        _orderContainer.Order = new(boxed.MoveNext, completionSource.Token);
     }
 
     [UsedImplicitly]
@@ -46,7 +43,7 @@ public readonly struct OrderMethodBuilder()
     [UsedImplicitly]
     public void SetResult()
     {
-        _orderContainer.Complete!.Invoke();
+        _orderContainer.CompletionSource!.Complete();
     }
 
     [UsedImplicitly]

@@ -9,7 +9,13 @@ namespace KirisameY.SyncOrder;
 [AsyncMethodBuilder(typeof(OrderMethodBuilder))]
 public class Order
 {
-    public Order(Func<bool> submit, out Action complete)
+    public Order(Action submit, OrderCompletionToken completionToken)
+    {
+        _submit                   =  submit;
+        completionToken.Completed += Complete;
+    }
+
+    private protected Order(Action submit, out Action complete)
     {
         _submit  = submit;
         complete = Complete;
@@ -20,7 +26,7 @@ public class Order
     public bool IsCompleted { get; private set; } = false;
 
 
-    private Func<bool>? _submit;
+    private Action? _submit;
 
     [PublicAPI]
     public void Submit()
@@ -30,15 +36,12 @@ public class Order
         DoSubmit();
     }
 
-    private protected bool DoSubmit()
+    private protected void DoSubmit()
     {
         if (_submit is null) throw new OrderDuplicateSubmitException(this);
 
         (_submit, var submit) = (null, _submit);
-        var completed = submit.Invoke();
-        if (completed) Complete();
-
-        return false;
+        submit.Invoke();
     }
 
 
@@ -49,12 +52,13 @@ public class Order
     {
         OrderConsumedException.TryConsume(this, ref _consumed);
 
-        var order = new Order(DoSubmit, out var complete);
+        var completionSource = new OrderCompletionSource();
+        var order = new Order(DoSubmit, completionSource.Token);
 
         _continuation = () =>
         {
             continuation.Invoke();
-            complete.Invoke();
+            completionSource.Complete();
         };
 
         return order;
@@ -65,12 +69,13 @@ public class Order
     {
         OrderConsumedException.TryConsume(this, ref _consumed);
 
-        var order = new Order<TResult>(DoSubmit, out var complete);
+        var completionSource = new OrderCompletionSource<TResult>();
+        var order = new Order<TResult>(DoSubmit, completionSource.Token);
 
         _continuation = () =>
         {
             var result = continuation.Invoke();
-            complete.Invoke(result);
+            completionSource.Complete(result);
         };
 
         return order;
@@ -89,12 +94,12 @@ public class Order
 [AsyncMethodBuilder(typeof(OrderMethodBuilder<>))]
 public sealed class Order<T> : Order // 等待C#15的union
 {
-    public Order(Func<bool> submit, out Action<T> complete) : base(submit, out var c)
+    public Order(Action submit, OrderCompletionToken<T> completionToken) : base(submit, out var complete)
     {
-        complete = result =>
+        completionToken.Completed += result =>
         {
             _result = result;
-            c.Invoke();
+            complete.Invoke();
         };
     }
 
@@ -107,12 +112,13 @@ public sealed class Order<T> : Order // 等待C#15的union
     {
         OrderConsumedException.TryConsume(this, ref _consumed);
 
-        var order = new Order(DoSubmit, out var complete);
+        var completionSource = new OrderCompletionSource();
+        var order = new Order(DoSubmit, completionSource.Token);
 
         _continuation = () =>
         {
             continuation.Invoke(_result!);
-            complete.Invoke();
+            completionSource.Complete();
         };
 
         return order;
@@ -123,12 +129,13 @@ public sealed class Order<T> : Order // 等待C#15的union
     {
         OrderConsumedException.TryConsume(this, ref _consumed);
 
-        var order = new Order<TResult>(DoSubmit, out var complete);
+        var completionSource = new OrderCompletionSource<TResult>();
+        var order = new Order<TResult>(DoSubmit, completionSource.Token);
 
         _continuation = () =>
         {
             var result = continuation.Invoke(_result!);
-            complete.Invoke(result);
+            completionSource.Complete(result);
         };
 
         return order;
