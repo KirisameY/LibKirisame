@@ -11,7 +11,7 @@ public sealed class OrderCompletionSource
     {
         add
         {
-            if (_isCompleted) throw new SourceAlreadyCompletedException();
+            if (_isCompleted) throw new OrderSourceAlreadyCompletedException();
             _completed += value;
         }
         remove => _completed -= value;
@@ -21,7 +21,7 @@ public sealed class OrderCompletionSource
 
     [PublicAPI] public void Complete()
     {
-        if (_isCompleted) throw new SourceAlreadyCompletedException();
+        if (_isCompleted) throw new OrderSourceAlreadyCompletedException();
         _isCompleted = true;
         _completed?.Invoke();
     }
@@ -36,7 +36,7 @@ public sealed class OrderCompletionSource<T>
     {
         add
         {
-            if (_isCompleted) throw new SourceAlreadyCompletedException();
+            if (_isCompleted) throw new OrderSourceAlreadyCompletedException();
             _completed += value;
         }
         remove => _completed -= value;
@@ -46,7 +46,7 @@ public sealed class OrderCompletionSource<T>
 
     [PublicAPI] public void Complete(T result)
     {
-        if (_isCompleted) throw new SourceAlreadyCompletedException();
+        if (_isCompleted) throw new OrderSourceAlreadyCompletedException();
         _isCompleted = true;
         _completed?.Invoke(result);
     }

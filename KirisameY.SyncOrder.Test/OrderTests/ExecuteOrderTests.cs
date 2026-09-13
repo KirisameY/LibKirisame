@@ -1,11 +1,9 @@
-﻿using KirisameY.SyncOrder.Await;
+﻿namespace KirisameY.SyncOrder.Test.OrderTests;
 
-namespace KirisameY.SyncOrder.Test;
-
-public class InvokeOrderTest
+public class ExecuteOrderTests
 {
     [Fact]
-    public void SubmitAndContinue()
+    public void SubmitContinue()
     {
         List<string> list = [];
 
@@ -48,7 +46,7 @@ public class InvokeOrderTest
     }
 
     [Fact]
-    public void SubmitAndContinueWithCompleteAction()
+    public void SubmitContinueWithCompletionOut()
     {
         List<string> list = [];
 

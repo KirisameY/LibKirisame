@@ -26,12 +26,14 @@ public class OrderUnsubmittedException(Order order) : InvalidOperationException
     [PublicAPI] public Order Order => order;
 }
 
-public class OrderDuplicateCompleteException(Order order) : InvalidOperationException
+// ↓非用户操作↓
+
+public class OrderDuplicateCompleteException(Order order) : Exception
 {
     [PublicAPI] public Order Order => order;
 }
 
-public class OrderDuplicateSubmitException(Order order) : Exception // 非用户操作
+public class OrderDuplicateSubmitException(Order order) : Exception
 {
     [PublicAPI] public Order Order => order;
 }

@@ -1,3 +1,3 @@
 ﻿namespace KirisameY.SyncOrder;
 
-public class SourceAlreadyCompletedException : Exception;
+public class OrderSourceAlreadyCompletedException : InvalidOperationException;

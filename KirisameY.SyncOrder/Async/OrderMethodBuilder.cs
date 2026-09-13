@@ -68,4 +68,11 @@ public readonly struct OrderMethodBuilder()
             order.ContinueWith(boxed.MoveNext).Submit();
         }
     }
+
+    public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
+        where TAwaiter : ICriticalNotifyCompletion
+        where TStateMachine : IAsyncStateMachine
+    {
+        throw new OrderAsyncMethodAwaitOtherAwaitableException(awaiter.GetType());
+    }
 }
