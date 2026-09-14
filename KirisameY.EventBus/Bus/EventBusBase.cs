@@ -45,7 +45,7 @@ public abstract class EventBusBase : IEventBus
                 Type type = typeof(TEvent);
                 while (type != typeof(object))
                 {
-                    if (_handlersDict.TryGetValue(typeof(TEvent), out var infos))
+                    if (_handlersDict.TryGetValue(type, out var infos))
                     {
                         infos.Handlers.ForEach(t => t.handler.Invoke(@event));
                     }
