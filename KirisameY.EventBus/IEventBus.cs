@@ -1,10 +1,12 @@
-﻿namespace KirisameY.EventBus;
+﻿using KirisameY.SyncOrder;
+
+namespace KirisameY.EventBus;
 
 public interface IEventBus
 {
-    SubscriptionToken Subscribe<TEvent>(Action<TEvent> handler) where TEvent : class;
+    SubscriptionToken Subscribe<TEvent>(Action<TEvent> handler) where TEvent : BaseEvent;
 
-    void Unsubscribe<TEvent>(Action<TEvent> handler) where TEvent : class;
+    bool Unsubscribe<TEvent>(Action<TEvent> handler) where TEvent : BaseEvent;
 
-    void Post<TEvent>(TEvent @event) where TEvent : class;
+    Order<TEvent> OrderPost<TEvent>(TEvent @event) where TEvent : BaseEvent;
 }
