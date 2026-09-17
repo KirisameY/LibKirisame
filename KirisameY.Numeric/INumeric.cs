@@ -1,5 +1,7 @@
 ﻿namespace KirisameY.Numeric;
 
+public interface INumeric;
+
 public interface INumeric<out T>
 {
     T BaseValue { get; }

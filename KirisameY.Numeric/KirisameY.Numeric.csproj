@@ -11,4 +11,9 @@
         <RepositoryUrl>https://github.com/KirisameY/LibKirisame/</RepositoryUrl>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="KirisameY.CollectionViews" Version="0.1.0" />
+      <PackageReference Include="KirisameY.GenericUtils" Version="0.0.1" />
+    </ItemGroup>
+
 </Project>
