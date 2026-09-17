@@ -9,7 +9,15 @@ internal class DoubleNumeric<TOrder>(double baseValue = 0) : IEditableNumeric<do
 
     private void SetDirtyHandler(object? sender, EventArgs e) => _dirty = true;
 
-    public double BaseValue { get; set; } = baseValue;
+    public double BaseValue
+    {
+        get;
+        set
+        {
+            field  = value;
+            _dirty = true;
+        }
+    } = baseValue;
     public double Value
     {
         get
