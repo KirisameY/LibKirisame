@@ -6,6 +6,11 @@ public interface INumeric<out T>
 {
     T BaseValue { get; }
     T Value { get; }
+
+    /// <summary>
+    /// 当该数值发生变化时触发。
+    /// </summary>
+    event EventHandler Updated;
 }
 
 public interface IBaseEditableNumeric<T> : INumeric<T>

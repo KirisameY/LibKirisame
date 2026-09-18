@@ -79,4 +79,32 @@ public class CreateTests
 
         Assert.Equal(13, numeric.BaseValue);
     }
+
+    [Fact]
+    public void WrappedNumericExposesModifiers()
+    {
+        var numeric = NumericTestUtils.Create(7);
+        var modifier = new TestModifier(TestOrder.Middle, v => v + 1);
+
+        numeric.AddModifier(modifier);
+
+        Assert.Single(numeric.Modifiers);
+        Assert.Contains(modifier, numeric.Modifiers);
+    }
+
+    [Fact]
+    public void WrappedNumericModifiersViewTracksLaterChanges()
+    {
+        var numeric = NumericTestUtils.Create(7);
+        var view = numeric.Modifiers;
+        Assert.Empty(view);
+
+        var modifier = new TestModifier(TestOrder.Early, v => v);
+        numeric.AddModifier(modifier);
+        Assert.Single(view);
+
+        numeric.RemoveModifier(modifier);
+
+        Assert.Empty(view);
+    }
 }

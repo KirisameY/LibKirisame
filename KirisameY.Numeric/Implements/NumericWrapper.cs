@@ -29,6 +29,12 @@ internal class NumericWrapper<TValue, TOrder>(DoubleNumeric<TOrder> innerNumeric
     }
     public TValue Value => ToValue(innerNumeric.Value);
 
+    public event EventHandler Updated
+    {
+        add => innerNumeric.Updated += value;
+        remove => innerNumeric.Updated -= value;
+    }
+
 
     public IReadOnlyCollection<INumericModifier<TOrder>> Modifiers => innerNumeric.Modifiers;
 

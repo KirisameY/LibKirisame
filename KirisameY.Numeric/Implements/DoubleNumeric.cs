@@ -7,7 +7,21 @@ internal class DoubleNumeric<TOrder>(double baseValue = 0) : IEditableNumeric<do
 {
     private bool _dirty = true;
 
-    private void SetDirtyHandler(object? sender, EventArgs e) => _dirty = true;
+    private EventHandler? _updated;
+
+    public event EventHandler Updated
+    {
+        add => _updated += value;
+        remove => _updated -= value;
+    }
+
+    private void RaiseUpdated() => _updated?.Invoke(this, EventArgs.Empty);
+
+    private void ModifierUpdatedHandler(object? sender, EventArgs e)
+    {
+        _dirty = true;
+        RaiseUpdated();
+    }
 
     public double BaseValue
     {
@@ -16,6 +30,7 @@ internal class DoubleNumeric<TOrder>(double baseValue = 0) : IEditableNumeric<do
         {
             field  = value;
             _dirty = true;
+            RaiseUpdated();
         }
     } = baseValue;
     public double Value
@@ -44,8 +59,9 @@ internal class DoubleNumeric<TOrder>(double baseValue = 0) : IEditableNumeric<do
         }
         list.Add(modifier);
 
-        modifier.Updated += SetDirtyHandler;
+        modifier.Updated += ModifierUpdatedHandler;
         _dirty           =  true;
+        RaiseUpdated();
     }
 
     public bool RemoveModifier(INumericModifier<TOrder> modifier)
@@ -53,8 +69,9 @@ internal class DoubleNumeric<TOrder>(double baseValue = 0) : IEditableNumeric<do
         if (!_modifiers.TryGetValue(modifier.Order, out var list)) return false;
         if (!list.Remove(modifier)) return false;
 
-        modifier.Updated -= SetDirtyHandler;
+        modifier.Updated -= ModifierUpdatedHandler;
         _dirty           =  true;
+        RaiseUpdated();
         return true;
     }
 }
