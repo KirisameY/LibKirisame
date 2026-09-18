@@ -1,6 +1,4 @@
-﻿using KirisameY.SyncOrder;
-
-namespace KirisameY.EventBus;
+﻿namespace KirisameY.EventBus;
 
 public interface IEventBus
 {
@@ -8,5 +6,5 @@ public interface IEventBus
 
     bool Unsubscribe<TEvent>(Action<TEvent> handler) where TEvent : BaseEvent;
 
-    Order<TEvent> OrderPost<TEvent>(TEvent @event) where TEvent : BaseEvent;
+    void Publish<TEvent>(TEvent @event) where TEvent : BaseEvent;
 }

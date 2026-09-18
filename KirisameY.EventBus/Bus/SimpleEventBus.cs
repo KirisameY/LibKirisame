@@ -1,7 +1,5 @@
 ﻿using System.Collections.Immutable;
 
-using KirisameY.SyncOrder;
-
 namespace KirisameY.EventBus.Bus;
 
 public abstract class EventBusBase : IEventBus
@@ -32,38 +30,16 @@ public abstract class EventBusBase : IEventBus
         return prev.Count > infos.Handlers.Count;
     }
 
-
-    private readonly Queue<Action> _eventPublishQueue = [];
-
-    public Order<TEvent> OrderPost<TEvent>(TEvent @event) where TEvent : BaseEvent
+    public void Publish<TEvent>(TEvent @event) where TEvent : BaseEvent
     {
-        OrderCompletionSource<TEvent> completionSource = new();
-        return new(() =>
+        Type type = typeof(TEvent);
+        while (type != typeof(object))
         {
-            _eventPublishQueue.Enqueue(() =>
+            if (_handlersDict.TryGetValue(type, out var infos))
             {
-                Type type = typeof(TEvent);
-                while (type != typeof(object))
-                {
-                    if (_handlersDict.TryGetValue(type, out var infos))
-                    {
-                        infos.Handlers.ForEach(t => t.handler.Invoke(@event));
-                    }
-                    type = type.BaseType!;
-                }
-                completionSource.Complete(@event);
-            });
-            PostEnqueued();
-        }, completionSource.Token);
-    }
-
-    protected abstract void PostEnqueued();
-
-    protected void HandleQueue()
-    {
-        while (_eventPublishQueue.TryDequeue(out var publish))
-        {
-            publish.Invoke();
+                infos.Handlers.ForEach(t => t.handler.Invoke(@event));
+            }
+            type = type.BaseType!;
         }
     }
 
