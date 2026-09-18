@@ -16,7 +16,7 @@ public static class NumericCreateExtensions
         public static IEditableNumeric<TValue, TOrder> Create<TValue, TOrder>(
             TValue value,
             [SuppressMessage("ReSharper", "UnusedParameter.Global")]
-            TypeA<TOrder>? orderType = null,
+            TypeA<TOrder> orderType = default,
             ValueConvertMode convertMode = ValueConvertMode.Checked
         )
             where TValue : INumberBase<TValue>
@@ -34,7 +34,7 @@ public static class NumericCreateExtensions
         public static IModifierEditableNumeric<TValue, TOrder> CreateReadonly<TValue, TOrder>(
             TValue value,
             [SuppressMessage("ReSharper", "UnusedParameter.Global")]
-            TypeA<TOrder>? orderType = null,
+            TypeA<TOrder> orderType = default,
             ValueConvertMode convertMode = ValueConvertMode.Checked
         )
             where TValue : INumberBase<TValue>

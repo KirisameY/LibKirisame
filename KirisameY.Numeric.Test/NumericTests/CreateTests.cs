@@ -38,8 +38,7 @@ public class CreateTests
     [Fact]
     public void OrderTypeArgumentCanBePassedExplicitly()
     {
-        // todo: 泛型推断失败，暂时显式指定类型参数，待修复后移除
-        var numeric = INumeric.Create<double, TestOrder>(3.0, TypeA.Of<TestOrder>());
+        var numeric = INumeric.Create(3.0, TypeA.Of<TestOrder>());
 
         Assert.Equal(3.0, numeric.Value);
     }
@@ -47,7 +46,6 @@ public class CreateTests
     [Fact]
     public void OrderTypeArgumentCanBeOmitted()
     {
-        // todo: 泛型推断失败，暂时显式指定类型参数，待修复后移除
         var numeric = INumeric.Create<double, TestOrder>(3.0);
 
         Assert.Equal(3.0, numeric.Value);

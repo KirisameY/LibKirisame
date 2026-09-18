@@ -43,14 +43,12 @@ public static class NumericTestUtils
         ValueConvertMode convertMode = ValueConvertMode.Checked
     )
         where TValue : INumberBase<TValue> =>
-        // todo: 泛型推断失败，暂时显式指定类型参数，待修复后移除
-        INumeric.Create<TValue, TestOrder>(value, TypeA.Of<TestOrder>(), convertMode);
+        INumeric.Create(value, TypeA.Of<TestOrder>(), convertMode);
 
     public static IModifierEditableNumeric<TValue, TestOrder> CreateReadonly<TValue>(
         TValue value,
         ValueConvertMode convertMode = ValueConvertMode.Checked
     )
         where TValue : INumberBase<TValue> =>
-        // todo: 泛型推断失败，暂时显式指定类型参数，待修复后移除
-        INumeric.CreateReadonly<TValue, TestOrder>(value, TypeA.Of<TestOrder>(), convertMode);
+        INumeric.CreateReadonly(value, TypeA.Of<TestOrder>(), convertMode);
 }
