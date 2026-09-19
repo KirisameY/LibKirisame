@@ -74,6 +74,7 @@ public class NotifiableList<T> : INotifiableList<T>
     {
         var before = _innerList.ToImmutableArray();
         _innerList.Clear();
+        // 索引取 0..旧长度-1：升序连续，且与 before 逐位对应
         ListUpdated?.Invoke(this, new ListItemClearedEventArgs<T>(Readonly, before, [..Enumerable.Range(0, before.Length)]));
     }
 
@@ -96,6 +97,7 @@ public class NotifiableList<T> : INotifiableList<T>
     public void RemoveRange(int index, int count)
     {
         var removed = _innerList[index..(index + count)];
+        // 升序连续，且与 removed 逐位对应
         var removedIndexes = Enumerable.Range(index, count).ToImmutableList();
         _innerList.RemoveRange(index, count);
         ListUpdated?.Invoke(this, new ListItemRemovedEventArgs<T>(Readonly, removed, removedIndexes));
@@ -103,8 +105,11 @@ public class NotifiableList<T> : INotifiableList<T>
 
     public void RemoveAll(Predicate<T> predicate)
     {
+        // 顺着原索引扫一遍再过滤，天然升序
         var indexes = _innerList.Select((item, index) => predicate.Invoke(item) ? index : -1)
                                 .Where(i => i >= 0).ToImmutableList();
+        // 内层倒序 RemoveAt 是必须的（否则删完前面的索引就错位了），
+        // 外层再 Reverse 一次把 items 翻回升序，好跟 indexes 逐位对齐
         var items = indexes.Reverse().Select(i =>
         {
             var item = _innerList[i];
