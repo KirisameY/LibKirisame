@@ -2,7 +2,7 @@
 
 namespace KirisameY.EventBus.Bus;
 
-public abstract class EventBusBase : IEventBus
+public class SimpleEventBus : IEventBus
 {
     private readonly Dictionary<Type, HandlerInfos> _handlersDict = [];
 

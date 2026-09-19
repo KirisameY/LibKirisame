@@ -1,8 +1,8 @@
 ﻿using JetBrains.Annotations;
 
-namespace KirisameY.EventBus.EventCompoments;
+namespace KirisameY.EventBus.EventComponents;
 
-public struct EventCancelToken()
+public class EventCancelToken
 {
     public bool Canceled { get; private set; } = false;
 
@@ -10,6 +10,6 @@ public struct EventCancelToken()
     public bool Cancel()
     {
         (var alreadyCanceled, Canceled) = (Canceled, true);
-        return alreadyCanceled;
+        return !alreadyCanceled;
     }
 }

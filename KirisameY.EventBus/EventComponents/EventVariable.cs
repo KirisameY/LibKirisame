@@ -1,9 +1,9 @@
 ﻿using JetBrains.Annotations;
 
-namespace KirisameY.EventBus.EventCompoments;
+namespace KirisameY.EventBus.EventComponents;
 
 [PublicAPI]
-public struct EventVariable<T>(T value)
+public class EventVariable<T>(T value)
 {
     [PublicAPI]
     public T Value { get; set; } = value;

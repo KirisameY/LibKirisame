@@ -5,14 +5,14 @@ namespace KirisameY.EventBus.Test.BusTests;
 public class SubscribeTests
 {
     [Fact]
-    public void HandlerReceivesPostedEvent()
+    public void HandlerReceivesPublishedEvent()
     {
-        var bus = new AutoEventBus();
+        var bus = new SimpleEventBus();
         List<TestEvent> received = [];
         bus.Subscribe<TestEvent>(received.Add);
 
         var @event = new TestEvent(42);
-        bus.OrderPost(@event).Submit();
+        bus.Publish(@event);
 
         Assert.Single(received);
         Assert.Same(@event, received[0]);
@@ -21,13 +21,13 @@ public class SubscribeTests
     [Fact]
     public void MultipleHandlersAllReceiveEvent()
     {
-        var bus = new AutoEventBus();
+        var bus = new SimpleEventBus();
         List<TestEvent> first = [];
         List<TestEvent> second = [];
         bus.Subscribe<TestEvent>(first.Add);
         bus.Subscribe<TestEvent>(second.Add);
 
-        bus.OrderPost(new TestEvent(1)).Submit();
+        bus.Publish(new TestEvent(1));
 
         Assert.Single(first);
         Assert.Single(second);
@@ -36,13 +36,13 @@ public class SubscribeTests
     [Fact]
     public void SameHandlerSubscribedTwiceIsInvokedTwice()
     {
-        var bus = new AutoEventBus();
+        var bus = new SimpleEventBus();
         var count = 0;
         Action<TestEvent> handler = _ => count++;
         bus.Subscribe(handler);
         bus.Subscribe(handler);
 
-        bus.OrderPost(new TestEvent(1)).Submit();
+        bus.Publish(new TestEvent(1));
 
         Assert.Equal(2, count);
     }
@@ -50,13 +50,13 @@ public class SubscribeTests
     [Fact]
     public void HandlersAreIsolatedPerEventType()
     {
-        var bus = new AutoEventBus();
+        var bus = new SimpleEventBus();
         List<TestEvent> testEvents = [];
         List<OtherEvent> otherEvents = [];
         bus.Subscribe<TestEvent>(testEvents.Add);
         bus.Subscribe<OtherEvent>(otherEvents.Add);
 
-        bus.OrderPost(new TestEvent(1)).Submit();
+        bus.Publish(new TestEvent(1));
 
         Assert.Single(testEvents);
         Assert.Empty(otherEvents);
@@ -65,12 +65,12 @@ public class SubscribeTests
     [Fact]
     public void BaseTypeHandlerReceivesDerivedEvent()
     {
-        var bus = new AutoEventBus();
+        var bus = new SimpleEventBus();
         List<TestEvent> received = [];
         bus.Subscribe<TestEvent>(received.Add);
 
         var @event = new DerivedTestEvent(1, "tag");
-        bus.OrderPost(@event).Submit();
+        bus.Publish(@event);
 
         Assert.Single(received);
         Assert.Same(@event, received[0]);
@@ -79,13 +79,13 @@ public class SubscribeTests
     [Fact]
     public void BothBaseAndDerivedHandlersReceiveDerivedEvent()
     {
-        var bus = new AutoEventBus();
+        var bus = new SimpleEventBus();
         List<TestEvent> baseReceived = [];
         List<DerivedTestEvent> derivedReceived = [];
         bus.Subscribe<TestEvent>(baseReceived.Add);
         bus.Subscribe<DerivedTestEvent>(derivedReceived.Add);
 
-        bus.OrderPost(new DerivedTestEvent(1, "tag")).Submit();
+        bus.Publish(new DerivedTestEvent(1, "tag"));
 
         Assert.Single(baseReceived);
         Assert.Single(derivedReceived);
@@ -94,11 +94,11 @@ public class SubscribeTests
     [Fact]
     public void ReceivedEventIsSingleInstanceWithoutDuplicateDispatch()
     {
-        var bus = new AutoEventBus();
+        var bus = new SimpleEventBus();
         List<TestEvent> received = [];
         bus.Subscribe<TestEvent>(received.Add);
 
-        bus.OrderPost(new TestEvent(1)).Submit();
+        bus.Publish(new TestEvent(1));
 
         Assert.Single(received);
     }
@@ -106,11 +106,11 @@ public class SubscribeTests
     [Fact]
     public void UnrelatedEventTypeHandlerIsNotInvoked()
     {
-        var bus = new AutoEventBus();
+        var bus = new SimpleEventBus();
         var invoked = false;
         bus.Subscribe<OtherEvent>(_ => invoked = true);
 
-        bus.OrderPost(new TestEvent(1)).Submit();
+        bus.Publish(new TestEvent(1));
 
         Assert.False(invoked);
     }
