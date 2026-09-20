@@ -10,7 +10,6 @@ public class DictionaryReadTests
         var dictionary = new NotifiableDictionary<string, int>();
 
         Assert.Empty(dictionary);
-        Assert.Equal(0, dictionary.Count);
     }
 
     [Fact]
@@ -56,9 +55,9 @@ public class DictionaryReadTests
     {
         var dictionary = new NotifiableDictionary<string, int> { { "a", 1 } };
 
-        Assert.True(dictionary.Contains(new KeyValuePair<string, int>("a", 1)));
-        Assert.False(dictionary.Contains(new KeyValuePair<string, int>("a", 2)));
-        Assert.False(dictionary.Contains(new KeyValuePair<string, int>("b", 1)));
+        Assert.Contains(new KeyValuePair<string, int>("a", 1), dictionary);
+        Assert.DoesNotContain(new KeyValuePair<string, int>("a", 2), dictionary);
+        Assert.DoesNotContain(new KeyValuePair<string, int>("b", 1), dictionary);
     }
 
     [Fact]
@@ -102,8 +101,8 @@ public class DictionaryReadTests
     {
         var dictionary = new NotifiableDictionary<string, int> { { "a", 1 } };
 
-        Assert.Equal(1, ((ICollection<KeyValuePair<string, int>>)dictionary).Count);
-        Assert.Equal(1, ((IReadOnlyCollection<KeyValuePair<string, int>>)dictionary).Count);
+        Assert.Single((ICollection<KeyValuePair<string, int>>)dictionary);
+        Assert.Single((IReadOnlyCollection<KeyValuePair<string, int>>)dictionary);
         Assert.Equal(1, ((IDictionary<string, int>)dictionary)["a"]);
         Assert.Equal(1, ((IReadOnlyDictionary<string, int>)dictionary)["a"]);
         Assert.True(((IDictionary<string, int>)dictionary).ContainsKey("a"));
@@ -140,6 +139,6 @@ public class DictionaryReadTests
 
         Assert.Equal(4, updates.Count);
         Assert.Equal(3, dictionary["a"]);
-        Assert.Equal(1, dictionary.Count);
+        Assert.Single(dictionary);
     }
 }

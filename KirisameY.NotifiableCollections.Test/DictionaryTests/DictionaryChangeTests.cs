@@ -15,7 +15,7 @@ public class DictionaryChangeTests
 
         var added = Assert.IsAssignableFrom<IDictionaryItemAddedEventArgs<string, int>>(Assert.Single(updates));
         Assert.Equal(1, added.AddedItems["a"]);
-        Assert.Equal(1, dictionary.Count);
+        Assert.Single(dictionary);
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public class DictionaryChangeTests
         Assert.False(dictionary.Remove("b"));
 
         Assert.Empty(updates);
-        Assert.Equal(1, dictionary.Count);
+        Assert.Single(dictionary);
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public class DictionaryChangeTests
         Assert.False(dictionary.Remove(new KeyValuePair<string, int>("a", 2)));
 
         Assert.Empty(updates);
-        Assert.Equal(1, dictionary.Count);
+        Assert.Single(dictionary);
     }
 
     [Fact]

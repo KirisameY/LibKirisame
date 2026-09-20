@@ -10,7 +10,6 @@ public class ListReadTests
         var list = new NotifiableList<int>();
 
         Assert.Empty(list);
-        Assert.Equal(0, list.Count);
         Assert.False(list.IsReadOnly);
     }
 
@@ -28,8 +27,8 @@ public class ListReadTests
     {
         var list = new NotifiableList<string> { "a", "b", "a" };
 
-        Assert.True(list.Contains("a"));
-        Assert.False(list.Contains("c"));
+        Assert.Contains("a", list);
+        Assert.DoesNotContain("c", list);
         Assert.Equal(0, list.IndexOf("a"));
         Assert.Equal(-1, list.IndexOf("c"));
     }

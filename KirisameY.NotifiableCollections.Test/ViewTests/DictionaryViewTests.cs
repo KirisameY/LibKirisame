@@ -31,7 +31,7 @@ public class DictionaryViewTests
         dictionary.Add("a", 1);
 
         Assert.Equal(1, view["a"]);
-        Assert.Equal(1, view.Count);
+        Assert.Single(view);
     }
 
     [Fact]

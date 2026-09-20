@@ -14,9 +14,9 @@ internal class NotifiableDictionaryReadonlyView<TKey, TValue>(IReadOnlyNotifiabl
 
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)dictionary).GetEnumerator();
 
-    public bool ContainsKey(TKey key) => ((IReadOnlyDictionary<TKey, TValue>)dictionary).ContainsKey(key);
+    public bool ContainsKey(TKey key) => dictionary.ContainsKey(key);
 
-    public bool TryGetValue(TKey key, out TValue value) => ((IReadOnlyDictionary<TKey, TValue>)dictionary).TryGetValue(key, out value!);
+    public bool TryGetValue(TKey key, out TValue value) => dictionary.TryGetValue(key, out value!);
 
     public TValue this[TKey key] => dictionary[key];
 
