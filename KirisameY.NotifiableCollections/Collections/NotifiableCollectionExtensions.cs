@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 using JetBrains.Annotations;
 
@@ -18,15 +20,118 @@ public static class NotifiableCollectionExtensions
         ///     Wraps the given <see cref="IReadOnlyNotifiableCollection{T}"/> into a read-only view.
         /// </summary>
         /// <returns>
-        ///     与 <paramref name="source"/> 同步的只读视图。
+        ///     与源集合同步的只读视图。
         ///     <br/>
-        ///     A read-only view kept in sync with <paramref name="source"/>.
+        ///     A read-only view kept in sync with source collection.
         /// </returns>
         [PublicAPI]
         public IReadOnlyNotifiableCollection<T> AsReadOnlyNotifiableCollection() => new NotifiableCollectionReadonlyView<T>(source);
 
+        /// <summary>
+        ///     将给定的任意 <see cref="IReadOnlyNotifiableCollection{T}"/> 包装为 <see cref="IReadOnlyObservableCollection{T}"/>，
+        ///     即以标准库通知模型对外报告变更的只读视图。
+        ///     <br/>
+        ///     Wraps the given <see cref="IReadOnlyNotifiableCollection{T}"/> into an
+        ///     <see cref="IReadOnlyObservableCollection{T}"/>: a read-only view that reports changes through the
+        ///     standard notification model.
+        /// </summary>
+        /// <param name="notifyThreshold">
+        ///     <para>
+        ///         决定一次变更应分多次发出单项通知，还是一次性发出 Reset 通知。默认为 <c>-1</c>，
+        ///         即不设上限、始终逐项发出通知：
+        ///         <list type="bullet">
+        ///             <item>
+        ///                 <b>负值</b>：不设上限，始终逐项发出通知
+        ///             </item>
+        ///             <item>
+        ///                 <b>0</b>：始终发出单次 <see cref="NotifyCollectionChangedAction.Reset"/>
+        ///             </item>
+        ///             <item>
+        ///                 <b>正值</b>：发生变化的项数超过该值时，发出单次
+        ///                 <see cref="NotifyCollectionChangedAction.Reset"/>；否则逐项发出
+        ///             </item>
+        ///         </list>
+        ///         本参数只影响 <see cref="INotifyCollectionChanged.CollectionChanged"/>，对
+        ///         <see cref="INotifyPropertyChanged.PropertyChanged"/> 无影响。
+        ///     </para>
+        ///     <para>
+        ///         Decides whether a single change is reported as several per-item notifications or as one Reset.
+        ///         Defaults to <c>-1</c>, i.e. no limit — notifications are always raised per item:
+        ///         <list type="bullet">
+        ///             <item>
+        ///                 <b>Negative</b>: no limit; notifications are always raised per item
+        ///             </item>
+        ///             <item>
+        ///                 <b>0</b>: a single <see cref="NotifyCollectionChangedAction.Reset"/> is always raised
+        ///             </item>
+        ///             <item>
+        ///                 <b>Positive</b>: a single <see cref="NotifyCollectionChangedAction.Reset"/> is raised once
+        ///                 the number of changed items exceeds the value; otherwise notifications are raised per item
+        ///             </item>
+        ///         </list>
+        ///         This parameter only affects <see cref="INotifyCollectionChanged.CollectionChanged"/>;
+        ///         <see cref="INotifyPropertyChanged.PropertyChanged"/> is unaffected.
+        ///     </para>
+        /// </param>
+        /// <returns>
+        ///     与源集合同步的只读可观测视图。
+        ///     <br/>
+        ///     A read-only observable view kept in sync with source collection.
+        /// </returns>
+        /// <remarks>
+        ///     <para>
+        ///         与库自身的只读通知视图相比，二者的读取行为完全一致，区别只在通知的对外形式：
+        ///         本方法的通知为 <see cref="INotifyCollectionChanged.CollectionChanged"/> 与
+        ///         <see cref="INotifyPropertyChanged.PropertyChanged"/>，适合 WPF / Avalonia / MAUI 等按标准模型订阅的场合；
+        ///         若需要携带项等富信息的强类型事件参数，请改用库自身的通知视图。
+        ///     </para>
+        ///     <para>
+        ///         通知的翻译规则为：
+        ///         <list type="bullet">
+        ///             <item>
+        ///                 <see cref="INotifyCollectionChanged.CollectionChanged"/>：元素加入、移除、替换时，逐项发出对应的
+        ///                 <see cref="NotifyCollectionChangedAction.Add"/>、
+        ///                 <see cref="NotifyCollectionChangedAction.Remove"/> 与
+        ///                 <see cref="NotifyCollectionChangedAction.Replace"/>
+        ///             </item>
+        ///             <item>
+        ///                 <see cref="INotifyPropertyChanged.PropertyChanged"/>：元素加入或移除时发出
+        ///                 <see cref="IReadOnlyCollection{T}.Count"/>；元素替换不发出任何通知
+        ///             </item>
+        ///         </list>
+        ///         <paramref name="notifyThreshold"/> 只作用于前者：单次变更的项数超过阈值时，
+        ///         上述逐项通知会被替换为单次 <see cref="NotifyCollectionChangedAction.Reset"/>。
+        ///     </para>
+        ///     <para>
+        ///         The read behaviour is identical to that of the library's own notifying read-only view; only the
+        ///         shape of the notifications differs. This overload reports through
+        ///         <see cref="INotifyCollectionChanged.CollectionChanged"/> and
+        ///         <see cref="INotifyPropertyChanged.PropertyChanged"/>, which suits consumers subscribing through the
+        ///         standard model (WPF / Avalonia / MAUI and the like). Use the library's own notifying view instead
+        ///         when the richer, strongly typed event arguments are needed.
+        ///     </para>
+        ///     <para>
+        ///         The notification mapping is as follows:
+        ///         <list type="bullet">
+        ///             <item>
+        ///                 <see cref="INotifyCollectionChanged.CollectionChanged"/>: additions, removals and
+        ///                 replacements raise the matching <see cref="NotifyCollectionChangedAction.Add"/>,
+        ///                 <see cref="NotifyCollectionChangedAction.Remove"/> and
+        ///                 <see cref="NotifyCollectionChangedAction.Replace"/>, one per item
+        ///             </item>
+        ///             <item>
+        ///                 <see cref="INotifyPropertyChanged.PropertyChanged"/>: additions and removals raise
+        ///                 <see cref="IReadOnlyCollection{T}.Count"/>; replacements raise nothing
+        ///             </item>
+        ///         </list>
+        ///         <paramref name="notifyThreshold"/> applies to the former only: once the number of changed items
+        ///         exceeds the threshold, those per-item notifications are replaced by a single
+        ///         <see cref="NotifyCollectionChangedAction.Reset"/>.
+        ///     </para>
+        /// </remarks>
         [PublicAPI]
-        public IReadOnlyObservableCollection<T> AsReadOnlyObservableCollection() => new ObservableCollectionWrapper<T>(source);
+        public IReadOnlyObservableCollection<T> AsReadOnlyObservableCollection(int notifyThreshold = -1) =>
+            new ObservableCollectionWrapper<T>(source, notifyThreshold);
     }
 
     extension<TSource, TValue>(IReadOnlyNotifiableCollection<TSource> source)

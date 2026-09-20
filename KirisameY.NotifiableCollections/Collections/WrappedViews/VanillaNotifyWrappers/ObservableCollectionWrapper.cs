@@ -8,13 +8,10 @@ using KirisameY.Relinq.Extensions;
 
 namespace KirisameY.NotifiableCollections.Collections.WrappedViews.VanillaNotifyWrappers;
 
-/// <param name="notifyThreshold">
-///     决定集合更新时应分多次发出单项通知还是一次性发出 Reset 通知<br/>
-///     > <b>正值</b>：在发生变化的集合项数量大于该值时将发送单次 Reset
-///     > <b>0</b>：始终发出单次通知
-///     > <b>负值</b>：始终发出单次 Reset
-/// </param>
-internal class ObservableCollectionWrapper<T>(IReadOnlyNotifiableCollection<T> source, int notifyThreshold = 0) : IReadOnlyObservableCollection<T>
+// notifyThreshold：决定集合更新时应分多次发出单项通知还是一次性发出 Reset 通知
+//     > 【非负值】：在发生变化的集合项数量大于该值时将发送单次 Reset（若为0则始终发出单次 Reset）
+//     > 【　负值】：始终发出单次通知
+internal class ObservableCollectionWrapper<T>(IReadOnlyNotifiableCollection<T> source, int notifyThreshold) : IReadOnlyObservableCollection<T>
 {
     public IEnumerator<T> GetEnumerator() => source.GetEnumerator();
 
@@ -46,19 +43,19 @@ internal class ObservableCollectionWrapper<T>(IReadOnlyNotifiableCollection<T> s
         {
             ICollectionItemAddedEventArgs<T> added => (notifyThreshold, added.AddedItems) switch
             {
-                (>= 0 and var t, var items) when t == 0 || items.Count < t =>
+                var (t, items) when t < 0 || items.Count <= t =>
                     items.Select(item => new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item)),
                 _ => [new(NotifyCollectionChangedAction.Reset)]
             },
             ICollectionItemRemovedEventArgs<T> removed => (notifyThreshold, removed.RemovedItems) switch
             {
-                (>= 0 and var t, var items) when t == 0 || items.Count < t =>
+                var (t, items) when t < 0 || items.Count <= t =>
                     items.Select(item => new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item)),
                 _ => [new(NotifyCollectionChangedAction.Reset)]
             },
             ICollectionItemReplacedEventArgs<T> replaced => (notifyThreshold, replaced.ItemChanges) switch
             {
-                (>= 0 and var t, var changes) when t == 0 || changes.Count < t =>
+                var (t, changes) when t < 0 || changes.Count <= t =>
                     changes.Select(change => new NotifyCollectionChangedEventArgs(
                                        NotifyCollectionChangedAction.Replace, change.New, change.Old)
                     ),

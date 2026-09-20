@@ -8,7 +8,7 @@ using KirisameY.Relinq.Extensions;
 
 namespace KirisameY.NotifiableCollections.Collections.WrappedViews.VanillaNotifyWrappers;
 
-public class ObservableListWrapper<T>(IReadOnlyNotifiableList<T> list, int notifyThreshold = 0) : IReadOnlyObservableList<T>
+internal class ObservableListWrapper<T>(IReadOnlyNotifiableList<T> list, int notifyThreshold) : IReadOnlyObservableList<T>
 {
     public IEnumerator<T> GetEnumerator() => list.GetEnumerator();
 
@@ -42,19 +42,19 @@ public class ObservableListWrapper<T>(IReadOnlyNotifiableList<T> list, int notif
         {
             IListItemAddedEventArgs<T> added => (notifyThreshold, added.AddedItemsWithIndex) switch
             {
-                (>= 0 and var t, var items) when t == 0 || items.Count < t =>
+                var (t, items) when t < 0 || items.Count <= t =>
                     items.Select(item => new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item.Item, item.Index)),
                 _ => [new(NotifyCollectionChangedAction.Reset)]
             },
             IListItemRemovedEventArgs<T> removed => (notifyThreshold, removed.RemovedItemsWithIndex) switch
             {
-                (>= 0 and var t, var items) when t == 0 || items.Count < t =>
+                var (t, items) when t < 0 || items.Count <= t =>
                     items.Select(item => new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item.Item, item.Index)),
                 _ => [new(NotifyCollectionChangedAction.Reset)]
             },
             IListItemReplacedEventArgs<T> replaced => (notifyThreshold, replaced.ItemChanges) switch
             {
-                (>= 0 and var t, var changes) when t == 0 || changes.Count < t =>
+                var (t, changes) when t < 0 || changes.Count <= t =>
                     changes.Select(change => new NotifyCollectionChangedEventArgs(
                                        NotifyCollectionChangedAction.Replace, change.New, change.Old, change.Index)
                     ),
@@ -73,7 +73,7 @@ public class ObservableListWrapper<T>(IReadOnlyNotifiableList<T> list, int notif
         EventHandler<ListUpdateEventArgs<T>>
     > PropertyChangedHandlerCache => field ??= new(handler => (_, args) =>
     {
-        const string indexerName = "Index[]";
+        const string indexerName = "Item[]";
 
         IEnumerable<PropertyChangedEventArgs> newArgs = args switch
         {

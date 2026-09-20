@@ -9,7 +9,7 @@ using KirisameY.Relinq.Extensions;
 
 namespace KirisameY.NotifiableCollections.Collections.WrappedViews.VanillaNotifyWrappers;
 
-public class ObservableDictionaryWrapper<TKey, TValue>(IReadOnlyNotifiableDictionary<TKey, TValue> dictionary, int notifyThreshold = 0) : IReadOnlyObservableDictionary<TKey, TValue>
+internal class ObservableDictionaryWrapper<TKey, TValue>(IReadOnlyNotifiableDictionary<TKey, TValue> dictionary, int notifyThreshold) : IReadOnlyObservableDictionary<TKey, TValue>
 {
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => dictionary.GetEnumerator();
 
@@ -23,8 +23,8 @@ public class ObservableDictionaryWrapper<TKey, TValue>(IReadOnlyNotifiableDictio
 
     public TValue this[TKey key] => dictionary[key];
 
-    public IReadOnlyObservableCollection<TKey> Keys => field ??= dictionary.Keys.AsReadOnlyObservableCollection();
-    public IReadOnlyObservableCollection<TValue> Values => field ??= dictionary.Values.AsReadOnlyObservableCollection();
+    public IReadOnlyObservableCollection<TKey> Keys => field ??= dictionary.Keys.AsReadOnlyObservableCollection(notifyThreshold);
+    public IReadOnlyObservableCollection<TValue> Values => field ??= dictionary.Values.AsReadOnlyObservableCollection(notifyThreshold);
 
 
     // Events
@@ -50,19 +50,19 @@ public class ObservableDictionaryWrapper<TKey, TValue>(IReadOnlyNotifiableDictio
         {
             IDictionaryItemAddedEventArgs<TKey, TValue> added => (notifyThreshold, added.AddedItems) switch
             {
-                (>= 0 and var t, var items) when t == 0 || items.Count < t =>
+                var (t, items) when t < 0 || items.Count <= t =>
                     items.Select(item => new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item)),
                 _ => [new(NotifyCollectionChangedAction.Reset)]
             },
             IDictionaryItemRemovedEventArgs<TKey, TValue> removed => (notifyThreshold, removed.RemovedItems) switch
             {
-                (>= 0 and var t, var items) when t == 0 || items.Count < t =>
+                var (t, items) when t < 0 || items.Count <= t =>
                     items.Select(item => new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item)),
                 _ => [new(NotifyCollectionChangedAction.Reset)]
             },
             IDictionaryItemReplacedEventArgs<TKey, TValue> replaced => (notifyThreshold, replaced.ItemChanges) switch
             {
-                (>= 0 and var t, var changes) when t == 0 || changes.Count < t =>
+                var (t, changes) when t < 0 || changes.Count <= t =>
                     changes.Select(change => new NotifyCollectionChangedEventArgs(
                                        NotifyCollectionChangedAction.Replace, change.New, change.Old)
                     ),
@@ -80,7 +80,7 @@ public class ObservableDictionaryWrapper<TKey, TValue>(IReadOnlyNotifiableDictio
         EventHandler<DictionaryUpdateEventArgs<TKey, TValue>>
     > PropertyChangedHandlerCache => field ??= new(handler => (_, args) =>
     {
-        const string indexerName = "Index[]";
+        const string indexerName = "Item[]";
 
         IEnumerable<PropertyChangedEventArgs> newArgs = args switch
         {
