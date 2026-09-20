@@ -36,7 +36,28 @@ internal class NotifiableDictionaryReadonlyView<TKey, TValue>(IReadOnlyNotifiabl
     private CountedWeakRefWrapper<
         EventHandler<DictionaryUpdateEventArgs<TKey, TValue>>,
         EventHandler<DictionaryUpdateEventArgs<TKey, TValue>>
-    > HandlerCache => field ??= new(handler => (_, args) => handler.Invoke(this, args));
+    > HandlerCache => field ??= new(handler => (_, args) =>
+    {
+        DictionaryUpdateEventArgs<TKey, TValue>? newArgs = args switch
+        {
+            IDictionaryItemAddedEventArgs<TKey, TValue> added => new DictionaryItemAddedEventArgs<TKey, TValue>(
+                this, added.AddedItems
+            ),
+            IDictionaryItemClearedEventArgs<TKey, TValue> cleared => new DictionaryItemClearedEventArgs<TKey, TValue>(
+                this, cleared.RemovedItems
+            ),
+            IDictionaryItemRemovedEventArgs<TKey, TValue> removed => new DictionaryItemRemovedEventArgs<TKey, TValue>(
+                this, removed.RemovedItems
+            ),
+            IDictionaryItemReplacedEventArgs<TKey, TValue> replaced => new DictionaryItemReplacedEventArgs<TKey, TValue>(
+                this, replaced.OldItems, replaced.NewItems
+            ),
+
+            _ => null
+        };
+
+        if (newArgs is not null) handler.Invoke(this, newArgs);
+    });
 }
 
 internal class NotifiableDictionaryReadOnlyView<TKey, TSourceValue, TValue>(
@@ -78,7 +99,7 @@ internal class NotifiableDictionaryReadOnlyView<TKey, TSourceValue, TValue>(
         EventHandler<DictionaryUpdateEventArgs<TKey, TSourceValue>>
     > HandlerCache => field ??= new(handler => (_, args) =>
     {
-        DictionaryUpdateEventArgs<TKey, TValue> newArgs = args switch
+        DictionaryUpdateEventArgs<TKey, TValue>? newArgs = args switch
         {
             IDictionaryItemAddedEventArgs<TKey, TSourceValue> added => new DictionaryItemAddedEventArgs<TKey, TValue>(
                 this,
@@ -98,9 +119,9 @@ internal class NotifiableDictionaryReadOnlyView<TKey, TSourceValue, TValue>(
                 replaced.NewItems.ToDictionary(p => p.Key, p => valueSelector.Invoke(p.Value))
             ),
 
-            _ => throw new InvalidDataException($"Unexpected type {args.GetType()} of args")
+            _ => null
         };
 
-        handler.Invoke(this, newArgs);
+        if (newArgs is not null) handler.Invoke(this, newArgs);
     });
 }

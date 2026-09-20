@@ -23,7 +23,30 @@ internal class NotifiableListReadonlyView<T>(IReadOnlyNotifiableList<T> list) : 
     private CountedWeakRefWrapper<
         EventHandler<ListUpdateEventArgs<T>>,
         EventHandler<ListUpdateEventArgs<T>>
-    > HandlerCache => field ??= new(handler => (_, args) => handler.Invoke(this, args));
+    > HandlerCache => field ??= new(handler => (_, args) =>
+    {
+        ListUpdateEventArgs<T>? newArgs = args switch
+        {
+            IListItemAddedEventArgs<T> added => new ListItemAddedEventArgs<T>(
+                this, added.AddedItems, added.StartIndex
+            ),
+            IListItemClearedEventArgs<T> cleared => new ListItemClearedEventArgs<T>(
+                this, cleared.RemovedItems, cleared.Indexes
+            ),
+            IListItemRemovedEventArgs<T> removed => new ListItemRemovedEventArgs<T>(
+                this, removed.RemovedItems, removed.Indexes
+            ),
+            IListItemReplacedEventArgs<T> replaced => new ListItemReplacedEventArgs<T>(
+                this, replaced.OldItems,
+                replaced.NewItems, replaced.Indexes
+            ),
+            IListSortedEventArgs<T> => new ListSortedEventArgs<T>(this),
+
+            _ => null
+        };
+
+        if (newArgs is not null) handler.Invoke(this, newArgs);
+    });
 }
 
 internal class NotifiableListReadonlyView<TSource, TValue>(
@@ -48,7 +71,7 @@ internal class NotifiableListReadonlyView<TSource, TValue>(
         EventHandler<ListUpdateEventArgs<TSource>>
     > HandlerCache => field ??= new(handler => (_, args) =>
     {
-        ListUpdateEventArgs<TValue> newArgs = args switch
+        ListUpdateEventArgs<TValue>? newArgs = args switch
         {
             IListItemAddedEventArgs<TSource> added => new ListItemAddedEventArgs<TValue>(
                 this, [..added.AddedItems.Select(valueSelector)], added.StartIndex
@@ -65,9 +88,9 @@ internal class NotifiableListReadonlyView<TSource, TValue>(
             ),
             IListSortedEventArgs<TSource> => new ListSortedEventArgs<TValue>(this),
 
-            _ => throw new InvalidDataException($"Unexpected type {args.GetType()} of args")
+            _ => null
         };
 
-        handler.Invoke(this, newArgs);
+        if (newArgs is not null) handler.Invoke(this, newArgs);
     });
 }

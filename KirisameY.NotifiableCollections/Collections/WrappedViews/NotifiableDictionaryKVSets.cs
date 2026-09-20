@@ -39,9 +39,7 @@ internal class NotifiableDictionaryKeySet<TKey, TValue>(IReadOnlyNotifiableDicti
                 this,
                 [..removed.RemovedItems.Select(p => p.Key)]
             ),
-            IDictionaryItemReplacedEventArgs<TKey, TValue> replaced => null, // 字典替换不影响 Key
-
-            _ => throw new InvalidDataException($"Unexpected type {args.GetType()} of args")
+            _ => null, // 字典替换不影响 Key
         };
 
         if (newArgs is not null) handler.Invoke(this, newArgs);
