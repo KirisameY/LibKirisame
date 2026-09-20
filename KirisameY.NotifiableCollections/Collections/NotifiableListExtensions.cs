@@ -10,6 +10,15 @@ using KirisameY.NotifiableCollections.Collections.WrappedViews.VanillaNotifyWrap
 
 namespace KirisameY.NotifiableCollections.Collections;
 
+/// <summary>
+///     把任意 <see cref="IReadOnlyNotifiableList{T}"/> 包装成只读视图的扩展方法：
+///     库自身的通知模型为 <c>AsReadOnlyNotifiableList</c>，
+///     桥接到标准库通知模型的观测版本为 <c>AsReadOnlyObservableCollection</c>。
+///     <br/>
+///     Extension methods that wrap an arbitrary <see cref="IReadOnlyNotifiableList{T}"/> into a read-only view:
+///     the library's own notification model is <c>AsReadOnlyNotifiableList</c>, and the observable variant
+///     bridging to the standard one is <c>AsReadOnlyObservableCollection</c>.
+/// </summary>
 public static class NotifiableListExtensions
 {
     extension<T>(IReadOnlyNotifiableList<T> list)

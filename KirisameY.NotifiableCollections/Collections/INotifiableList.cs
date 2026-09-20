@@ -19,14 +19,6 @@ public interface IListUpdateNotifier<T> : ICollectionUpdateNotifier<T>
     ///     <br/>
     ///     Raised when the contents of the list change.
     /// </summary>
-    /// <remarks>
-    ///     与集合级的 <see cref="ICollectionUpdateNotifier{T}.CollectionUpdated"/> 相比，这里的事件参数额外携带索引信息
-    ///     （具体见 <see cref="ListUpdateEventArgs{T}"/> 体系）。
-    ///     <br/>
-    ///     Compared with the collection-level <see cref="ICollectionUpdateNotifier{T}.CollectionUpdated"/>,
-    ///     the event args here additionally carry index information (see the
-    ///     <see cref="ListUpdateEventArgs{T}"/> family).
-    /// </remarks>
     public event EventHandler<ListUpdateEventArgs<T>>? ListUpdated;
 
     /// <summary>
@@ -35,13 +27,9 @@ public interface IListUpdateNotifier<T> : ICollectionUpdateNotifier<T>
     ///     This is the <b>same</b> event as <see cref="ListUpdated"/>.
     /// </summary>
     /// <remarks>
-    ///     显式实现而不是另开一个事件，是为了让列表被当作
-    ///     <see cref="ICollectionUpdateNotifier{T}"/> 使用时也能收到通知；
     ///     订阅它等价于订阅 <see cref="ListUpdated"/>。
     ///     <br/>
-    ///     It is implemented explicitly rather than declared as a separate event so that the list still
-    ///     delivers notifications when it is used as an <see cref="ICollectionUpdateNotifier{T}"/>;
-    ///     subscribing to it is equivalent to subscribing to <see cref="ListUpdated"/>.
+    ///     Subscribing to it is equivalent to subscribing to <see cref="ListUpdated"/>.
     /// </remarks>
     event EventHandler<CollectionUpdateEventArgs<T>>? ICollectionUpdateNotifier<T>.CollectionUpdated
     {
@@ -83,12 +71,9 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
     ///     Reads or writes an element by its index.
     /// </summary>
     /// <remarks>
-    ///     set 会触发一次「替换」变更；用 <c>new</c> 把 <see cref="IList{T}"/> 与
-    ///     <see cref="IReadOnlyList{T}"/> 两份同名索引器收敛成一个。
+    ///     赋值会发出一次替换通知。
     ///     <br/>
-    ///     Setting a value raises a single "replace" change. <c>new</c> is used to collapse the two
-    ///     identically named indexers inherited from <see cref="IList{T}"/> and
-    ///     <see cref="IReadOnlyList{T}"/> into a single one.
+    ///     Assigning raises a single replacement notification.
     /// </remarks>
     public new T this[int index] { get; set; }
 
