@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 
+using KirisameY.NotifiableCollections.Collections.WrappedViews;
 using KirisameY.NotifiableCollections.EventArgs;
 
 namespace KirisameY.NotifiableCollections.Collections;
@@ -8,6 +9,7 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
     where TKey : notnull
 {
     private readonly Dictionary<TKey, TValue> _innerDict = [];
+
     private IReadOnlyDictionary<TKey, TValue> Readonly => field ??= _innerDict.AsReadOnly();
 
 
@@ -25,9 +27,11 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
 
     bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly => false;
 
-    public ICollection<TKey> Keys => _innerDict.Keys;
+    public IReadOnlyNotifiableCollection<TKey> Keys => field ??= new NotifiableDictionaryKeySet<TKey, TValue>(this);
+    public IReadOnlyNotifiableCollection<TValue> Values => field ??= this.AsReadOnlyNotifiableCollection(p => p.Value);
 
-    public ICollection<TValue> Values => _innerDict.Values;
+    ICollection<TKey> IDictionary<TKey, TValue>.Keys => _innerDict.Keys;
+    ICollection<TValue> IDictionary<TKey, TValue>.Values => _innerDict.Values;
 
     public bool Contains(KeyValuePair<TKey, TValue> item) => _innerDict.Contains(item);
 

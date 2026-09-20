@@ -44,27 +44,32 @@ public abstract class CollectionUpdateEventArgs<T>(IReadOnlyCollection<T> collec
     public IReadOnlyCollection<T> CollectionView => collectionView;
 }
 
-// internal class CollectionItemAddedEventArgs<T>(IReadOnlyCollection<T> collectionView, IReadOnlyCollection<T> addedItems)
-//     : CollectionUpdateEventArgs<T>(collectionView), ICollectionItemAddedEventArgs<T>
-// {
-//     public IReadOnlyCollection<T> AddedItems => addedItems;
-// }
-//
-// internal class CollectionItemRemovedEventArgs<T>(IReadOnlyCollection<T> collectionView, IReadOnlyCollection<T> removedItems)
-//     : CollectionUpdateEventArgs<T>(collectionView), ICollectionItemRemovedEventArgs<T>
-// {
-//     public IReadOnlyCollection<T> RemovedItems => removedItems;
-// }
-//
-// internal class CollectionItemClearedEventArgs<T>(IReadOnlyCollection<T> collectionView, IReadOnlyCollection<T> removedItems)
-//     : CollectionItemRemovedEventArgs<T>(collectionView, removedItems), ICollectionItemClearedEventArgs<T>;
-//
-// internal class CollectionItemReplacedEventArgs<T>(IReadOnlyCollection<T> collectionView, IReadOnlyCollection<T> oldItems, IReadOnlyCollection<T> newItems)
-//     : CollectionUpdateEventArgs<T>(collectionView), ICollectionItemReplacedEventArgs<T>
-// {
-//     public IReadOnlyCollection<T> OldItems => oldItems;
-//     public IReadOnlyCollection<T> NewItems => newItems;
-//     public IReadOnlyCollection<(T old, T @new)> ItemChanges => field ??= [..OldItems.Zip(NewItems)];
-// }
+internal class CollectionItemAddedEventArgs<T>(IReadOnlyCollection<T> collectionView, IReadOnlyCollection<T> addedItems)
+    : CollectionUpdateEventArgs<T>(collectionView), ICollectionItemAddedEventArgs<T>
+{
+    public IReadOnlyCollection<T> AddedItems => addedItems;
+}
+
+internal class CollectionItemRemovedEventArgs<T>(IReadOnlyCollection<T> collectionView, IReadOnlyCollection<T> removedItems)
+    : CollectionUpdateEventArgs<T>(collectionView), ICollectionItemRemovedEventArgs<T>
+{
+    public IReadOnlyCollection<T> RemovedItems => removedItems;
+}
+
+internal class CollectionItemClearedEventArgs<T>(IReadOnlyCollection<T> collectionView, IReadOnlyCollection<T> removedItems)
+    : CollectionItemRemovedEventArgs<T>(collectionView, removedItems), ICollectionItemClearedEventArgs<T>;
+
+internal class CollectionItemReplacedEventArgs<T>(IReadOnlyCollection<T> collectionView, IReadOnlyCollection<T> oldItems, IReadOnlyCollection<T> newItems)
+    : CollectionUpdateEventArgs<T>(collectionView), ICollectionItemReplacedEventArgs<T>
+{
+    public IReadOnlyCollection<T> OldItems => oldItems;
+    public IReadOnlyCollection<T> NewItems => newItems;
+
+    public IReadOnlyCollection<IItemReplaceInfo<T>> ItemChanges => field ??=
+    [
+        ..OldItems.Zip(NewItems)
+                  .Select(t => ItemReplaceInfo.From(t.First, t.Second))
+    ];
+}
 
 #endregion

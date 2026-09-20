@@ -13,9 +13,9 @@ public interface IListUpdateNotifier<T> : ICollectionUpdateNotifier<T>
     }
 }
 
-public interface IReadOnlyNotifiableList<T> : IReadOnlyList<T>, IListUpdateNotifier<T>;
+public interface IReadOnlyNotifiableList<T> : IReadOnlyNotifiableCollection<T>, IReadOnlyList<T>, IListUpdateNotifier<T>;
 
-public interface INotifiableList<T> : IList<T>, IReadOnlyNotifiableList<T>
+public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadOnlyNotifiableList<T>
 {
     public new int Count { get; }
     public new T this[int index] { get; set; }

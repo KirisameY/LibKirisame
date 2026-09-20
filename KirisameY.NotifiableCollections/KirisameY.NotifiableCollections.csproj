@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         <LangVersion>preview</LangVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.0.6</Version>
+        <Version>0.1.0</Version>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/KirisameY/LibKirisame/</RepositoryUrl>
     </PropertyGroup>
@@ -14,6 +14,10 @@
     <ItemGroup>
       <PackageReference Include="KirisameY.GenericUtils" Version="0.0.1" />
       <PackageReference Include="KirisameY.Relinq" Version="0.1.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Collections\VanillaNotifyWrappers\" />
     </ItemGroup>
 
 </Project>
