@@ -94,10 +94,9 @@ public interface IDictionaryItemAddedEventArgs<TKey, TValue> : IDictionaryUpdate
 public interface IDictionaryItemRemovedEventArgs<TKey, TValue> : IDictionaryUpdateEventArgs<TKey, TValue>, ICollectionItemRemovedEventArgs<KeyValuePair<TKey, TValue>>
 {
     /// <summary>
-    ///     本次被移除的键值对（含被移除时的值），按键组织以便直接查找。
+    ///     本次被移除的键值对（含被移除时的值）.
     ///     <br/>
-    ///     The key-value pairs removed by this change (including the values they held when removed), keyed so
-    ///     that they can be looked up directly.
+    ///     The key-value pairs removed by this change (including the values they held when removed).
     /// </summary>
     [PublicAPI] public new IReadOnlyDictionary<TKey, TValue> RemovedItems { get; }
 
@@ -126,7 +125,7 @@ public interface IDictionaryItemRemovedEventArgs<TKey, TValue> : IDictionaryUpda
 ///     every key-value pair the dictionary contained before being cleared.
 /// </remarks>
 [PublicAPI]
-public interface IDictionaryItemClearedEventArgs<TKey, TValue> : IDictionaryItemRemovedEventArgs<TKey, TValue>;
+public interface IDictionaryItemClearedEventArgs<TKey, TValue> : IDictionaryItemRemovedEventArgs<TKey, TValue>, ICollectionItemClearedEventArgs<KeyValuePair<TKey, TValue>>;
 
 /// <summary>
 ///     字典中一个或多个键对应的值被替换。

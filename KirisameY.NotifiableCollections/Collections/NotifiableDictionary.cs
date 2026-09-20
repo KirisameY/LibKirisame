@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Immutable;
 
 using KirisameY.NotifiableCollections.Collections.WrappedViews;
 using KirisameY.NotifiableCollections.EventArgs;
@@ -109,15 +110,31 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
 
     public void Clear()
     {
-        var before = _innerDict.AsReadOnly();
+        var before = _innerDict.ToImmutableDictionary();
         _innerDict.Clear();
         RaiseUpdate(new DictionaryItemClearedEventArgs<TKey, TValue>(Readonly, before));
     }
 
-    public event EventHandler<DictionaryUpdateEventArgs<TKey, TValue>>? DictionaryUpdated;
+
+    private readonly List<EventHandler<DictionaryUpdateEventArgs<TKey, TValue>>> _dictionaryUpdatedEventHandlers = [];
 
     private void RaiseUpdate(DictionaryUpdateEventArgs<TKey, TValue> args)
     {
-        DictionaryUpdated?.Invoke(this, args);
+        foreach (var eventHandler in _dictionaryUpdatedEventHandlers)
+        {
+            eventHandler.Invoke(this, args);
+        }
+    }
+
+    public event EventHandler<DictionaryUpdateEventArgs<TKey, TValue>>? DictionaryUpdated
+    {
+        add
+        {
+            if (value is not null) _dictionaryUpdatedEventHandlers.Add(value);
+        }
+        remove
+        {
+            if (value is not null) _dictionaryUpdatedEventHandlers.Remove(value);
+        }
     }
 }

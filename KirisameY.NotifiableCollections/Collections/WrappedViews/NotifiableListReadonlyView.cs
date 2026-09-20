@@ -9,7 +9,7 @@ internal class NotifiableListReadonlyView<T>(IReadOnlyNotifiableList<T> list) : 
 {
     public IEnumerator<T> GetEnumerator() => list.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)list).GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     public int Count => list.Count;
     public T this[int index] => list[index];
 
@@ -23,7 +23,7 @@ internal class NotifiableListReadonlyView<T>(IReadOnlyNotifiableList<T> list) : 
     private CountedWeakRefWrapper<
         EventHandler<ListUpdateEventArgs<T>>,
         EventHandler<ListUpdateEventArgs<T>>
-    > HandlerCache => new(handler => (_, args) => handler.Invoke(this, args));
+    > HandlerCache => field ??= new(handler => (_, args) => handler.Invoke(this, args));
 }
 
 internal class NotifiableListReadonlyView<TSource, TValue>(
@@ -32,7 +32,7 @@ internal class NotifiableListReadonlyView<TSource, TValue>(
 {
     public IEnumerator<TValue> GetEnumerator() => list.Select(valueSelector).GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)list).GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     public int Count => list.Count;
     public TValue this[int index] => valueSelector.Invoke(list[index]);
 
@@ -46,7 +46,7 @@ internal class NotifiableListReadonlyView<TSource, TValue>(
     private CountedWeakRefWrapper<
         EventHandler<ListUpdateEventArgs<TValue>>,
         EventHandler<ListUpdateEventArgs<TSource>>
-    > HandlerCache => new(handler => (_, args) =>
+    > HandlerCache => field ??= new(handler => (_, args) =>
     {
         ListUpdateEventArgs<TValue> newArgs = args switch
         {

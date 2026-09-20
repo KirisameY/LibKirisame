@@ -36,7 +36,7 @@ internal class NotifiableDictionaryReadonlyView<TKey, TValue>(IReadOnlyNotifiabl
     private CountedWeakRefWrapper<
         EventHandler<DictionaryUpdateEventArgs<TKey, TValue>>,
         EventHandler<DictionaryUpdateEventArgs<TKey, TValue>>
-    > HandlerCache => new(handler => (_, args) => handler.Invoke(this, args));
+    > HandlerCache => field ??= new(handler => (_, args) => handler.Invoke(this, args));
 }
 
 internal class NotifiableDictionaryReadOnlyView<TKey, TSourceValue, TValue>(

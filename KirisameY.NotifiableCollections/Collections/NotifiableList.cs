@@ -30,6 +30,8 @@ public class NotifiableList<T> : INotifiableList<T>
     #endregion
 
 
+    #region Writing
+
     public T this[int index]
     {
         get => _innerList[index];
@@ -37,21 +39,21 @@ public class NotifiableList<T> : INotifiableList<T>
         {
             var oldValue = _innerList[index];
             _innerList[index] = value;
-            ListUpdated?.Invoke(this, new ListItemReplacedEventArgs<T>(Readonly, [oldValue], [value], [index]));
+            RaiseUpdate(new ListItemReplacedEventArgs<T>(Readonly, [oldValue], [value], [index]));
         }
     }
 
     public void Add(T item)
     {
         _innerList.Add(item);
-        ListUpdated?.Invoke(this, new ListItemAddedEventArgs<T>(Readonly, [item], _innerList.Count - 1));
+        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, [item], _innerList.Count - 1));
     }
 
     public void AddRange(ICollection<T> items)
     {
         var fromIndex = _innerList.Count;
         _innerList.AddRange(items);
-        ListUpdated?.Invoke(this, new ListItemAddedEventArgs<T>(Readonly, [..items], fromIndex));
+        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, [..items], fromIndex));
     }
 
     public void AddRange(IEnumerable<T> items) => AddRange([..items]);
@@ -59,13 +61,13 @@ public class NotifiableList<T> : INotifiableList<T>
     public void Insert(int index, T item)
     {
         _innerList.Insert(index, item);
-        ListUpdated?.Invoke(this, new ListItemAddedEventArgs<T>(Readonly, [item], index));
+        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, [item], index));
     }
 
     public void InsertRange(int index, ICollection<T> items)
     {
         _innerList.InsertRange(index, items);
-        ListUpdated?.Invoke(this, new ListItemAddedEventArgs<T>(Readonly, [..items], index));
+        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, [..items], index));
     }
 
     public void InsertRange(int index, IEnumerable<T> items) => InsertRange(index, [..items]);
@@ -75,7 +77,7 @@ public class NotifiableList<T> : INotifiableList<T>
         var before = _innerList.ToImmutableArray();
         _innerList.Clear();
         // 索引取 0..旧长度-1：升序连续，且与 before 逐位对应
-        ListUpdated?.Invoke(this, new ListItemClearedEventArgs<T>(Readonly, before, [..Enumerable.Range(0, before.Length)]));
+        RaiseUpdate(new ListItemClearedEventArgs<T>(Readonly, before, [..Enumerable.Range(0, before.Length)]));
     }
 
     public bool Remove(T item)
@@ -83,7 +85,7 @@ public class NotifiableList<T> : INotifiableList<T>
         var index = _innerList.IndexOf(item);
         if (index < 0) return false;
         _innerList.RemoveAt(index);
-        ListUpdated?.Invoke(this, new ListItemRemovedEventArgs<T>(Readonly, [item], [index]));
+        RaiseUpdate(new ListItemRemovedEventArgs<T>(Readonly, [item], [index]));
         return true;
     }
 
@@ -91,7 +93,7 @@ public class NotifiableList<T> : INotifiableList<T>
     {
         var item = _innerList[index];
         _innerList.RemoveAt(index);
-        ListUpdated?.Invoke(this, new ListItemRemovedEventArgs<T>(Readonly, [item], [index]));
+        RaiseUpdate(new ListItemRemovedEventArgs<T>(Readonly, [item], [index]));
     }
 
     public void RemoveRange(int index, int count)
@@ -100,7 +102,7 @@ public class NotifiableList<T> : INotifiableList<T>
         // 升序连续，且与 removed 逐位对应
         var removedIndexes = Enumerable.Range(index, count).ToImmutableList();
         _innerList.RemoveRange(index, count);
-        ListUpdated?.Invoke(this, new ListItemRemovedEventArgs<T>(Readonly, removed, removedIndexes));
+        RaiseUpdate(new ListItemRemovedEventArgs<T>(Readonly, removed, removedIndexes));
     }
 
     public void RemoveAll(Predicate<T> predicate)
@@ -116,45 +118,67 @@ public class NotifiableList<T> : INotifiableList<T>
             _innerList.RemoveAt(i);
             return item;
         }).Reverse().ToImmutableList();
-        ListUpdated?.Invoke(this, new ListItemRemovedEventArgs<T>(Readonly, items, indexes));
+        RaiseUpdate(new ListItemRemovedEventArgs<T>(Readonly, items, indexes));
     }
 
     public void Sort()
     {
         _innerList.Sort();
-        ListUpdated?.Invoke(this, new ListSortedEventArgs<T>(Readonly));
+        RaiseUpdate(new ListSortedEventArgs<T>(Readonly));
     }
 
     public void Sort(Comparison<T> comparison)
     {
         _innerList.Sort(comparison);
-        ListUpdated?.Invoke(this, new ListSortedEventArgs<T>(Readonly));
+        RaiseUpdate(new ListSortedEventArgs<T>(Readonly));
     }
 
     public void Sort(IComparer<T> comparer)
     {
         _innerList.Sort(comparer);
-        ListUpdated?.Invoke(this, new ListSortedEventArgs<T>(Readonly));
+        RaiseUpdate(new ListSortedEventArgs<T>(Readonly));
     }
 
     public void Sort(int index, int count, IComparer<T> comparer)
     {
         _innerList.Sort(index, count, comparer);
-        ListUpdated?.Invoke(this, new ListSortedEventArgs<T>(Readonly));
+        RaiseUpdate(new ListSortedEventArgs<T>(Readonly));
     }
 
     public void Reverse()
     {
         _innerList.Reverse();
-        ListUpdated?.Invoke(this, new ListSortedEventArgs<T>(Readonly));
+        RaiseUpdate(new ListSortedEventArgs<T>(Readonly));
     }
 
     public void Reverse(int index, int count)
     {
         _innerList.Reverse(index, count);
-        ListUpdated?.Invoke(this, new ListSortedEventArgs<T>(Readonly));
+        RaiseUpdate(new ListSortedEventArgs<T>(Readonly));
     }
 
+    #endregion
 
-    public event EventHandler<ListUpdateEventArgs<T>>? ListUpdated;
+
+    private readonly List<EventHandler<ListUpdateEventArgs<T>>> _listUpdatedEventHandlers = [];
+
+    private void RaiseUpdate(ListUpdateEventArgs<T> args)
+    {
+        foreach (var eventHandler in _listUpdatedEventHandlers)
+        {
+            eventHandler.Invoke(this, args);
+        }
+    }
+
+    public event EventHandler<ListUpdateEventArgs<T>>? ListUpdated
+    {
+        add
+        {
+            if (value is not null) _listUpdatedEventHandlers.Add(value);
+        }
+        remove
+        {
+            if (value is not null) _listUpdatedEventHandlers.Remove(value);
+        }
+    }
 }

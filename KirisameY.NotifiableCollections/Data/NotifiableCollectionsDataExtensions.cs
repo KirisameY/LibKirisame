@@ -65,7 +65,7 @@ public static class NotifiableCollectionsDataExtensions
         }
     }
 
-    extension<T>(ItemWithIndex<T> info)
+    extension<T>(IItemWithIndex<T> info)
     {
         /// <summary>
         ///     解构出索引与对应元素。

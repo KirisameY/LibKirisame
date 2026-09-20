@@ -153,7 +153,7 @@ public interface IListItemRemovedEventArgs<out T> : IListUpdateEventArgs<T>, ICo
 ///     entire list as it was before being cleared.
 /// </remarks>
 [PublicAPI]
-public interface IListItemClearedEventArgs<out T> : IListItemRemovedEventArgs<T>;
+public interface IListItemClearedEventArgs<out T> : IListItemRemovedEventArgs<T>, ICollectionItemClearedEventArgs<T>;
 
 /// <summary>
 ///     一个或多个列表中的元素被替换。
