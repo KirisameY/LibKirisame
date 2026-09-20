@@ -30,6 +30,9 @@ internal class ListItemAddedEventArgs<T>(IReadOnlyList<T> listView, IReadOnlyLis
 {
     public IReadOnlyList<T> AddedItems => addedItems;
     public int StartIndex => startIndex;
+
+    public IReadOnlyList<IItemWithIndex<T>> AddedItemsWithIndex => field ??=
+        [..Enumerable.Range(StartIndex, AddedItems.Count).Zip(AddedItems, ItemWithIndex.From)];
 }
 
 internal class ListItemRemovedEventArgs<T>(IReadOnlyList<T> listView, IReadOnlyList<T> removedItems, IReadOnlyList<int> indexes)

@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 
 using KirisameY.GenericUtils;
 using KirisameY.NotifiableCollections.Collections.WrappedViews;
+using KirisameY.NotifiableCollections.Collections.WrappedViews.VanillaNotifyWrappers;
 
 namespace KirisameY.NotifiableCollections.Collections;
 
@@ -25,7 +26,8 @@ public static class NotifiableDictionaryExtensions
         public IReadOnlyNotifiableDictionary<TKey, TValue> AsReadOnlyNotifiableDictionary() =>
             new NotifiableDictionaryReadonlyView<TKey, TValue>(dictionary);
 
-        // todo: as INotifyCollection&PropertyChanged
+        [PublicAPI]
+        public IReadOnlyObservableDictionary<TKey, TValue> AsReadOnlyObservableDictionary() => new ObservableDictionaryWrapper<TKey, TValue>(dictionary);
     }
 
     extension<TKey, TSourceValue, TValue>(IReadOnlyNotifiableDictionary<TKey, TSourceValue> dictionary)

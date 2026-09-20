@@ -76,6 +76,13 @@ public interface IListItemAddedEventArgs<out T> : IListUpdateEventArgs<T>, IColl
     /// </remarks>
     [PublicAPI] public int StartIndex { get; }
 
+    /// <summary>
+    ///     相应的索引值与 <see cref="AddedItems"/> 按位配对（Zip）的结果。
+    ///     <br/>
+    ///     The result of pairing (zipping) indexes with corresponding <see cref="AddedItems"/> position by position.
+    /// </summary>
+    [PublicAPI] public IReadOnlyList<IItemWithIndex<T>> AddedItemsWithIndex { get; }
+
     IReadOnlyCollection<T> ICollectionItemAddedEventArgs<T>.AddedItems => AddedItems;
 }
 

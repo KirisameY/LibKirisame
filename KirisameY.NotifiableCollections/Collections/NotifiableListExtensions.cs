@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 
 using KirisameY.GenericUtils;
 using KirisameY.NotifiableCollections.Collections.WrappedViews;
+using KirisameY.NotifiableCollections.Collections.WrappedViews.VanillaNotifyWrappers;
 
 namespace KirisameY.NotifiableCollections.Collections;
 
@@ -24,7 +25,8 @@ public static class NotifiableListExtensions
         [PublicAPI]
         public IReadOnlyNotifiableList<T> AsReadOnlyNotifiableList() => new NotifiableListReadonlyView<T>(list);
 
-        // todo: as INotifyCollection&PropertyChanged
+        [PublicAPI]
+        public IReadOnlyObservableList<T> AsReadOnlyObservableCollection() => new ObservableListWrapper<T>(list);
     }
 
     extension<TSource, TValue>(IReadOnlyNotifiableList<TSource> list)
