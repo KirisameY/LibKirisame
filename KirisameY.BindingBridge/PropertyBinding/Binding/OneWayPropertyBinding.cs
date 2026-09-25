@@ -1,4 +1,4 @@
-﻿namespace KirisameY.BindingBridge.PropertyBinding;
+﻿namespace KirisameY.BindingBridge.PropertyBinding.Binding;
 
 internal sealed class OneWayPropertyBinding<TSource, TTarget, TValue> : IBindHandle
 {
@@ -24,7 +24,7 @@ internal sealed class OneWayPropertyBinding<TSource, TTarget, TValue> : IBindHan
 
     private bool _disposed = false;
 
-    private void Update(TValue value) => _to.SetValue(_target, value);
+    private void Update() => _to.SetValue(_target, _from.GetValue(_source));
 
     public void Dispose()
     {
@@ -59,7 +59,7 @@ internal sealed class OneWayPropertyBinding<TSource, TTarget, TSourceValue, TTar
 
     private bool _disposed = false;
 
-    private void Update(TSourceValue value) => _to.SetValue(_target, _converter.Invoke(value));
+    private void Update() => _to.SetValue(_target, _converter.Invoke(_from.GetValue(_source)));
 
     public void Dispose()
     {

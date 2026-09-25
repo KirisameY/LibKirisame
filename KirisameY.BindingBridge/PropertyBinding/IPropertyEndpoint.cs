@@ -7,8 +7,8 @@ public interface IPropertyEndpoint<in TObject, out TProperty>
 
 public interface IObservablePropertyEndpoint<in TObject, out TProperty> : IPropertyEndpoint<TObject, TProperty>
 {
-    void SubscribeUpdate(TObject? obj, Action<TProperty> handler);
-    void UnsubscribeUpdate(TObject? obj, Action<TProperty> handler);
+    void SubscribeUpdate(TObject? obj, Action handler);
+    void UnsubscribeUpdate(TObject? obj, Action handler);
 }
 
 public interface IWritablePropertyEndpoint<in TObject, TProperty> : IPropertyEndpoint<TObject, TProperty>
