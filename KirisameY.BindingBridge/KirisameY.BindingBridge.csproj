@@ -12,4 +12,8 @@
         <RepositoryUrl>https://github.com/KirisameY/LibKirisame/</RepositoryUrl>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="KirisameY.Relinq" Version="0.1.1" />
+    </ItemGroup>
+
 </Project>

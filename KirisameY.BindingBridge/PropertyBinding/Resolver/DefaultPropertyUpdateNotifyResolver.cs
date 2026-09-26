@@ -1,6 +1,9 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+
+using KirisameY.Relinq.Extensions;
 
 namespace KirisameY.BindingBridge.PropertyBinding.Resolver;
 
@@ -21,42 +24,45 @@ public class DefaultPropertyUpdateNotifyResolver : IPropertyUpdateNotifyResolver
     }
 
 
-    private class HandlerRecord(PropertyChangedEventHandler observer, Dictionary<string, List<Action>> dict)
+    private class HandlerRecord()
     {
-        public static HandlerRecord Create()
+        private ImmutableDictionary<string, ImmutableList<Action>> _dict = [];
+
+
+        public PropertyChangedEventHandler Observer => field ??= (_, args) =>
         {
-            Dictionary<string, List<Action>> dict = [];
-            PropertyChangedEventHandler observer = (_, args) =>
+            if (string.IsNullOrEmpty(args.PropertyName))
             {
-                if (!dict.TryGetValue(args.PropertyName!, out var list)) return;
-                list.ForEach(a => a.Invoke());
-            };
+                _dict.Values.Flatten().ForEach(a => a.Invoke());
+                return;
+            }
 
-            return new(observer, dict);
-        }
+            if (!_dict.TryGetValue(args.PropertyName, out var list)) return;
 
-        public PropertyChangedEventHandler Observer => observer;
-        public int Count = 0;
+            list.ForEach(a => a.Invoke());
+        };
+
+        private int _count = 0;
 
         private readonly Lock _lock = new();
 
         public int Add(string name, Action handler)
         {
             using var _ = _lock.EnterScope();
-            if (!dict.TryGetValue(name, out var list))
-                dict[name] = list = [];
-            list.Add(handler);
-            Count++;
-            return Count;
+            if (!_dict.TryGetValue(name, out var list)) list = [];
+            _dict = _dict.SetItem(name, list.Add(handler));
+            return _count++;
         }
 
         public bool Remove(string name, Action handler, out int count)
         {
             using var _ = _lock.EnterScope();
-            count = Count;
-            if (!dict.TryGetValue(name, out var list)) return false;
-            if (!list.Remove(handler)) return false;
-            count = Count -= 1;
+            count = _count;
+            if (!_dict.TryGetValue(name, out var list)) return false;
+            var removed = list.Remove(handler);
+            if (removed == list) return false;
+            _dict = _dict.SetItem(name, removed);
+            count = _count -= 1;
             return true;
         }
     }
@@ -77,7 +83,7 @@ public class DefaultPropertyUpdateNotifyResolver : IPropertyUpdateNotifyResolver
         {
             if (!_handlerTable.TryGetValue(notifier, out record))
             {
-                _handlerTable.Add(notifier, record = HandlerRecord.Create());
+                _handlerTable.Add(notifier, record = new HandlerRecord());
             }
         }
 

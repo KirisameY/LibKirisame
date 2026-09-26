@@ -11,8 +11,10 @@ public abstract class DataBinderBase : IDataBinder
 {
     #region Property
 
-    public IBindHandle BindPropertyOneWay<TSource, TTarget, TValue>(TSource source, Expression<Func<TSource, TValue>> sourceProperty,
-                                                                    TTarget target, Expression<Func<TTarget, TValue>> targetProperty)
+    public IBindHandle BindPropertyOneWay<TSource, TTarget, TValue>(
+        TSource source, Expression<Func<TSource, TValue>> sourceProperty,
+        TTarget target, Expression<Func<TTarget, TValue>> targetProperty
+    ) where TSource : notnull where TTarget : notnull
     {
         if (ResolveProperty(sourceProperty) is not IObservablePropertyEndpoint<TSource, TValue> fromEndpoint)
             throw new ArgumentException($"{nameof(sourceProperty)} is not observable.");
@@ -22,9 +24,11 @@ public abstract class DataBinderBase : IDataBinder
         return fromEndpoint.OneWayBindTo(toEndpoint, source, target);
     }
 
-    public IBindHandle BindPropertyOneWay<TSource, TTarget, TSourceValue, TTargetValue>(TSource source, Expression<Func<TSource, TSourceValue>> sourceProperty,
-                                                                                        TTarget target, Expression<Func<TTarget, TTargetValue>> targetProperty,
-                                                                                        Func<TSourceValue, TTargetValue> converter)
+    public IBindHandle BindPropertyOneWay<TSource, TTarget, TSourceValue, TTargetValue>(
+        TSource source, Expression<Func<TSource, TSourceValue>> sourceProperty,
+        TTarget target, Expression<Func<TTarget, TTargetValue>> targetProperty,
+        Func<TSourceValue, TTargetValue> converter
+    ) where TSource : notnull where TTarget : notnull
     {
         if (ResolveProperty(sourceProperty) is not IObservablePropertyEndpoint<TSource, TSourceValue> fromEndpoint)
             throw new ArgumentException($"{nameof(sourceProperty)} is not observable.");
@@ -34,8 +38,10 @@ public abstract class DataBinderBase : IDataBinder
         return fromEndpoint.OneWayBindTo(toEndpoint, source, target, converter);
     }
 
-    public IBindHandle BindPropertyTwoWay<TSource, TTarget, TValue>(TSource source, Expression<Func<TSource, TValue>> sourceProperty,
-                                                                    TTarget target, Expression<Func<TTarget, TValue>> targetProperty)
+    public IBindHandle BindPropertyTwoWay<TSource, TTarget, TValue>(
+        TSource source, Expression<Func<TSource, TValue>> sourceProperty,
+        TTarget target, Expression<Func<TTarget, TValue>> targetProperty
+    ) where TSource : notnull where TTarget : notnull
     {
         if (ResolveProperty(sourceProperty) is not IUniversalPropertyEndpoint<TSource, TValue> fromEndpoint)
             throw new ArgumentException($"{nameof(sourceProperty)} is not writable or not observable.");
@@ -45,9 +51,11 @@ public abstract class DataBinderBase : IDataBinder
         return fromEndpoint.TwoWayBindTo(toEndpoint, source, target);
     }
 
-    public IBindHandle BindPropertyTwoWay<TSource, TTarget, TSourceValue, TTargetValue>(TSource source, Expression<Func<TSource, TSourceValue>> sourceProperty,
-                                                                                        TTarget target, Expression<Func<TTarget, TTargetValue>> targetProperty,
-                                                                                        Func<TSourceValue, TTargetValue> converter, Func<TTargetValue, TSourceValue> reversedConverter)
+    public IBindHandle BindPropertyTwoWay<TSource, TTarget, TSourceValue, TTargetValue>(
+        TSource source, Expression<Func<TSource, TSourceValue>> sourceProperty,
+        TTarget target, Expression<Func<TTarget, TTargetValue>> targetProperty,
+        Func<TSourceValue, TTargetValue> converter, Func<TTargetValue, TSourceValue> reversedConverter
+    ) where TSource : notnull where TTarget : notnull
     {
         if (ResolveProperty(sourceProperty) is not IUniversalPropertyEndpoint<TSource, TSourceValue> fromEndpoint)
             throw new ArgumentException($"{nameof(sourceProperty)} is not writable or not observable.");
@@ -59,13 +67,35 @@ public abstract class DataBinderBase : IDataBinder
 
 
     private DelegatePropertyEndpoint<TObject, TProperty> ResolveProperty<TObject, TProperty>(Expression<Func<TObject, TProperty>> exp)
+        where TObject : notnull
     {
         var objParam = exp.Parameters[0];
         var expBody = exp.Body;
-        var (parent, member) = expBody switch
+        var (parent, member, targetExp) = expBody switch
         {
-            MemberExpression memberExp => (memberExp.Expression, memberExp.Member),
-            IndexExpression indexExp   => (indexExp.Object, indexExp.Indexer),
+            MemberExpression memberExp => (memberExp.Expression, memberExp.Member, (Expression)memberExp),
+            IndexExpression indexExp   => (indexExp.Object, indexExp.Indexer, indexExp),
+            BinaryExpression
+            {
+                NodeType: ExpressionType.ArrayIndex,
+                Left: var array,
+                Right: var i
+            } arrayIndexExp => (
+                arrayIndexExp.Left, null, Expression.MakeIndex(array, null, [i])
+            ),
+            MethodCallExpression
+            {
+                Method.IsSpecialName: true,
+                Method.Name: var methodName,
+                Object: { Type: var type } obj,
+                Arguments: var arguments
+            } when (
+                methodName.Split('_') is ["get", var propName] && type.GetProperty(propName) is { } property
+            ) => (
+                obj, property, property.GetIndexParameters() is []
+                    ? Expression.Property(objParam, property)
+                    : Expression.MakeIndex(objParam, property, arguments)
+            ),
 
             _ => throw new ArgumentException("Expression is neither a property, field, nor indexer.")
         };
@@ -81,7 +111,7 @@ public abstract class DataBinderBase : IDataBinder
         try
         {
             var valueParam = Expression.Parameter(typeof(TProperty));
-            var assign = Expression.Assign(expBody, valueParam);
+            var assign = Expression.Assign(targetExp, valueParam);
             var lambda = Expression.Lambda<Action<TObject, TProperty>>(assign, objParam, valueParam);
             setter = lambda.Compile();
         }
