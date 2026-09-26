@@ -5,7 +5,7 @@ internal sealed class OneWayPropertyBinding<TSource, TTarget, TValue> : IBindHan
     public OneWayPropertyBinding(
         IObservablePropertyEndpoint<TSource, TValue> from,
         IWritablePropertyEndpoint<TTarget, TValue> to,
-        TSource? source, TTarget? target
+        TSource source, TTarget target
     )
     {
         _from   = from;
@@ -19,8 +19,8 @@ internal sealed class OneWayPropertyBinding<TSource, TTarget, TValue> : IBindHan
 
     private readonly IObservablePropertyEndpoint<TSource, TValue> _from;
     private readonly IWritablePropertyEndpoint<TTarget, TValue> _to;
-    private readonly TSource? _source;
-    private readonly TTarget? _target;
+    private readonly TSource _source;
+    private readonly TTarget _target;
 
     private bool _disposed = false;
 
@@ -38,7 +38,7 @@ internal sealed class OneWayPropertyBinding<TSource, TTarget, TSourceValue, TTar
     public OneWayPropertyBinding(
         IObservablePropertyEndpoint<TSource, TSourceValue> from,
         IWritablePropertyEndpoint<TTarget, TTargetValue> to,
-        TSource? source, TTarget? target, Func<TSourceValue, TTargetValue> converter
+        TSource source, TTarget target, Func<TSourceValue, TTargetValue> converter
     )
     {
         _from      = from;
@@ -53,8 +53,8 @@ internal sealed class OneWayPropertyBinding<TSource, TTarget, TSourceValue, TTar
 
     private readonly IObservablePropertyEndpoint<TSource, TSourceValue> _from;
     private readonly IWritablePropertyEndpoint<TTarget, TTargetValue> _to;
-    private readonly TSource? _source;
-    private readonly TTarget? _target;
+    private readonly TSource _source;
+    private readonly TTarget _target;
     private readonly Func<TSourceValue, TTargetValue> _converter;
 
     private bool _disposed = false;

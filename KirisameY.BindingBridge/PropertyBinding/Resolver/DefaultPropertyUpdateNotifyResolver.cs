@@ -68,7 +68,7 @@ public class DefaultPropertyUpdateNotifyResolver : IPropertyUpdateNotifyResolver
 
     private readonly Lock _lock = new();
 
-    private Action<object?, Action> CreateSubscriber(string name) => (obj, handler) =>
+    private Action<object, Action> CreateSubscriber(string name) => (obj, handler) =>
     {
         var notifier = (INotifyPropertyChanged)obj!;
 
@@ -84,7 +84,7 @@ public class DefaultPropertyUpdateNotifyResolver : IPropertyUpdateNotifyResolver
         if (record.Add(name, handler) == 0) notifier.PropertyChanged += record.Observer;
     };
 
-    private Action<object?, Action> CreateUnsubscriber(string name) => (obj, handler) =>
+    private Action<object, Action> CreateUnsubscriber(string name) => (obj, handler) =>
     {
         var notifier = (INotifyPropertyChanged)obj!;
 

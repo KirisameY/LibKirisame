@@ -5,7 +5,7 @@ internal sealed class TwoWayPropertyBinding<TSource, TTarget, TValue> : IBindHan
     public TwoWayPropertyBinding(
         IUniversalPropertyEndpoint<TSource, TValue> from,
         IUniversalPropertyEndpoint<TTarget, TValue> to,
-        TSource? source, TTarget? target
+        TSource source, TTarget target
     )
     {
         _from   = from;
@@ -21,8 +21,8 @@ internal sealed class TwoWayPropertyBinding<TSource, TTarget, TValue> : IBindHan
 
     private readonly IUniversalPropertyEndpoint<TSource, TValue> _from;
     private readonly IUniversalPropertyEndpoint<TTarget, TValue> _to;
-    private readonly TSource? _source;
-    private readonly TTarget? _target;
+    private readonly TSource _source;
+    private readonly TTarget _target;
 
     private bool _disposed = false;
 
@@ -42,7 +42,7 @@ internal sealed class TwoWayPropertyBinding<TSource, TTarget, TSourceValue, TTar
     public TwoWayPropertyBinding(
         IUniversalPropertyEndpoint<TSource, TSourceValue> from,
         IUniversalPropertyEndpoint<TTarget, TTargetValue> to,
-        TSource? source, TTarget? target,
+        TSource source, TTarget target,
         Func<TSourceValue, TTargetValue> converter,
         Func<TTargetValue, TSourceValue> reversedConverter
     )
@@ -62,8 +62,8 @@ internal sealed class TwoWayPropertyBinding<TSource, TTarget, TSourceValue, TTar
 
     private readonly IUniversalPropertyEndpoint<TSource, TSourceValue> _from;
     private readonly IUniversalPropertyEndpoint<TTarget, TTargetValue> _to;
-    private readonly TSource? _source;
-    private readonly TTarget? _target;
+    private readonly TSource _source;
+    private readonly TTarget _target;
     private readonly Func<TSourceValue, TTargetValue> _converter;
     private readonly Func<TTargetValue, TSourceValue> _reversedConverter;
 

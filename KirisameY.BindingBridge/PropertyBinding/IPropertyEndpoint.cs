@@ -2,18 +2,18 @@
 
 public interface IPropertyEndpoint<in TObject, out TProperty>
 {
-    TProperty GetValue(TObject? obj);
+    TProperty GetValue(TObject obj);
 }
 
 public interface IObservablePropertyEndpoint<in TObject, out TProperty> : IPropertyEndpoint<TObject, TProperty>
 {
-    void SubscribeUpdate(TObject? obj, Action handler);
-    void UnsubscribeUpdate(TObject? obj, Action handler);
+    void SubscribeUpdate(TObject obj, Action handler);
+    void UnsubscribeUpdate(TObject obj, Action handler);
 }
 
 public interface IWritablePropertyEndpoint<in TObject, TProperty> : IPropertyEndpoint<TObject, TProperty>
 {
-    void SetValue(TObject? obj, TProperty value);
+    void SetValue(TObject obj, TProperty value);
 }
 
 public interface IUniversalPropertyEndpoint<in TObject, TProperty> : IObservablePropertyEndpoint<TObject, TProperty>,
