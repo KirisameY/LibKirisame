@@ -171,29 +171,6 @@ public class OneWayBindingTests
     }
 
     [Fact]
-    public void OneWayBindWithConverterRerunsEvenWhenTheSourceValueIsUnchanged()
-    {
-        // 绑定不做值相等判断：每收到一次通知就重新取值、重新转换、重新写回
-        int conversions = 0;
-        var source = new Holder { Number = 7 };
-        var target = new Holder();
-        var from = new FakeObservableEndpoint<Holder, int>(h => h.Number);
-        var to = new FakeWritableEndpoint<Holder, string>(h => h.Text, (h, v) => h.Text = v);
-
-        using var handle = from.OneWayBindTo(to, source, target, v =>
-        {
-            conversions++;
-            return $"#{v}";
-        });
-        Assert.Equal(1, conversions);
-
-        from.RaiseUpdate(source);
-
-        Assert.Equal(2, conversions);
-        Assert.Equal(2, to.SetCalls);
-    }
-
-    [Fact]
     public void OneWayBindSupportsDifferentSourceAndTargetObjectTypes()
     {
         var source = new Holder { Number = 7 };

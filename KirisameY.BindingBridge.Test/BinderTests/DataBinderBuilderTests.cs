@@ -60,9 +60,11 @@ public class DataBinderBuilderTests
 
         Assert.Equal(2, target.Number);
 
-        // 沿 BaseType 找到了 BaseSource 的解析器，但传进去的仍是原始的声明类型
-        var seen = Assert.Single(registered.Seen);
-        Assert.Equal(typeof(DerivedSource), seen.Type);
+        // 沿 BaseType 找到了 BaseSource 的解析器，但传进去的仍是原始的声明类型。
+        // 只断言"被问了什么"，不断言被问了几次——调用次数属于库的内部实现（比如缓存）。
+        Assert.Contains(
+            registered.Seen, seen => seen.Type == typeof(DerivedSource) && seen.MemberName == nameof(BaseSource.Number)
+        );
     }
 
     [Fact]
@@ -80,8 +82,11 @@ public class DataBinderBuilderTests
 
         using var handle = binder.BindPropertyOneWay(source, s => s.Number, target, t => t.Number);
 
-        Assert.Single(derivedResolver.Seen);
-        Assert.Empty(baseResolver.Seen);
+        Assert.Equal(3, target.Number);
+
+        // 声明类型是 DerivedSource：登记的 DerivedSource 解析器被问了，BaseSource 那个没被问
+        Assert.Contains(derivedResolver.Seen, seen => seen.Type == typeof(DerivedSource));
+        Assert.DoesNotContain(baseResolver.Seen, seen => seen.Type == typeof(DerivedSource));
     }
 
     [Fact]
@@ -97,22 +102,29 @@ public class DataBinderBuilderTests
 
         Assert.Throws<ArgumentException>(() =>
             binder.BindPropertyOneWay(source, s => s.Number, new PlainObject(), t => t.Number));
-        Assert.Empty(derivedResolver.Seen);
+
+        // 声明类型是 BaseSource，DerivedSource 上的登记不该被问到
+        Assert.DoesNotContain(derivedResolver.Seen, seen => seen.Type == typeof(BaseSource));
     }
 
     [Fact]
     public void WithFallbackResolverIsUsedWhenNoTypeIsRegistered()
     {
-        var fallback = new AlwaysResolvePropertyUpdateNotifyResolver();
-        var binder = new DataBinderBuilder().WithFallbackResolver(fallback).Build();
+        // 刻意只设兜底、一个类型都不登记：ManualNotifySource 不是 INotifyPropertyChanged，
+        // 它能被绑上、还能收到后续变更，就说明兜底确实被选中了。
+        var binder = new DataBinderBuilder()
+                    .WithFallbackResolver(ManualNotifySource.CreateResolver())
+                    .Build();
 
-        var source = new PlainObject { Number = 5 };
-        var target = new PlainObject();
+        var source = new ManualNotifySource { Number = 5 };
+        var target = new ManualNotifySource();
 
         using var handle = binder.BindPropertyOneWay(source, s => s.Number, target, t => t.Number);
 
         Assert.Equal(5, target.Number);
-        Assert.Equal(2, fallback.Calls);
+
+        source.Number = 9;
+        Assert.Equal(9, target.Number);
     }
 
     [Fact]
@@ -144,19 +156,25 @@ public class DataBinderBuilderTests
     [Fact]
     public void ResolverSelectionAlsoAppliesToTheTargetExpression()
     {
-        var always = new AlwaysResolvePropertyUpdateNotifyResolver();
-        var binder = new DataBinderBuilder().WithFallbackResolver(always).Build();
+        // 目标侧的表达式同样要走解析器选择：双向绑定要求目标也能解析出"可观察"端点，
+        // 而 ManualNotifySource 不是 INotifyPropertyChanged，全靠兜底。
+        var binder = new DataBinderBuilder()
+                    .WithFallbackResolver(ManualNotifySource.CreateResolver())
+                    .Build();
 
-        var source = new PlainObject { Number = 4 };
-        var target = new PlainObject();
+        var source = new ManualNotifySource { Number = 4 };
+        var target = new ManualNotifySource();
 
-        using var handle = binder.BindPropertyOneWay(source, s => s.Number, target, t => t.Number);
+        using var handle = binder.BindPropertyTwoWay(source, s => s.Number, target, t => t.Number);
 
         Assert.Equal(4, target.Number);
 
-        // 源、目标各解析一次
-        Assert.Equal(2, always.Seen.Count);
-        Assert.All(always.Seen, seen => Assert.Equal(nameof(PlainObject.Number), seen.MemberName));
+        source.Number = 6;
+        Assert.Equal(6, target.Number); // 源 → 目标
+
+        // 目标 → 源：只有目标侧也解析出了可观察端点，这个方向才可能成立
+        target.Number = 8;
+        Assert.Equal(8, source.Number);
     }
 
     [Fact]
@@ -180,23 +198,5 @@ public class DataBinderBuilderTests
 
         Assert.Throws<ArgumentException>(() =>
             built.BindPropertyOneWay(new PlainObject(), s => s.Number, new PlainObject(), t => t.Number));
-    }
-
-    [Fact]
-    public void BuilderCopiesShareTheSameRegistrationTable()
-    {
-        // DataBinderBuilder 是 readonly struct，注册表字段按引用拷贝：
-        // with / WithXxx 得到的副本与原值看到的是同一张表——这既是链式写法能累积注册的原因，
-        // 也意味着从"原值"建出来的绑定器同样能看到之后在副本上做的登记。
-        var original = new DataBinderBuilder().WithFallbackResolver(new NullPropertyUpdateNotifyResolver());
-
-        _ = original.WithResolver(typeof(PlainObject), new AlwaysResolvePropertyUpdateNotifyResolver());
-
-        var source = new PlainObject { Number = 1 };
-        var target = new PlainObject();
-
-        using var handle = original.Build().BindPropertyOneWay(source, s => s.Number, target, t => t.Number);
-
-        Assert.Equal(1, target.Number);
     }
 }

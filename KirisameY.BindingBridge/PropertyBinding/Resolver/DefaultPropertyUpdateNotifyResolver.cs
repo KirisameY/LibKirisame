@@ -76,7 +76,7 @@ public class DefaultPropertyUpdateNotifyResolver : IPropertyUpdateNotifyResolver
 
     private Action<object, Action> CreateSubscriber(string name) => (obj, handler) =>
     {
-        var notifier = (INotifyPropertyChanged)obj!;
+        var notifier = (INotifyPropertyChanged)obj;
 
         HandlerRecord? record;
         using (_lock.EnterScope())
@@ -92,7 +92,7 @@ public class DefaultPropertyUpdateNotifyResolver : IPropertyUpdateNotifyResolver
 
     private Action<object, Action> CreateUnsubscriber(string name) => (obj, handler) =>
     {
-        var notifier = (INotifyPropertyChanged)obj!;
+        var notifier = (INotifyPropertyChanged)obj;
 
         HandlerRecord? record;
         using (_lock.EnterScope())

@@ -175,7 +175,7 @@ public class PropertyExpressionResolutionTests
         var ex = Assert.Throws<ArgumentException>(() =>
             Binder().BindPropertyOneWay(SourceOf(1), s => s.Number, new PlainObject(), methodCall));
 
-        Assert.Equal("Expression is neither a property, field, nor indexer.", ex.Message);
+        Assert.Equal("Expression is neither a property, field, nor indexer with constant index.", ex.Message);
     }
 
     [Fact]
@@ -186,6 +186,6 @@ public class PropertyExpressionResolutionTests
         var ex = Assert.Throws<ArgumentException>(() =>
             Binder().BindPropertyOneWay(SourceOf(1), s => s.Number, new PlainObject(), constant));
 
-        Assert.Equal("Expression is neither a property, field, nor indexer.", ex.Message);
+        Assert.Equal("Expression is neither a property, field, nor indexer with constant index.", ex.Message);
     }
 }
