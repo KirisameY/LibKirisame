@@ -52,6 +52,7 @@ internal class NotifiableDictionaryReadonlyView<TKey, TValue>(IReadOnlyNotifiabl
             IDictionaryItemReplacedEventArgs<TKey, TValue> replaced => new DictionaryItemReplacedEventArgs<TKey, TValue>(
                 this, replaced.OldItems, replaced.NewItems
             ),
+            IDictionaryResetEventArgs<TKey, TValue> => new DictionaryResetEventArgs<TKey, TValue>(this),
 
             _ => null
         };

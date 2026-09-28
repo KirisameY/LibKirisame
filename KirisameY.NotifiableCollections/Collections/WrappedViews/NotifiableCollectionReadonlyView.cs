@@ -39,6 +39,7 @@ internal class NotifiableCollectionReadonlyView<T>(IReadOnlyNotifiableCollection
             ICollectionItemReplacedEventArgs<T> replaced => new CollectionItemReplacedEventArgs<T>(
                 this, replaced.OldItems, replaced.NewItems
             ),
+            ICollectionResetEventArgs<T> => new CollectionResetEventArgs<T>(this),
 
             _ => null
         };

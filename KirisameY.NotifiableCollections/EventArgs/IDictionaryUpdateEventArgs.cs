@@ -179,3 +179,21 @@ public interface IDictionaryItemReplacedEventArgs<TKey, TValue> : IDictionaryUpd
     IReadOnlyCollection<KeyValuePair<TKey, TValue>> ICollectionItemReplacedEventArgs<KeyValuePair<TKey, TValue>>.NewItems => NewItems;
     IReadOnlyCollection<IItemReplaceInfo<KeyValuePair<TKey, TValue>>> ICollectionItemReplacedEventArgs<KeyValuePair<TKey, TValue>>.ItemChanges => ItemChanges;
 }
+
+/// <summary>
+///     字典被重置为新状态，需要重新加载。
+///     <br/>
+///     The dictionary has been reset to a new state and need to be reloaded.
+/// </summary>
+/// <typeparam name="TKey">
+///     键类型。
+///     <br/>
+///     The type of the keys.
+/// </typeparam>
+/// <typeparam name="TValue">
+///     值类型。
+///     <br/>
+///     The type of the values.
+/// </typeparam>
+[PublicAPI]
+public interface IDictionaryResetEventArgs<TKey, TValue> : IDictionaryUpdateEventArgs<TKey, TValue>, ICollectionResetEventArgs<KeyValuePair<TKey, TValue>>;

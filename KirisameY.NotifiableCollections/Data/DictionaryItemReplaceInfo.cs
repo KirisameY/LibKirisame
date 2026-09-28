@@ -67,21 +67,12 @@ public static class DictionaryItemReplaceInfo
         new DictionaryItemReplaceInfo<TKey, TValue>(key, old, @new);
 }
 
-/// <summary>
-///     <see cref="IDictionaryItemReplaceInfo{TKey, TValue}"/> 的默认实现。
-///     <br/>
-///     The default implementation of <see cref="IDictionaryItemReplaceInfo{TKey, TValue}"/>.
-/// </summary>
-public class DictionaryItemReplaceInfo<TKey, TValue>(TKey key, TValue old, TValue @new)
+
+internal class DictionaryItemReplaceInfo<TKey, TValue>(TKey key, TValue old, TValue @new)
     : ItemReplaceInfo<KeyValuePair<TKey, TValue>>(new KeyValuePair<TKey, TValue>(key, old), new KeyValuePair<TKey, TValue>(key, @new)),
       IDictionaryItemReplaceInfo<TKey, TValue>
 {
-    /// <inheritdoc/>
     public TKey Key { get; } = key;
-
-    /// <inheritdoc/>
     public TValue OldValue { get; } = old;
-
-    /// <inheritdoc/>
     public TValue NewValue { get; } = @new;
 }

@@ -52,3 +52,5 @@ internal class CollectionItemReplacedEventArgs<T>(IReadOnlyCollection<T> collect
                   .Select(t => ItemReplaceInfo.From(t.First, t.Second))
     ];
 }
+
+internal class CollectionResetEventArgs<T>(IReadOnlyCollection<T> collectionView) : CollectionUpdateEventArgs<T>(collectionView), ICollectionResetEventArgs<T>;

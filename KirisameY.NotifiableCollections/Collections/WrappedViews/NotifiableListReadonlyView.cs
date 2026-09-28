@@ -40,7 +40,11 @@ internal class NotifiableListReadonlyView<T>(IReadOnlyNotifiableList<T> list) : 
                 this, replaced.OldItems,
                 replaced.NewItems, replaced.Indexes
             ),
+            IListItemMovedEventArgs<T> moved => new ListItemMovedEventArgs<T>(
+                this, moved.Items, moved.OldIndexes, moved.NewIndexes
+            ),
             IListSortedEventArgs<T> => new ListSortedEventArgs<T>(this),
+            IListResetEventArgs<T>  => new ListResetEventArgs<T>(this),
 
             _ => null
         };

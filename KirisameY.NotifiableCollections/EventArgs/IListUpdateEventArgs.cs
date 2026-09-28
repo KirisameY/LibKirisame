@@ -215,6 +215,75 @@ public interface IListItemReplacedEventArgs<out T> : IListUpdateEventArgs<T>, IC
 }
 
 /// <summary>
+///     列表被重置为新状态，需要重新加载。
+///     <br/>
+///     The list has been reset to a new state and need to be reloaded.
+/// </summary>
+/// <typeparam name="T">
+///     元素类型。
+///     <br/>
+///     The type of the elements.
+/// </typeparam>
+[PublicAPI]
+public interface IListResetEventArgs<out T> : IListUpdateEventArgs<T>, ICollectionResetEventArgs<T>;
+
+/// <summary>
+///     列表中的元素被移动位置。
+///     <br/>
+///     Elements in the list has been moved to another index.
+/// </summary>
+/// <typeparam name="T">
+///     元素类型。
+///     <br/>
+///     The type of the elements.
+/// </typeparam>
+/// <remarks>
+///     存在多条记录时，将依照操作顺序排序，列表项和前后的索引依序一一对应。
+///     <br/>
+///     When there are multiple records, they will be sorted according to the order of movement,
+///     and the items and there old and new indexes will correspond one-to-one.
+/// </remarks>
+[PublicAPI]
+public interface IListItemMovedEventArgs<out T> : IListUpdateEventArgs<T>
+{
+    /// <summary>
+    ///     被移动的列表项，按<b>移动顺序</b>排列。
+    ///     <br/>
+    ///     The item which has been moved, in the order in <b>which they were moved</b>.
+    /// </summary>
+    IReadOnlyList<T> Items { get; }
+
+    /// <summary>
+    ///     列表项在被移动前的位置，与 <see cref="Items"/>、<see cref="Items"/> 逐位对应且同序。
+    ///     <br/>
+    ///     The index of items before moved, positionally aligned and in the same order as
+    ///     <see cref="Items"/> and <see cref="Items"/>.
+    /// </summary>
+    IReadOnlyList<int> OldIndexes { get; }
+
+    /// <summary>
+    ///     列表项在被移动后的位置，与 <see cref="Items"/>、<see cref="Items"/> 逐位对应且同序。
+    ///     <br/>
+    ///     The index of items after moved, positionally aligned and in the same order as
+    ///     <see cref="Items"/> and <see cref="Items"/>.
+    /// </summary>
+    IReadOnlyList<int> NewIndexes { get; }
+
+    /// <summary>
+    ///     <see cref="Items"/>、<see cref="OldIndexes"/>、<see cref="NewIndexes"/> 按位配对（Zip）的结果。
+    ///     <br/>
+    ///     The result of pairing (zipping) <see cref="Items"/>, <see cref="OldIndexes"/> and <see cref="NewIndexes"/>
+    ///     position by position.
+    /// </summary>
+    /// <remarks>
+    ///     依赖上面三者逐位对齐的约定。
+    ///     <br/>
+    ///     Relies on the positional alignment of the three properties above.
+    /// </remarks>
+    [PublicAPI] public IReadOnlyList<IListItemMovedInfo<T>> ItemMoves { get; }
+}
+
+/// <summary>
 ///     列表中的元素被重新排序。
 ///     <br/>
 ///     Elements in the list has been resorted.

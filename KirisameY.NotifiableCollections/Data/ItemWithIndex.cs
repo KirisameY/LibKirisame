@@ -56,19 +56,4 @@ public static class ItemWithIndex
     public static IItemWithIndex<T> WithIndex<T>(this T item, int index) => From(index, item);
 }
 
-/// <summary>
-///     <see cref="IItemWithIndex{T}"/> 的默认实现。
-///     <br/>
-///     The default implementation of <see cref="IItemWithIndex{T}"/>.
-/// </summary>
-/// <param name="Index">
-///     该元素在变更前的原始索引。
-///     <br/>
-///     The element's original index, measured before the change.
-/// </param>
-/// <param name="Item">
-///     元素本身。
-///     <br/>
-///     The element itself.
-/// </param>
-public record ItemWithIndex<T>(int Index, T Item) : IItemWithIndex<T>;
+internal record ItemWithIndex<T>(int Index, T Item) : IItemWithIndex<T>;

@@ -60,3 +60,6 @@ internal class DictionaryItemReplacedEventArgs<TKey, TValue>(
         ..OldItems.Select(o => DictionaryItemReplaceInfo.From(o.Key, o.Value, NewItems[o.Key]))
     ];
 }
+
+internal class DictionaryResetEventArgs<TKey, TValue>(IReadOnlyDictionary<TKey, TValue> dictionaryView)
+    : DictionaryUpdateEventArgs<TKey, TValue>(dictionaryView), IDictionaryResetEventArgs<TKey, TValue>;

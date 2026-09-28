@@ -193,6 +193,20 @@ public class NotifiableList<T> : INotifiableList<T>
     }
 
     /// <summary>
+    ///     将指定索引的列表项移动至另一索引，并发出一次移动通知。
+    ///     <br/>
+    ///     Move the list item at the specified index to another index and raise a single move notification.
+    /// </summary>
+    public void Move(int index, int to)
+    {
+        var item = _innerList[index];
+        _innerList.RemoveAt(index);
+        _innerList.Insert(to, item);
+
+        RaiseUpdate(new ListItemMovedEventArgs<T>(Readonly, [item], [index], [to]));
+    }
+
+    /// <summary>
     ///     就地排序，并发出一次重排通知。
     ///     <br/>
     ///     Sorts in place and raises a single reorder notification.

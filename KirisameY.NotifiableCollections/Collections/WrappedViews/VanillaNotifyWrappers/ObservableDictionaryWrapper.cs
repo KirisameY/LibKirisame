@@ -68,6 +68,7 @@ internal class ObservableDictionaryWrapper<TKey, TValue>(IReadOnlyNotifiableDict
                     ),
                 _ => [new(NotifyCollectionChangedAction.Reset)]
             },
+            IDictionaryResetEventArgs<TKey, TValue> => [new(NotifyCollectionChangedAction.Reset)],
 
             _ => []
         };

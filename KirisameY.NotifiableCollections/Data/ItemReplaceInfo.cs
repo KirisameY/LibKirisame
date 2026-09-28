@@ -55,41 +55,27 @@ public interface IListItemReplaceInfo<out T> : IItemReplaceInfo<T>
 public static class ItemReplaceInfo
 {
     /// <summary>
-    ///     配一对新旧值。
+    ///     构造一个 <see cref="IItemReplaceInfo{T}"/>。
     ///     <br/>
-    ///     Pairs an old value with a new one.
+    ///     Create an <see cref="IItemReplaceInfo{T}"/>.
     /// </summary>
     public static IItemReplaceInfo<T> From<T>(T old, T @new) => new ItemReplaceInfo<T>(old, @new);
 
     /// <summary>
-    ///     配一对新旧值，并带上发生替换的索引。
+    ///     构造一个 <see cref="IListItemReplaceInfo{T}"/>。
     ///     <br/>
-    ///     Pairs an old value with a new one and records the index the replacement happened at.
+    ///     Create an <see cref="IListItemReplaceInfo{T}"/>.
     /// </summary>
     public static IListItemReplaceInfo<T> From<T>(int index, T old, T @new) => new ListItemReplaceInfo<T>(index, old, @new);
 }
 
-/// <summary>
-///     <see cref="IItemReplaceInfo{T}"/> 的默认实现。
-///     <br/>
-///     The default implementation of <see cref="IItemReplaceInfo{T}"/>.
-/// </summary>
-public class ItemReplaceInfo<T>(T old, T @new) : IItemReplaceInfo<T>
+internal class ItemReplaceInfo<T>(T old, T @new) : IItemReplaceInfo<T>
 {
-    /// <inheritdoc/>
     public T Old { get; } = old;
-
-    /// <inheritdoc/>
     public T New { get; } = @new;
 }
 
-/// <summary>
-///     <see cref="IListItemReplaceInfo{T}"/> 的默认实现。
-///     <br/>
-///     The default implementation of <see cref="IListItemReplaceInfo{T}"/>.
-/// </summary>
-public class ListItemReplaceInfo<T>(int index, T old, T @new) : ItemReplaceInfo<T>(old, @new), IListItemReplaceInfo<T>
+internal class ListItemReplaceInfo<T>(int index, T old, T @new) : ItemReplaceInfo<T>(old, @new), IListItemReplaceInfo<T>
 {
-    /// <inheritdoc/>
     public int Index { get; } = index;
 }

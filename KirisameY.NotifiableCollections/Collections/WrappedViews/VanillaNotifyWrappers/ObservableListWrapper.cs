@@ -60,7 +60,15 @@ internal class ObservableListWrapper<T>(IReadOnlyNotifiableList<T> list, int not
                     ),
                 _ => [new(NotifyCollectionChangedAction.Reset)]
             },
-            IListSortedEventArgs<T> => [new(NotifyCollectionChangedAction.Reset)],
+            IListItemMovedEventArgs<T> moved => (notifyThreshold, moved.ItemMoves) switch
+            {
+                var (t, moves) when t < 0 || moves.Count <= t =>
+                    moves.Select(move => new NotifyCollectionChangedEventArgs(
+                                     NotifyCollectionChangedAction.Move, move.Item, move.NewIndex, move.OldIndex)
+                    ),
+                _ => [new(NotifyCollectionChangedAction.Reset)]
+            },
+            IListSortedEventArgs<T> or IListResetEventArgs<T> => [new(NotifyCollectionChangedAction.Reset)],
 
             _ => []
         };

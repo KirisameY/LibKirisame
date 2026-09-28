@@ -60,4 +60,19 @@ internal class ListItemReplacedEventArgs<T>(IReadOnlyList<T> listView, IReadOnly
     ];
 }
 
+internal class ListResetEventArgs<T>(IReadOnlyList<T> listView) : ListUpdateEventArgs<T>(listView), IListResetEventArgs<T>;
+
+internal class ListItemMovedEventArgs<T>(IReadOnlyList<T> listView, IReadOnlyList<T> items, IReadOnlyList<int> oldIndexes, IReadOnlyList<int> newIndexes)
+    : ListUpdateEventArgs<T>(listView), IListItemMovedEventArgs<T>
+{
+    public IReadOnlyList<T> Items => items;
+    public IReadOnlyList<int> OldIndexes => oldIndexes;
+    public IReadOnlyList<int> NewIndexes => newIndexes;
+    public IReadOnlyList<IListItemMovedInfo<T>> ItemMoves => field ??=
+    [
+        .. Items.Zip(OldIndexes, NewIndexes)
+                .Select(t => ListItemMoveInfo.From(t.First, t.Second, t.Third))
+    ];
+}
+
 internal class ListSortedEventArgs<T>(IReadOnlyList<T> listView) : ListUpdateEventArgs<T>(listView), IListSortedEventArgs<T>;

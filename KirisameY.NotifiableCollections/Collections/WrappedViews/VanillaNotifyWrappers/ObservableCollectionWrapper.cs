@@ -61,6 +61,7 @@ internal class ObservableCollectionWrapper<T>(IReadOnlyNotifiableCollection<T> s
                     ),
                 _ => [new(NotifyCollectionChangedAction.Reset)]
             },
+            ICollectionResetEventArgs<T> => [new(NotifyCollectionChangedAction.Reset)],
 
             _ => []
         };

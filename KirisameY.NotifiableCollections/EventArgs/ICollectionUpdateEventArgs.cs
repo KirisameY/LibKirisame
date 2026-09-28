@@ -152,3 +152,16 @@ public interface ICollectionItemReplacedEventArgs<out T> : ICollectionUpdateEven
     /// </remarks>
     [PublicAPI] public IReadOnlyCollection<IItemReplaceInfo<T>> ItemChanges { get; }
 }
+
+/// <summary>
+///     集合被重置为新状态，需要重新加载。
+///     <br/>
+///     The collection has been reset to a new state and need to be reloaded.
+/// </summary>
+/// <typeparam name="T">
+///     集合元素类型。
+///     <br/>
+///     The type of the collection's elements.
+/// </typeparam>
+[PublicAPI]
+public interface ICollectionResetEventArgs<out T> : ICollectionUpdateEventArgs<T>;

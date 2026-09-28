@@ -39,6 +39,8 @@ internal class NotifiableDictionaryKeySet<TKey, TValue>(IReadOnlyNotifiableDicti
                 this,
                 [..removed.RemovedItems.Select(p => p.Key)]
             ),
+            IDictionaryResetEventArgs<TKey, TValue> => new CollectionResetEventArgs<TKey>(this),
+
             _ => null, // 字典替换不影响 Key
         };
 
