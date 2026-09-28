@@ -146,17 +146,18 @@ public class VanillaListTests
     }
 
     [Fact]
-    public void MoveCarryingSeveralItemsIsDropped()
+    public void MoveCarryingSeveralItemsThrows()
     {
         var source = new RaisableObservableCollection<int> { 1, 2, 3 };
         var view = source.AsNotifiableList(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordListUpdates(view);
 
-        // 标准库用一对索引描述整批被移动的项，还原不出每一项各自的新旧位置，所以这种形状目前整条丢掉。
-        // （ObservableCollection 自己一次只移动一项，单项那条路是通的，见上一条。）
-        source.Raise(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, new List<int> { 2, 3 }, 2, 1));
+        var e = Assert.Throws<NotSupportedException>(() =>
+        {
+            source.Raise(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, new List<int> { 2, 3 }, 2, 1));
+        });
 
-        Assert.Empty(updates);
+        Assert.StartsWith("Not supported collection changed event:", e.Message);
     }
 
     [Fact]

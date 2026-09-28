@@ -30,43 +30,52 @@ internal class NotifiableListWrapper<TItem, TList>(TList list) : IReadOnlyNotifi
     {
         ListUpdateEventArgs<TItem>? newArgs = args switch
         {
+            // Add
             {
                 Action: NotifyCollectionChangedAction.Add,
                 NewItems: { } newItems,
                 NewStartingIndex: var startIndex
             } => new ListItemAddedEventArgs<TItem>(
-                this, [..newItems.Cast<TItem>()], startIndex
+                this, [..newItems.Cast<TItem>()],
+                startIndex >= 0 ? startIndex : list.Count - newItems.Count
             ),
+            // Remove
             {
                 Action: NotifyCollectionChangedAction.Remove,
                 OldItems: { } oldItems,
                 OldStartingIndex: var startIndex
             } => new ListItemRemovedEventArgs<TItem>(
-                this, [..oldItems.Cast<TItem>()], [..Enumerable.Range(startIndex, oldItems.Count)]
+                this, [..oldItems.Cast<TItem>()],
+                [..Enumerable.Range(startIndex >= 0 ? startIndex : list.Count, oldItems.Count)]
             ),
+            // Replace
             {
                 Action: NotifyCollectionChangedAction.Replace,
                 OldItems: { } oldItems,
                 NewItems: { } newItems,
-                NewStartingIndex: var startIndex
+                NewStartingIndex: >= 0 and var startIndex
             } => new ListItemReplacedEventArgs<TItem>(
                 this, [..oldItems.Cast<TItem>()], [..newItems.Cast<TItem>()],
                 [..Enumerable.Range(startIndex, oldItems.Count)]
             ),
+            // Move
             {
                 Action: NotifyCollectionChangedAction.Move,
                 OldItems: [{ } item],
-                OldStartingIndex: var oldIndex,
-                NewStartingIndex: var newIndex
+                OldStartingIndex: >= 0 and var oldIndex,
+                NewStartingIndex: >= 0 and var newIndex
             } => new ListItemMovedEventArgs<TItem>(
                 this, [(TItem)item], [oldIndex], [newIndex]
             ),
+            // Reset
             {
                 Action: NotifyCollectionChangedAction.Reset
             } => new ListResetEventArgs<TItem>(this),
-            _ => null
+            // ERROR
+            _ => throw new NotSupportedException($"Not supported collection changed event: {args}")
         };
 
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
         if (newArgs is not null) handler.Invoke(this, newArgs);
     });
 }

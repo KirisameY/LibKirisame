@@ -36,31 +36,46 @@ internal class NotifiableDictionaryWrapper<TKey, TValue, TDict>(TDict dict) : IR
     {
         DictionaryUpdateEventArgs<TKey, TValue>? newArgs = args switch
         {
+            // Add
             {
                 Action: NotifyCollectionChangedAction.Add,
                 NewItems: { } newItems
             } => new DictionaryItemAddedEventArgs<TKey, TValue>(
                 this, newItems.Cast<KeyValuePair<TKey, TValue>>().ToDictionary()
             ),
+            // Remove
             {
                 Action: NotifyCollectionChangedAction.Remove,
                 OldItems: { } oldItems
             } => new DictionaryItemRemovedEventArgs<TKey, TValue>(
                 this, oldItems.Cast<KeyValuePair<TKey, TValue>>().ToDictionary()
             ),
+            // Replace
             {
                 Action: NotifyCollectionChangedAction.Replace,
                 OldItems: { } oldItems,
                 NewItems: { } newItems
-            } => new DictionaryItemReplacedEventArgs<TKey, TValue>(
+            } when (
+                oldItems.Count == newItems.Count &&
+                Enumerable.Zip(
+                    oldItems.Cast<KeyValuePair<TKey, TValue>>(),
+                    newItems.Cast<KeyValuePair<TKey, TValue>>()
+                ).All(t => t.First.Key.Equals(t.Second.Key))
+            ) => new DictionaryItemReplacedEventArgs<TKey, TValue>(
                 this,
                 oldItems.Cast<KeyValuePair<TKey, TValue>>().ToDictionary(),
                 newItems.Cast<KeyValuePair<TKey, TValue>>().ToDictionary()
             ),
+            // Reset
             {
                 Action: NotifyCollectionChangedAction.Reset
             } => new DictionaryResetEventArgs<TKey, TValue>(this),
-            _ => null
+            // Move - skip
+            {
+                Action: NotifyCollectionChangedAction.Move
+            } => null,
+            // ERROR
+            _ => throw new NotSupportedException($"Not supported collection changed event: {args}")
         };
 
         if (newArgs is not null) handler.Invoke(this, newArgs);

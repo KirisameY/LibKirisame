@@ -29,18 +29,21 @@ internal class NotifiableCollectionWrapper<TElement, TCollection>(TCollection co
     {
         CollectionUpdateEventArgs<TElement>? newArgs = args switch
         {
+            // Add
             {
                 Action: NotifyCollectionChangedAction.Add,
                 NewItems: { } newItems
             } => new CollectionItemAddedEventArgs<TElement>(
                 this, [..newItems.Cast<TElement>()]
             ),
+            // Remove
             {
                 Action: NotifyCollectionChangedAction.Remove,
                 OldItems: { } oldItems
             } => new CollectionItemRemovedEventArgs<TElement>(
                 this, [..oldItems.Cast<TElement>()]
             ),
+            // Replace
             {
                 Action: NotifyCollectionChangedAction.Replace,
                 OldItems: { } oldItems,
@@ -48,10 +51,14 @@ internal class NotifiableCollectionWrapper<TElement, TCollection>(TCollection co
             } => new CollectionItemReplacedEventArgs<TElement>(
                 this, [..oldItems.Cast<TElement>()], [..newItems.Cast<TElement>()]
             ),
+            // Reset
             {
                 Action: NotifyCollectionChangedAction.Reset
             } => new CollectionResetEventArgs<TElement>(this),
-            _ => null
+            // Move - skip
+            { Action: NotifyCollectionChangedAction.Move } => null,
+            // ERROR
+            _ => throw new NotSupportedException($"Not supported collection changed event: {args}")
         };
 
         if (newArgs is not null) handler.Invoke(this, newArgs);
