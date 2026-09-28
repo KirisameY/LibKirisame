@@ -119,6 +119,7 @@ internal class NotifiableDictionaryReadOnlyView<TKey, TSourceValue, TValue>(
                 replaced.OldItems.ToDictionary(p => p.Key, p => valueSelector.Invoke(p.Value)),
                 replaced.NewItems.ToDictionary(p => p.Key, p => valueSelector.Invoke(p.Value))
             ),
+            IDictionaryResetEventArgs<TKey, TSourceValue> => new DictionaryResetEventArgs<TKey, TValue>(this),
 
             _ => null
         };

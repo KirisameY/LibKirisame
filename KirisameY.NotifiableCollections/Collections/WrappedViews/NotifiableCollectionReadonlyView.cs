@@ -84,6 +84,7 @@ internal class NotifiableCollectionReadonlyView<TSource, TValue>(
             ICollectionItemReplacedEventArgs<TSource> replaced => new CollectionItemReplacedEventArgs<TValue>(
                 this, [..replaced.OldItems.Select(valueSelector)], [..replaced.NewItems.Select(valueSelector)]
             ),
+            ICollectionResetEventArgs<TSource> => new CollectionResetEventArgs<TValue>(this),
 
             _ => null
         };

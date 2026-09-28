@@ -90,7 +90,11 @@ internal class NotifiableListReadonlyView<TSource, TValue>(
                 this, [..replaced.OldItems.Select(valueSelector)],
                 [..replaced.NewItems.Select(valueSelector)], replaced.Indexes
             ),
+            IListItemMovedEventArgs<TSource> moved => new ListItemMovedEventArgs<TValue>(
+                this, [..moved.Items.Select(valueSelector)], moved.OldIndexes, moved.NewIndexes
+            ),
             IListSortedEventArgs<TSource> => new ListSortedEventArgs<TValue>(this),
+            IListResetEventArgs<TSource>  => new ListResetEventArgs<TValue>(this),
 
             _ => null
         };
