@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
+using KirisameY.GenericUtils;
 using KirisameY.NotifiableCollections.Collections;
 using KirisameY.NotifiableCollections.EventArgs;
 using KirisameY.NotifiableCollections.Test.TestDoubles;
@@ -23,7 +24,7 @@ public class VanillaCollectionTests
     {
         ObservableCollection<int> source = [1, 2, 3];
 
-        var view = source.AsNotifiableCollection<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
 
         Assert.Equal([1, 2, 3], view);
         // Count 是独立于枚举的一条路径，单独确认一次（取到局部变量是为了绕开 xUnit2013 分析器）
@@ -35,7 +36,7 @@ public class VanillaCollectionTests
     public void ViewIsLive()
     {
         ObservableCollection<int> source = [];
-        var view = source.AsNotifiableCollection<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
 
         source.Add(1);
         Assert.Equal([1], view);
@@ -48,7 +49,7 @@ public class VanillaCollectionTests
     public void AddIsReportedAsAnAddition()
     {
         ObservableCollection<int> source = [];
-        var view = source.AsNotifiableCollection<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view);
 
         source.Add(7);
@@ -61,7 +62,7 @@ public class VanillaCollectionTests
     public void ABatchAddIsReportedAsOneEvent()
     {
         var source = new RaisableObservableCollection<int>();
-        var view = source.AsNotifiableCollection<int, RaisableObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view);
 
         source.AddSilently(1);
@@ -78,7 +79,7 @@ public class VanillaCollectionTests
     public void ABatchRemoveIsReportedAsOneEvent()
     {
         var source = new RaisableObservableCollection<int> { 1, 2, 3 };
-        var view = source.AsNotifiableCollection<int, RaisableObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view);
 
         source.RemoveSilentlyAt(2);
@@ -94,7 +95,7 @@ public class VanillaCollectionTests
     public void ReplaceIsReportedWithTheOldAndNewItemsPairedUp()
     {
         ObservableCollection<int> source = [1, 2];
-        var view = source.AsNotifiableCollection<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view);
 
         source[1] = 9;
@@ -112,7 +113,7 @@ public class VanillaCollectionTests
     public void ABatchReplaceIsReportedAsOneEventWithThePairsKeptTogether()
     {
         var source = new RaisableObservableCollection<int> { 1, 2 };
-        var view = source.AsNotifiableCollection<int, RaisableObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view);
 
         source.SetSilently(0, 9);
@@ -130,7 +131,7 @@ public class VanillaCollectionTests
     public void ResetIsReportedAsResetWithoutTheClearedItems()
     {
         ObservableCollection<int> source = [1, 2];
-        var view = source.AsNotifiableCollection<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view);
 
         source.Clear();
@@ -146,7 +147,7 @@ public class VanillaCollectionTests
     public void MoveIsNotRepresentableSoNothingIsRaised()
     {
         ObservableCollection<int> source = [1, 2, 3];
-        var view = source.AsNotifiableCollection<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view);
 
         source.Move(0, 2);
@@ -162,7 +163,7 @@ public class VanillaCollectionTests
     public void EventArgsPointAtTheViewItself()
     {
         ObservableCollection<int> source = [];
-        var view = source.AsNotifiableCollection<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
         CollectionUpdateEventArgs<int>? captured = null;
         view.CollectionUpdated += (_, args) => captured = args;
 
@@ -175,7 +176,7 @@ public class VanillaCollectionTests
     public void SenderIsTheViewItself()
     {
         ObservableCollection<int> source = [];
-        var view = source.AsNotifiableCollection<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
         object? sender = null;
         view.CollectionUpdated += (s, _) => sender = s;
 
@@ -188,7 +189,7 @@ public class VanillaCollectionTests
     public void ViewStopsForwardingAfterUnsubscribing()
     {
         ObservableCollection<int> source = [];
-        var view = source.AsNotifiableCollection<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
         var count = 0;
         EventHandler<CollectionUpdateEventArgs<int>> handler = (_, _) => count++;
         view.CollectionUpdated += handler;
@@ -204,7 +205,7 @@ public class VanillaCollectionTests
     public void UnsubscribingAnUnknownHandlerIsIgnored()
     {
         ObservableCollection<int> source = [];
-        var view = source.AsNotifiableCollection<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view);
         EventHandler<CollectionUpdateEventArgs<int>> unknown = (_, _) => { };
         source.Add(1);
@@ -220,7 +221,7 @@ public class VanillaCollectionTests
     public void SameHandlerSubscribedTwiceIsCountedSeparately()
     {
         ObservableCollection<int> source = [];
-        var view = source.AsNotifiableCollection<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
         var count = 0;
         EventHandler<CollectionUpdateEventArgs<int>> handler = (_, _) => count++;
         view.CollectionUpdated += handler;
@@ -240,7 +241,7 @@ public class VanillaCollectionTests
     {
         // 集合版包装只要求「能数、能枚举」，不需要索引，所以非列表的源也该能用
         var source = new FakeNotifyCollection<string>();
-        var view = source.AsNotifiableCollection<string, FakeNotifyCollection<string>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<string>());
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view);
 
         source.Add("a");
@@ -254,7 +255,7 @@ public class VanillaCollectionTests
     public void NonGenericEnumerationAlsoYieldsTheElements()
     {
         ObservableCollection<int> source = [1, 2, 3];
-        var view = source.AsNotifiableCollection<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableCollection(TypeA.Of<int>());
 
         Assert.Equal([1, 2, 3], ((IEnumerable)view).Cast<int>());
     }

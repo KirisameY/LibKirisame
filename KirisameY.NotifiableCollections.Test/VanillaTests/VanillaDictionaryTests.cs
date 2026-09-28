@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 
+using KirisameY.GenericUtils;
 using KirisameY.NotifiableCollections.Collections;
 using KirisameY.NotifiableCollections.EventArgs;
 using KirisameY.NotifiableCollections.Test.TestDoubles;
@@ -25,7 +26,7 @@ public class VanillaDictionaryTests
     {
         var source = PairSource();
 
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
 
         Assert.Equal(1, view["a"]);
         Assert.True(view.ContainsKey("b"));
@@ -45,7 +46,7 @@ public class VanillaDictionaryTests
     {
         var source = PairSource();
 
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
 
         Assert.False(view.ContainsKey("z"));
         Assert.False(view.TryGetValue("z", out _));
@@ -56,7 +57,7 @@ public class VanillaDictionaryTests
     public void ViewIsLive()
     {
         var source = new FakeNotifyDictionary<string, int>();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
 
         source.Add("a", 1);
 
@@ -68,7 +69,7 @@ public class VanillaDictionaryTests
     public void AddIsReportedWithTheAddedPairs()
     {
         var source = new FakeNotifyDictionary<string, int>();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordDictionaryUpdates(view);
 
         source.Add("a", 1);
@@ -81,7 +82,7 @@ public class VanillaDictionaryTests
     public void RemoveIsReportedWithTheRemovedPairs()
     {
         var source = PairSource();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordDictionaryUpdates(view);
 
         source.Remove("a");
@@ -94,7 +95,7 @@ public class VanillaDictionaryTests
     public void ReplaceIsReportedWithTheOldAndNewValuesOfEachKey()
     {
         var source = new FakeNotifyDictionary<string, int>().With("a", 1);
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordDictionaryUpdates(view);
 
         source.Set("a", 2);
@@ -113,7 +114,7 @@ public class VanillaDictionaryTests
     public void ResetIsReportedAsResetWithoutTheClearedPairs()
     {
         var source = PairSource();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordDictionaryUpdates(view);
 
         source.Clear();
@@ -127,7 +128,7 @@ public class VanillaDictionaryTests
     public void EventArgsPointAtTheViewItself()
     {
         var source = new FakeNotifyDictionary<string, int>();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
         DictionaryUpdateEventArgs<string, int>? captured = null;
         view.DictionaryUpdated += (_, args) => captured = args;
 
@@ -141,7 +142,7 @@ public class VanillaDictionaryTests
     public void SenderIsTheViewItself()
     {
         var source = new FakeNotifyDictionary<string, int>();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
         object? sender = null;
         view.DictionaryUpdated += (s, _) => sender = s;
 
@@ -155,7 +156,7 @@ public class VanillaDictionaryTests
     {
         var source = PairSource();
 
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
 
         Assert.Equal(["a", "b"], view.Keys);
     }
@@ -164,7 +165,7 @@ public class VanillaDictionaryTests
     public void KeysViewIsLive()
     {
         var source = new FakeNotifyDictionary<string, int>();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
 
         source.Add("a", 1);
         Assert.Equal(["a"], view.Keys);
@@ -177,7 +178,7 @@ public class VanillaDictionaryTests
     public void KeysViewReportsAddsAndRemovals()
     {
         var source = PairSource();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view.Keys);
 
         source.Add("c", 3);
@@ -193,7 +194,7 @@ public class VanillaDictionaryTests
     public void KeysViewIgnoresValueReplacement()
     {
         var source = new FakeNotifyDictionary<string, int>().With("a", 1);
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view.Keys);
 
         source.Set("a", 2);
@@ -207,7 +208,7 @@ public class VanillaDictionaryTests
     public void KeysViewRaisesResetOnClear()
     {
         var source = PairSource();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view.Keys);
 
         source.Clear();
@@ -221,7 +222,7 @@ public class VanillaDictionaryTests
     {
         var source = PairSource();
 
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
 
         Assert.Equal([1, 2], view.Values);
     }
@@ -230,7 +231,7 @@ public class VanillaDictionaryTests
     public void ValuesViewIsLive()
     {
         var source = new FakeNotifyDictionary<string, int>();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
 
         source.Add("a", 1);
         Assert.Equal([1], view.Values);
@@ -243,7 +244,7 @@ public class VanillaDictionaryTests
     public void ValuesViewReportsAddsRemovalsAndReplacements()
     {
         var source = PairSource();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view.Values);
 
         source.Add("c", 3);
@@ -263,7 +264,7 @@ public class VanillaDictionaryTests
     public void ValuesViewRaisesResetOnClear()
     {
         var source = PairSource();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view.Values);
 
         source.Clear();
@@ -277,7 +278,7 @@ public class VanillaDictionaryTests
     public void KeysAndValuesViewsAreCachedPerDictionaryView()
     {
         var source = PairSource();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
 
         Assert.Same(view.Keys, view.Keys);
         Assert.Same(view.Values, view.Values);
@@ -287,7 +288,7 @@ public class VanillaDictionaryTests
     public void ViewStopsForwardingAfterUnsubscribing()
     {
         var source = new FakeNotifyDictionary<string, int>();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
         var count = 0;
         EventHandler<DictionaryUpdateEventArgs<string, int>> handler = (_, _) => count++;
         view.DictionaryUpdated += handler;
@@ -303,7 +304,7 @@ public class VanillaDictionaryTests
     public void UnsubscribingAnUnknownHandlerIsIgnored()
     {
         var source = new FakeNotifyDictionary<string, int>();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordDictionaryUpdates(view);
         EventHandler<DictionaryUpdateEventArgs<string, int>> unknown = (_, _) => { };
         source.Add("a", 1);
@@ -319,7 +320,7 @@ public class VanillaDictionaryTests
     public void ViewIsUsableAsAPlainNotifiableCollection()
     {
         var source = new FakeNotifyDictionary<string, int>();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
         // 字典视图本身也是集合视图，按集合订阅也照样收到
         var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view);
 
@@ -334,7 +335,7 @@ public class VanillaDictionaryTests
     public void NonGenericEnumerationAlsoYieldsThePairs()
     {
         var source = PairSource();
-        var view = source.AsNotifiableDictionary<string, int, FakeNotifyDictionary<string, int>>();
+        var view = source.AsNotifiableDictionary(TypeA.Of<string>(), TypeA.Of<int>());
 
         Assert.Equal(
             [new KeyValuePair<string, int>("a", 1), new KeyValuePair<string, int>("b", 2)],

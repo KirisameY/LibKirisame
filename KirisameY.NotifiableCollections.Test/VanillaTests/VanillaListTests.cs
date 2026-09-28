@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
+using KirisameY.GenericUtils;
 using KirisameY.NotifiableCollections.Collections;
 using KirisameY.NotifiableCollections.EventArgs;
 using KirisameY.NotifiableCollections.Test.TestDoubles;
@@ -23,7 +24,7 @@ public class VanillaListTests
     {
         ObservableCollection<int> source = [1, 2, 3];
 
-        var view = source.AsNotifiableList<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
 
         Assert.Equal([1, 2, 3], view);
         Assert.Equal(2, view[1]);
@@ -36,7 +37,7 @@ public class VanillaListTests
     public void ViewIsLive()
     {
         ObservableCollection<int> source = [];
-        var view = source.AsNotifiableList<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
 
         source.Add(1);
         Assert.Equal([1], view);
@@ -49,7 +50,7 @@ public class VanillaListTests
     public void InsertCarriesTheStartIndex()
     {
         ObservableCollection<int> source = [1, 3];
-        var view = source.AsNotifiableList<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordListUpdates(view);
 
         source.Insert(1, 2);
@@ -64,7 +65,7 @@ public class VanillaListTests
     public void ABatchAddSharesOneStartIndex()
     {
         var source = new RaisableObservableCollection<int> { 1 };
-        var view = source.AsNotifiableList<int, RaisableObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordListUpdates(view);
 
         source.AddSilently(2);
@@ -82,7 +83,7 @@ public class VanillaListTests
     public void RemoveAtCarriesTheIndex()
     {
         ObservableCollection<int> source = [1, 2, 3];
-        var view = source.AsNotifiableList<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordListUpdates(view);
 
         source.RemoveAt(1);
@@ -96,7 +97,7 @@ public class VanillaListTests
     public void ABatchRemoveCarriesEachOriginalIndex()
     {
         var source = new RaisableObservableCollection<int> { 1, 2, 3, 4 };
-        var view = source.AsNotifiableList<int, RaisableObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordListUpdates(view);
 
         source.RemoveSilentlyAt(2);
@@ -115,7 +116,7 @@ public class VanillaListTests
     public void ReplaceCarriesTheIndexes()
     {
         ObservableCollection<int> source = [1, 2, 3];
-        var view = source.AsNotifiableList<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordListUpdates(view);
 
         source[1] = 9;
@@ -131,7 +132,7 @@ public class VanillaListTests
     public void MoveCarriesTheOldAndNewIndex()
     {
         ObservableCollection<int> source = [1, 2, 3];
-        var view = source.AsNotifiableList<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordListUpdates(view);
 
         source.Move(0, 2);
@@ -148,7 +149,7 @@ public class VanillaListTests
     public void MoveCarryingSeveralItemsIsDropped()
     {
         var source = new RaisableObservableCollection<int> { 1, 2, 3 };
-        var view = source.AsNotifiableList<int, RaisableObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordListUpdates(view);
 
         // 标准库用一对索引描述整批被移动的项，还原不出每一项各自的新旧位置，所以这种形状目前整条丢掉。
@@ -162,7 +163,7 @@ public class VanillaListTests
     public void ResetIsReportedAsResetWithoutTheClearedItems()
     {
         ObservableCollection<int> source = [1, 2];
-        var view = source.AsNotifiableList<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordListUpdates(view);
 
         source.Clear();
@@ -176,7 +177,7 @@ public class VanillaListTests
     public void EventArgsPointAtTheViewItself()
     {
         ObservableCollection<int> source = [];
-        var view = source.AsNotifiableList<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
         ListUpdateEventArgs<int>? captured = null;
         view.ListUpdated += (_, args) => captured = args;
 
@@ -191,7 +192,7 @@ public class VanillaListTests
     public void SenderIsTheViewItself()
     {
         ObservableCollection<int> source = [];
-        var view = source.AsNotifiableList<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
         object? sender = null;
         view.ListUpdated += (s, _) => sender = s;
 
@@ -204,9 +205,9 @@ public class VanillaListTests
     public void ListNotificationsAlsoReachTheCollectionLevelSubscription()
     {
         ObservableCollection<int> source = [];
-        var view = source.AsNotifiableList<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
         // 列表版的事件参数本身就实现了集合版接口，所以按集合订阅也照样收到
-        var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates<int>(view);
+        var updates = NotifiableCollectionsTestUtils.RecordCollectionUpdates(view);
 
         source.Add(1);
 
@@ -218,7 +219,7 @@ public class VanillaListTests
     public void ViewStopsForwardingAfterUnsubscribing()
     {
         ObservableCollection<int> source = [];
-        var view = source.AsNotifiableList<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
         var count = 0;
         EventHandler<ListUpdateEventArgs<int>> handler = (_, _) => count++;
         view.ListUpdated += handler;
@@ -234,7 +235,7 @@ public class VanillaListTests
     public void UnsubscribingAnUnknownHandlerIsIgnored()
     {
         ObservableCollection<int> source = [];
-        var view = source.AsNotifiableList<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
         var updates = NotifiableCollectionsTestUtils.RecordListUpdates(view);
         EventHandler<ListUpdateEventArgs<int>> unknown = (_, _) => { };
         source.Add(1);
@@ -250,7 +251,7 @@ public class VanillaListTests
     public void NonGenericEnumerationAlsoYieldsTheElements()
     {
         ObservableCollection<int> source = [1, 2, 3];
-        var view = source.AsNotifiableList<int, ObservableCollection<int>>();
+        var view = source.AsNotifiableList(TypeA.Of<int>());
 
         Assert.Equal([1, 2, 3], ((IEnumerable)view).Cast<int>());
     }

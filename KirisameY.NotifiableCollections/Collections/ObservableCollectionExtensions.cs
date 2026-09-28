@@ -2,6 +2,7 @@
 
 using JetBrains.Annotations;
 
+using KirisameY.GenericUtils;
 using KirisameY.NotifiableCollections.Collections.WrappedViews.VanillaNotifyWrappers;
 
 namespace KirisameY.NotifiableCollections.Collections;
@@ -30,7 +31,8 @@ public static class ObservableCollectionExtensions
         ///     A read-only notifiable view kept in sync with source collection.
         /// </returns>
         [PublicAPI]
-        public IReadOnlyNotifiableCollection<TElement> AsNotifiableCollection() => new NotifiableCollectionWrapper<TElement, TCollection>(collection);
+        public IReadOnlyNotifiableCollection<TElement> AsNotifiableCollection(TypeA<TElement> elementType = default) =>
+            new NotifiableCollectionWrapper<TElement, TCollection>(collection);
     }
 
     extension<TItem, TList>(TList collection) where TList : IReadOnlyList<TItem>, INotifyCollectionChanged
@@ -49,7 +51,8 @@ public static class ObservableCollectionExtensions
         ///     A read-only notifiable view kept in sync with source list.
         /// </returns>
         [PublicAPI]
-        public IReadOnlyNotifiableList<TItem> AsNotifiableList() => new NotifiableListWrapper<TItem, TList>(collection);
+        public IReadOnlyNotifiableList<TItem> AsNotifiableList(TypeA<TItem> itemType = default) =>
+            new NotifiableListWrapper<TItem, TList>(collection);
     }
 
     extension<TKey, TValue, TDictionary>(TDictionary collection)
@@ -70,7 +73,7 @@ public static class ObservableCollectionExtensions
         ///     A read-only notifiable view kept in sync with source dictionary.
         /// </returns>
         [PublicAPI]
-        public IReadOnlyNotifiableDictionary<TKey, TValue> AsNotifiableDictionary() =>
+        public IReadOnlyNotifiableDictionary<TKey, TValue> AsNotifiableDictionary(TypeA<TKey> keyType = default, TypeA<TValue> valueType = default) =>
             new NotifiableDictionaryWrapper<TKey, TValue, TDictionary>(collection);
     }
 }
