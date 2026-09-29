@@ -168,11 +168,11 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
     }
 
 
-    private readonly List<EventHandler<DictionaryUpdateEventArgs<TKey, TValue>>> _dictionaryUpdatedEventHandlers = [];
+    private ImmutableList<EventHandler<DictionaryUpdateEventArgs<TKey, TValue>>> _updatedEventHandlers = [];
 
     private void RaiseUpdate(DictionaryUpdateEventArgs<TKey, TValue> args)
     {
-        foreach (var eventHandler in _dictionaryUpdatedEventHandlers)
+        foreach (var eventHandler in _updatedEventHandlers)
         {
             eventHandler.Invoke(this, args);
         }
@@ -183,11 +183,11 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
     {
         add
         {
-            if (value is not null) _dictionaryUpdatedEventHandlers.Add(value);
+            if (value is not null) _updatedEventHandlers = _updatedEventHandlers.Add(value);
         }
         remove
         {
-            if (value is not null) _dictionaryUpdatedEventHandlers.Remove(value);
+            if (value is not null) _updatedEventHandlers = _updatedEventHandlers.Remove(value);
         }
     }
 }

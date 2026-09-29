@@ -275,11 +275,11 @@ public class NotifiableList<T> : INotifiableList<T>
     #endregion
 
 
-    private readonly List<EventHandler<ListUpdateEventArgs<T>>> _listUpdatedEventHandlers = [];
+    private ImmutableList<EventHandler<ListUpdateEventArgs<T>>> _updatedEventHandlers = [];
 
     private void RaiseUpdate(ListUpdateEventArgs<T> args)
     {
-        foreach (var eventHandler in _listUpdatedEventHandlers)
+        foreach (var eventHandler in _updatedEventHandlers)
         {
             eventHandler.Invoke(this, args);
         }
@@ -290,11 +290,11 @@ public class NotifiableList<T> : INotifiableList<T>
     {
         add
         {
-            if (value is not null) _listUpdatedEventHandlers.Add(value);
+            if (value is not null) _updatedEventHandlers = _updatedEventHandlers.Add(value);
         }
         remove
         {
-            if (value is not null) _listUpdatedEventHandlers.Remove(value);
+            if (value is not null) _updatedEventHandlers = _updatedEventHandlers.Remove(value);
         }
     }
 }
