@@ -25,14 +25,14 @@ public abstract class ListUpdateEventArgs<T>(IReadOnlyList<T> listView) : Collec
     public IReadOnlyList<T> ListView => listView;
 }
 
-internal class ListItemAddedEventArgs<T>(IReadOnlyList<T> listView, IReadOnlyList<T> addedItems, int startIndex)
+internal class ListItemAddedEventArgs<T>(IReadOnlyList<T> listView, IReadOnlyList<T> addedItems, IReadOnlyList<int> indexes)
     : ListUpdateEventArgs<T>(listView), IListItemAddedEventArgs<T>
 {
     public IReadOnlyList<T> AddedItems => addedItems;
-    public int StartIndex => startIndex;
+    public IReadOnlyList<int> Indexes => indexes;
 
     public IReadOnlyList<IItemWithIndex<T>> AddedItemsWithIndex => field ??=
-        [..Enumerable.Range(StartIndex, AddedItems.Count).Zip(AddedItems, ItemWithIndex.From)];
+        [..Indexes.Zip(AddedItems, ItemWithIndex.From)];
 }
 
 internal class ListItemRemovedEventArgs<T>(IReadOnlyList<T> listView, IReadOnlyList<T> removedItems, IReadOnlyList<int> indexes)

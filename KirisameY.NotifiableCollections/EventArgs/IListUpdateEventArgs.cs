@@ -63,18 +63,12 @@ public interface IListItemAddedEventArgs<out T> : IListUpdateEventArgs<T>, IColl
     [PublicAPI] public new IReadOnlyList<T> AddedItems { get; }
 
     /// <summary>
-    ///     这批元素插入的起始索引（插入前的口径）。
+    ///     被加入的各个项的索引，按<b>升序</b>排列。
     ///     <br/>
     ///     The start index of the inserted elements (measured before the insertion).
+    ///     The index of each added item, in <b>ascending</b> order.
     /// </summary>
-    /// <remarks>
-    ///     批量添加插入的是连续一段，所以一个起点就足以定位，
-    ///     <see cref="AddedItems"/> 不必像移除那样额外配一份索引。
-    ///     <br/>
-    ///     Batch insertion adds one contiguous run, so a single start index is enough to locate it;
-    ///     <see cref="AddedItems"/> does not need an accompanying index list the way removal does.
-    /// </remarks>
-    [PublicAPI] public int StartIndex { get; }
+    [PublicAPI] public IReadOnlyList<int> Indexes { get; }
 
     /// <summary>
     ///     相应的索引值与 <see cref="AddedItems"/> 按位配对（Zip）的结果。
@@ -100,27 +94,17 @@ public interface IListItemAddedEventArgs<out T> : IListUpdateEventArgs<T>, IColl
 public interface IListItemRemovedEventArgs<out T> : IListUpdateEventArgs<T>, ICollectionItemRemovedEventArgs<T>
 {
     /// <summary>
-    ///     被移除的元素，与 <see cref="Indexes"/> <b>逐位对应且同序</b>（即同样按索引升序）。
+    ///     被移除的元素，与 <see cref="Indexes"/> <b>逐位对应且同序</b>。
     ///     <br/>
     ///     The removed elements, <b>positionally aligned and in the same order</b> as <see cref="Indexes"/>
-    ///     (that is, also in ascending index order).
     /// </summary>
     [PublicAPI] public new IReadOnlyList<T> RemovedItems { get; }
 
     /// <summary>
-    ///     各被移除元素在<b>移除前</b>的原始索引，<b>严格升序</b>（不要求连续）。
+    ///     被移除的各个元素在<b>移除前</b>的原始索引，按<b>升序</b>排列。
     ///     <br/>
-    ///     The original index of each removed element <b>before</b> removal, in <b>strictly ascending</b> order
-    ///     (not necessarily contiguous).
+    ///     The original index of each removed element <b>before</b> removal, in <b>ascending</b> order.
     /// </summary>
-    /// <remarks>
-    ///     统一约定为升序，批量移除的实现必须维持这一点。
-    ///     存的是移除前的口径：移除后列表会收缩，用新索引无法还原这些元素本来的位置。
-    ///     <br/>
-    ///     Ascending order is the uniform convention, and implementations of batch removal must preserve it.
-    ///     These indices are measured before removal: the list shrinks afterwards, so the new indices could not
-    ///     restore where those elements originally sat.
-    /// </remarks>
     [PublicAPI] public IReadOnlyList<int> Indexes { get; }
 
     /// <summary>

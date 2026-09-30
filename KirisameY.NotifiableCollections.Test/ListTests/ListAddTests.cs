@@ -15,7 +15,7 @@ public class ListAddTests
 
         var added = Assert.IsAssignableFrom<IListItemAddedEventArgs<int>>(Assert.Single(updates));
         Assert.Equal([42], added.AddedItems);
-        Assert.Equal(0, added.StartIndex);
+        Assert.Equal([0], added.Indexes);
         Assert.Equal([42], list);
     }
 
@@ -28,11 +28,11 @@ public class ListAddTests
         list.Add(3);
 
         var added = Assert.IsAssignableFrom<IListItemAddedEventArgs<int>>(Assert.Single(updates));
-        Assert.Equal(2, added.StartIndex);
+        Assert.Equal([2], added.Indexes);
     }
 
     [Fact]
-    public void AddRangeFromCollectionReportsTheWholeRunAtOneStartIndex()
+    public void AddRangeFromCollectionReportsTheIndexes()
     {
         var list = new NotifiableList<int> { 1 };
         var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
@@ -41,7 +41,7 @@ public class ListAddTests
 
         var added = Assert.IsAssignableFrom<IListItemAddedEventArgs<int>>(Assert.Single(updates));
         Assert.Equal([2, 3], added.AddedItems);
-        Assert.Equal(1, added.StartIndex);
+        Assert.Equal([1, 2], added.Indexes);
         Assert.Equal([1, 2, 3], list);
     }
 
@@ -55,7 +55,7 @@ public class ListAddTests
 
         var added = Assert.IsAssignableFrom<IListItemAddedEventArgs<int>>(Assert.Single(updates));
         Assert.Equal([1, 2, 3], added.AddedItems);
-        Assert.Equal(0, added.StartIndex);
+        Assert.Equal([0, 1, 2], added.Indexes);
     }
 
     [Fact]
@@ -68,12 +68,12 @@ public class ListAddTests
 
         var added = Assert.IsAssignableFrom<IListItemAddedEventArgs<int>>(Assert.Single(updates));
         Assert.Equal([2], added.AddedItems);
-        Assert.Equal(1, added.StartIndex);
+        Assert.Equal([1], added.Indexes);
         Assert.Equal([1, 2, 3], list);
     }
 
     [Fact]
-    public void InsertRangeReportsTheInsertionIndex()
+    public void InsertRangeReportsTheInsertedItemIndexes()
     {
         var list = new NotifiableList<int> { 1, 4 };
         var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
@@ -82,7 +82,7 @@ public class ListAddTests
 
         var added = Assert.IsAssignableFrom<IListItemAddedEventArgs<int>>(Assert.Single(updates));
         Assert.Equal([2, 3], added.AddedItems);
-        Assert.Equal(1, added.StartIndex);
+        Assert.Equal([1, 2], added.Indexes);
         Assert.Equal([1, 2, 3, 4], list);
     }
 
@@ -96,6 +96,6 @@ public class ListAddTests
 
         var added = Assert.IsAssignableFrom<IListItemAddedEventArgs<int>>(Assert.Single(updates));
         Assert.Equal([2, 3], added.AddedItems);
-        Assert.Equal(1, added.StartIndex);
+        Assert.Equal([1, 2], added.Indexes);
     }
 }

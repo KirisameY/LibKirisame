@@ -28,7 +28,7 @@ internal class NotifiableListReadonlyView<T>(IReadOnlyNotifiableList<T> list) : 
         ListUpdateEventArgs<T>? newArgs = args switch
         {
             IListItemAddedEventArgs<T> added => new ListItemAddedEventArgs<T>(
-                this, added.AddedItems, added.StartIndex
+                this, added.AddedItems, added.Indexes
             ),
             IListItemClearedEventArgs<T> cleared => new ListItemClearedEventArgs<T>(
                 this, cleared.RemovedItems, cleared.Indexes
@@ -78,7 +78,7 @@ internal class NotifiableListReadonlyView<TSource, TValue>(
         ListUpdateEventArgs<TValue>? newArgs = args switch
         {
             IListItemAddedEventArgs<TSource> added => new ListItemAddedEventArgs<TValue>(
-                this, [..added.AddedItems.Select(valueSelector)], added.StartIndex
+                this, [..added.AddedItems.Select(valueSelector)], added.Indexes
             ),
             IListItemClearedEventArgs<TSource> cleared => new ListItemClearedEventArgs<TValue>(
                 this, [..cleared.RemovedItems.Select(valueSelector)], cleared.Indexes

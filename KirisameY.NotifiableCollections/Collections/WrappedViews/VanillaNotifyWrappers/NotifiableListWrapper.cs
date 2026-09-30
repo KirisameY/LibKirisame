@@ -37,7 +37,9 @@ internal class NotifiableListWrapper<TItem, TList>(TList list) : IReadOnlyNotifi
                 NewStartingIndex: var startIndex
             } => new ListItemAddedEventArgs<TItem>(
                 this, [..newItems.Cast<TItem>()],
-                startIndex >= 0 ? startIndex : list.Count - newItems.Count
+                startIndex >= 0
+                    ? [..Enumerable.Range(startIndex, newItems.Count)]
+                    : [..Enumerable.Range(list.Count - newItems.Count, newItems.Count)]
             ),
             // Remove
             {

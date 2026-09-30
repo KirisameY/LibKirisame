@@ -47,7 +47,7 @@ public class VanillaListTests
     }
 
     [Fact]
-    public void InsertCarriesTheStartIndex()
+    public void InsertCarriesTheIndex()
     {
         ObservableCollection<int> source = [1, 3];
         var view = source.AsNotifiableList(TypeA.Of<int>());
@@ -57,7 +57,7 @@ public class VanillaListTests
 
         var added = Assert.IsAssignableFrom<IListItemAddedEventArgs<int>>(Assert.Single(updates));
         Assert.Equal([2], added.AddedItems);
-        Assert.Equal(1, added.StartIndex);
+        Assert.Equal([1], added.Indexes);
         Assert.Equal([(1, 2)], added.AddedItemsWithIndex.Select(i => (i.Index, i.Item)));
     }
 
@@ -74,8 +74,7 @@ public class VanillaListTests
 
         var added = Assert.IsAssignableFrom<IListItemAddedEventArgs<int>>(Assert.Single(updates));
         Assert.Equal([2, 3], added.AddedItems);
-        // 批量添加插的是连续一段，一个起点就够，配对用的索引由库自己推出来
-        Assert.Equal(1, added.StartIndex);
+        Assert.Equal([1, 2], added.Indexes);
         Assert.Equal([(1, 2), (2, 3)], added.AddedItemsWithIndex.Select(i => (i.Index, i.Item)));
     }
 

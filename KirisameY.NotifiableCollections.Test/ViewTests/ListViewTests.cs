@@ -110,7 +110,7 @@ public class ListViewTests
         Assert.Equal([3], added.AddedItems);
 
         // 索引是位置信息、与元素类型无关，投影后原样透传
-        Assert.Equal(2, added.StartIndex);
+        Assert.Equal([2], added.Indexes);
     }
 
     [Fact]

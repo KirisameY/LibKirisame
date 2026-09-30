@@ -88,7 +88,7 @@ public class NotifiableList<T> : INotifiableList<T>
     public void Add(T item)
     {
         _innerList.Add(item);
-        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, [item], _innerList.Count - 1));
+        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, [item], [_innerList.Count - 1]));
     }
 
     /// <summary>
@@ -100,7 +100,7 @@ public class NotifiableList<T> : INotifiableList<T>
     {
         var fromIndex = _innerList.Count;
         _innerList.AddRange(items);
-        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, [..items], fromIndex));
+        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, [..items], [..Enumerable.Range(fromIndex, items.Count)]));
     }
 
     /// <inheritdoc cref="AddRange(ICollection{T})"/>
@@ -110,7 +110,7 @@ public class NotifiableList<T> : INotifiableList<T>
     public void Insert(int index, T item)
     {
         _innerList.Insert(index, item);
-        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, [item], index));
+        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, [item], [index]));
     }
 
     /// <summary>
@@ -122,7 +122,7 @@ public class NotifiableList<T> : INotifiableList<T>
     public void InsertRange(int index, ICollection<T> items)
     {
         _innerList.InsertRange(index, items);
-        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, [..items], index));
+        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, [..items], [..Enumerable.Range(index, items.Count)]));
     }
 
     /// <inheritdoc cref="InsertRange(int, ICollection{T})"/>

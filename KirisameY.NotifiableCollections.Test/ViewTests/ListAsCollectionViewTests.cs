@@ -141,7 +141,7 @@ public class ListAsCollectionViewTests
 
         var added = Assert.IsAssignableFrom<IListItemAddedEventArgs<int>>(Assert.Single(updates));
         Assert.Equal([1], added.AddedItems);
-        Assert.Equal(0, added.StartIndex);
+        Assert.Equal([0], added.Indexes);
     }
 
     [Theory]
