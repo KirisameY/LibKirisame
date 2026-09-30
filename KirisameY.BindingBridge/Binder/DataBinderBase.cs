@@ -17,9 +17,9 @@ public abstract class DataBinderBase : IDataBinder
         TTarget target, Expression<Func<TTarget, TValue>> targetProperty
     ) where TSource : notnull where TTarget : notnull
     {
-        if (ResolveProperty(sourceProperty) is not IObservablePropertyEndpoint<TSource, TValue> fromEndpoint)
+        if (ResolveProperty(sourceProperty) is not IPropertyObservableEndpoint<TSource, TValue> fromEndpoint)
             throw new ArgumentException($"{nameof(sourceProperty)} is not observable.");
-        if (ResolveProperty(targetProperty) is not IWritablePropertyEndpoint<TTarget, TValue> toEndpoint)
+        if (ResolveProperty(targetProperty) is not IPropertyWritableEndpoint<TTarget, TValue> toEndpoint)
             throw new ArgumentException($"{nameof(targetProperty)} is not writable.");
 
         return fromEndpoint.OneWayBindTo(toEndpoint, source, target);
@@ -31,9 +31,9 @@ public abstract class DataBinderBase : IDataBinder
         Func<TSourceValue, TTargetValue> converter
     ) where TSource : notnull where TTarget : notnull
     {
-        if (ResolveProperty(sourceProperty) is not IObservablePropertyEndpoint<TSource, TSourceValue> fromEndpoint)
+        if (ResolveProperty(sourceProperty) is not IPropertyObservableEndpoint<TSource, TSourceValue> fromEndpoint)
             throw new ArgumentException($"{nameof(sourceProperty)} is not observable.");
-        if (ResolveProperty(targetProperty) is not IWritablePropertyEndpoint<TTarget, TTargetValue> toEndpoint)
+        if (ResolveProperty(targetProperty) is not IPropertyWritableEndpoint<TTarget, TTargetValue> toEndpoint)
             throw new ArgumentException($"{nameof(targetProperty)} is not writable.");
 
         return fromEndpoint.OneWayBindTo(toEndpoint, source, target, converter);
@@ -44,9 +44,9 @@ public abstract class DataBinderBase : IDataBinder
         TTarget target, Expression<Func<TTarget, TValue>> targetProperty
     ) where TSource : notnull where TTarget : notnull
     {
-        if (ResolveProperty(sourceProperty) is not IUniversalPropertyEndpoint<TSource, TValue> fromEndpoint)
+        if (ResolveProperty(sourceProperty) is not IPropertyUniversalEndpoint<TSource, TValue> fromEndpoint)
             throw new ArgumentException($"{nameof(sourceProperty)} is not writable or not observable.");
-        if (ResolveProperty(targetProperty) is not IUniversalPropertyEndpoint<TTarget, TValue> toEndpoint)
+        if (ResolveProperty(targetProperty) is not IPropertyUniversalEndpoint<TTarget, TValue> toEndpoint)
             throw new ArgumentException($"{nameof(targetProperty)} is not writable or not observable.");
 
         return fromEndpoint.TwoWayBindTo(toEndpoint, source, target);
@@ -58,9 +58,9 @@ public abstract class DataBinderBase : IDataBinder
         Func<TSourceValue, TTargetValue> converter, Func<TTargetValue, TSourceValue> reversedConverter
     ) where TSource : notnull where TTarget : notnull
     {
-        if (ResolveProperty(sourceProperty) is not IUniversalPropertyEndpoint<TSource, TSourceValue> fromEndpoint)
+        if (ResolveProperty(sourceProperty) is not IPropertyUniversalEndpoint<TSource, TSourceValue> fromEndpoint)
             throw new ArgumentException($"{nameof(sourceProperty)} is not writable or not observable.");
-        if (ResolveProperty(targetProperty) is not IUniversalPropertyEndpoint<TTarget, TTargetValue> toEndpoint)
+        if (ResolveProperty(targetProperty) is not IPropertyUniversalEndpoint<TTarget, TTargetValue> toEndpoint)
             throw new ArgumentException($"{nameof(targetProperty)} is not writable or not observable.");
 
         return fromEndpoint.TwoWayBindTo(toEndpoint, source, target, converter, reversedConverter);
@@ -176,9 +176,9 @@ public abstract class DataBinderBase : IDataBinder
         var result = (notifiable, setter) switch
         {
             (false, null)     => new DelegatePropertyEndpoint<TObject, TProperty>(getter),
-            (true, null)      => new DelegateObservablePropertyEndpoint<TObject, TProperty>(getter, subscriber!, unsubscriber!),
-            (false, not null) => new DelegateWritablePropertyEndpoint<TObject, TProperty>(getter, setter),
-            (true, not null)  => new DelegateUniversalPropertyEndpoint<TObject, TProperty>(getter, setter, subscriber!, unsubscriber!)
+            (true, null)      => new DelegatePropertyObservableEndpoint<TObject, TProperty>(getter, subscriber!, unsubscriber!),
+            (false, not null) => new DelegatePropertyWritableEndpoint<TObject, TProperty>(getter, setter),
+            (true, not null)  => new DelegatePropertyUniversalEndpoint<TObject, TProperty>(getter, setter, subscriber!, unsubscriber!)
         };
         _propertyCache.Add(cacheKey, result);
         return result;

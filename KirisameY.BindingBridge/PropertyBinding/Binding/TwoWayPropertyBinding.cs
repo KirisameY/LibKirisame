@@ -3,8 +3,8 @@
 internal sealed class TwoWayPropertyBinding<TSource, TTarget, TValue> : IBindHandle
 {
     public TwoWayPropertyBinding(
-        IUniversalPropertyEndpoint<TSource, TValue> from,
-        IUniversalPropertyEndpoint<TTarget, TValue> to,
+        IPropertyUniversalEndpoint<TSource, TValue> from,
+        IPropertyUniversalEndpoint<TTarget, TValue> to,
         TSource source, TTarget target
     )
     {
@@ -19,8 +19,8 @@ internal sealed class TwoWayPropertyBinding<TSource, TTarget, TValue> : IBindHan
         _to.SetValue(_target, _from.GetValue(_source));
     }
 
-    private readonly IUniversalPropertyEndpoint<TSource, TValue> _from;
-    private readonly IUniversalPropertyEndpoint<TTarget, TValue> _to;
+    private readonly IPropertyUniversalEndpoint<TSource, TValue> _from;
+    private readonly IPropertyUniversalEndpoint<TTarget, TValue> _to;
     private readonly TSource _source;
     private readonly TTarget _target;
 
@@ -40,8 +40,8 @@ internal sealed class TwoWayPropertyBinding<TSource, TTarget, TValue> : IBindHan
 internal sealed class TwoWayPropertyBinding<TSource, TTarget, TSourceValue, TTargetValue> : IBindHandle
 {
     public TwoWayPropertyBinding(
-        IUniversalPropertyEndpoint<TSource, TSourceValue> from,
-        IUniversalPropertyEndpoint<TTarget, TTargetValue> to,
+        IPropertyUniversalEndpoint<TSource, TSourceValue> from,
+        IPropertyUniversalEndpoint<TTarget, TTargetValue> to,
         TSource source, TTarget target,
         Func<TSourceValue, TTargetValue> converter,
         Func<TTargetValue, TSourceValue> reversedConverter
@@ -60,8 +60,8 @@ internal sealed class TwoWayPropertyBinding<TSource, TTarget, TSourceValue, TTar
         _to.SetValue(_target, _converter.Invoke(_from.GetValue(_source)));
     }
 
-    private readonly IUniversalPropertyEndpoint<TSource, TSourceValue> _from;
-    private readonly IUniversalPropertyEndpoint<TTarget, TTargetValue> _to;
+    private readonly IPropertyUniversalEndpoint<TSource, TSourceValue> _from;
+    private readonly IPropertyUniversalEndpoint<TTarget, TTargetValue> _to;
     private readonly TSource _source;
     private readonly TTarget _target;
     private readonly Func<TSourceValue, TTargetValue> _converter;

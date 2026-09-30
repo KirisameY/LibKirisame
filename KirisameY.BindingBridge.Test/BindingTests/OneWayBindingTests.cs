@@ -24,8 +24,8 @@ public class OneWayBindingTests
     {
         var source = new Holder { Number = 7 };
         var target = new Holder();
-        var from = new FakeObservableEndpoint<Holder, int>(h => h.Number);
-        var to = new FakeWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
+        var from = new FakePropertyObservableEndpoint<Holder, int>(h => h.Number);
+        var to = new FakePropertyWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
 
         using var handle = from.OneWayBindTo(to, source, target);
 
@@ -38,8 +38,8 @@ public class OneWayBindingTests
     {
         var source = new Holder { Number = 7 };
         var target = new Holder();
-        var from = new FakeObservableEndpoint<Holder, int>(h => h.Number);
-        var to = new FakeWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
+        var from = new FakePropertyObservableEndpoint<Holder, int>(h => h.Number);
+        var to = new FakePropertyWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
 
         using var handle = from.OneWayBindTo(to, source, target);
 
@@ -53,8 +53,8 @@ public class OneWayBindingTests
     {
         var source = new Holder { Number = 7 };
         var target = new Holder();
-        var from = new FakeObservableEndpoint<Holder, int>(h => h.Number);
-        var to = new FakeWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
+        var from = new FakePropertyObservableEndpoint<Holder, int>(h => h.Number);
+        var to = new FakePropertyWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
 
         using var handle = from.OneWayBindTo(to, source, target);
 
@@ -70,8 +70,8 @@ public class OneWayBindingTests
     {
         var source = new Holder { Number = 7 };
         var target = new Holder();
-        var from = new FakeObservableEndpoint<Holder, int>(h => h.Number);
-        var to = new FakeUniversalEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
+        var from = new FakePropertyObservableEndpoint<Holder, int>(h => h.Number);
+        var to = new FakePropertyUniversalEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
 
         using var handle = from.OneWayBindTo(to, source, target);
 
@@ -90,8 +90,8 @@ public class OneWayBindingTests
         var source = new Holder { Number = 7 };
         var other = new Holder { Number = 100 };
         var target = new Holder();
-        var from = new FakeObservableEndpoint<Holder, int>(h => h.Number);
-        var to = new FakeWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
+        var from = new FakePropertyObservableEndpoint<Holder, int>(h => h.Number);
+        var to = new FakePropertyWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
 
         using var handle = from.OneWayBindTo(to, source, target);
 
@@ -106,8 +106,8 @@ public class OneWayBindingTests
     {
         var source = new Holder { Number = 7 };
         var target = new Holder();
-        var from = new FakeObservableEndpoint<Holder, int>(h => h.Number);
-        var to = new FakeWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
+        var from = new FakePropertyObservableEndpoint<Holder, int>(h => h.Number);
+        var to = new FakePropertyWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
 
         var handle = from.OneWayBindTo(to, source, target);
 
@@ -122,8 +122,8 @@ public class OneWayBindingTests
     {
         var source = new Holder { Number = 7 };
         var target = new Holder();
-        var from = new FakeObservableEndpoint<Holder, int>(h => h.Number);
-        var to = new FakeWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
+        var from = new FakePropertyObservableEndpoint<Holder, int>(h => h.Number);
+        var to = new FakePropertyWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
 
         var handle = from.OneWayBindTo(to, source, target);
         var setsBeforeDispose = to.SetCalls;
@@ -141,8 +141,8 @@ public class OneWayBindingTests
     {
         var source = new Holder { Number = 7 };
         var target = new Holder();
-        var from = new FakeObservableEndpoint<Holder, int>(h => h.Number);
-        var to = new FakeWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
+        var from = new FakePropertyObservableEndpoint<Holder, int>(h => h.Number);
+        var to = new FakePropertyWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
 
         var handle = from.OneWayBindTo(to, source, target);
 
@@ -157,8 +157,8 @@ public class OneWayBindingTests
     {
         var source = new Holder { Number = 7 };
         var target = new Holder();
-        var from = new FakeObservableEndpoint<Holder, int>(h => h.Number);
-        var to = new FakeWritableEndpoint<Holder, string>(h => h.Text, (h, v) => h.Text = v);
+        var from = new FakePropertyObservableEndpoint<Holder, int>(h => h.Number);
+        var to = new FakePropertyWritableEndpoint<Holder, string>(h => h.Text, (h, v) => h.Text = v);
 
         using var handle = from.OneWayBindTo(to, source, target, v => $"#{v}");
 
@@ -175,8 +175,8 @@ public class OneWayBindingTests
     {
         var source = new Holder { Number = 7 };
         var target = new OtherHolder();
-        var from = new FakeObservableEndpoint<Holder, int>(h => h.Number);
-        var to = new FakeWritableEndpoint<OtherHolder, string>(h => h.Text, (h, v) => h.Text = v);
+        var from = new FakePropertyObservableEndpoint<Holder, int>(h => h.Number);
+        var to = new FakePropertyWritableEndpoint<OtherHolder, string>(h => h.Text, (h, v) => h.Text = v);
 
         using var handle = from.OneWayBindTo(to, source, target, v => v.ToString());
 
@@ -193,8 +193,8 @@ public class OneWayBindingTests
     {
         var source = new Holder { Number = 7 };
         var target = new Holder();
-        var from = new FakeObservableEndpoint<Holder, int>(h => h.Number);
-        var to = new FakeWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
+        var from = new FakePropertyObservableEndpoint<Holder, int>(h => h.Number);
+        var to = new FakePropertyWritableEndpoint<Holder, int>(h => h.Number, (h, v) => h.Number = v);
 
         using var handle = from.OneWayBindTo(to, source, target);
 

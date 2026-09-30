@@ -61,8 +61,8 @@ public sealed class FakeReadOnlyEndpoint<TObject, TProperty>(Func<TObject, TProp
 }
 
 /// <summary>可观察端点：可取值、可订阅。</summary>
-public sealed class FakeObservableEndpoint<TObject, TProperty>(Func<TObject, TProperty> getter)
-    : FakeEndpointBase<TObject>, IObservablePropertyEndpoint<TObject, TProperty>
+public sealed class FakePropertyObservableEndpoint<TObject, TProperty>(Func<TObject, TProperty> getter)
+    : FakeEndpointBase<TObject>, IPropertyObservableEndpoint<TObject, TProperty>
 {
     public int GetCalls { get; private set; }
 
@@ -78,8 +78,8 @@ public sealed class FakeObservableEndpoint<TObject, TProperty>(Func<TObject, TPr
 }
 
 /// <summary>可写端点：可取值、可写值，但不会发通知。</summary>
-public sealed class FakeWritableEndpoint<TObject, TProperty>(Func<TObject, TProperty> getter, Action<TObject, TProperty> setter)
-    : FakeEndpointBase<TObject>, IWritablePropertyEndpoint<TObject, TProperty>
+public sealed class FakePropertyWritableEndpoint<TObject, TProperty>(Func<TObject, TProperty> getter, Action<TObject, TProperty> setter)
+    : FakeEndpointBase<TObject>, IPropertyWritableEndpoint<TObject, TProperty>
 {
     public int GetCalls { get; private set; }
     public int SetCalls { get; private set; }
@@ -102,8 +102,8 @@ public sealed class FakeWritableEndpoint<TObject, TProperty>(Func<TObject, TProp
 }
 
 /// <summary>全能端点：四种接口齐备。</summary>
-public sealed class FakeUniversalEndpoint<TObject, TProperty>(Func<TObject, TProperty> getter, Action<TObject, TProperty> setter)
-    : FakeEndpointBase<TObject>, IUniversalPropertyEndpoint<TObject, TProperty>
+public sealed class FakePropertyUniversalEndpoint<TObject, TProperty>(Func<TObject, TProperty> getter, Action<TObject, TProperty> setter)
+    : FakeEndpointBase<TObject>, IPropertyUniversalEndpoint<TObject, TProperty>
 {
     /// <summary>
     ///     打开后，<see cref="SetValue"/> 引起的值变化会立刻回放一次通知，

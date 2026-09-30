@@ -30,7 +30,7 @@ public class TwoWayBindingTests
         }
     }
 
-    private static FakeUniversalEndpoint<Holder, int> IntEndpoint() =>
+    private static FakePropertyUniversalEndpoint<Holder, int> IntEndpoint() =>
         new(h => h.Number, (h, v) => h.Number = v);
 
     [Fact]
@@ -157,7 +157,7 @@ public class TwoWayBindingTests
         var source = new Holder { Number = 7 };
         var target = new Holder();
         var from = IntEndpoint();
-        var to = new FakeUniversalEndpoint<Holder, string>(h => h.Text, (h, v) => h.Text = v);
+        var to = new FakePropertyUniversalEndpoint<Holder, string>(h => h.Text, (h, v) => h.Text = v);
 
         using var handle = from.TwoWayBindTo(to, source, target, v => v.ToString(), s => int.Parse(s));
 
@@ -181,8 +181,8 @@ public class TwoWayBindingTests
         // 两端 Setter 都是"值不变就不写也不发通知"，因此双向绑定一轮之后收敛，而不是无限递归。
         var source = new GuardedHolder { Number = 5 };
         var target = new GuardedHolder();
-        var from = new FakeUniversalEndpoint<GuardedHolder, int>(h => h.Number, (h, v) => h.Number = v) { AutoNotify = true };
-        var to = new FakeUniversalEndpoint<GuardedHolder, int>(h => h.Number, (h, v) => h.Number = v) { AutoNotify = true };
+        var from = new FakePropertyUniversalEndpoint<GuardedHolder, int>(h => h.Number, (h, v) => h.Number = v) { AutoNotify = true };
+        var to = new FakePropertyUniversalEndpoint<GuardedHolder, int>(h => h.Number, (h, v) => h.Number = v) { AutoNotify = true };
 
         using var handle = from.TwoWayBindTo(to, source, target);
 

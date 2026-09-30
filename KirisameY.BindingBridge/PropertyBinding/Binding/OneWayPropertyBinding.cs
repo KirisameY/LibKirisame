@@ -3,8 +3,8 @@
 internal sealed class OneWayPropertyBinding<TSource, TTarget, TValue> : IBindHandle
 {
     public OneWayPropertyBinding(
-        IObservablePropertyEndpoint<TSource, TValue> from,
-        IWritablePropertyEndpoint<TTarget, TValue> to,
+        IPropertyObservableEndpoint<TSource, TValue> from,
+        IPropertyWritableEndpoint<TTarget, TValue> to,
         TSource source, TTarget target
     )
     {
@@ -17,8 +17,8 @@ internal sealed class OneWayPropertyBinding<TSource, TTarget, TValue> : IBindHan
         _to.SetValue(_target, _from.GetValue(_source));
     }
 
-    private readonly IObservablePropertyEndpoint<TSource, TValue> _from;
-    private readonly IWritablePropertyEndpoint<TTarget, TValue> _to;
+    private readonly IPropertyObservableEndpoint<TSource, TValue> _from;
+    private readonly IPropertyWritableEndpoint<TTarget, TValue> _to;
     private readonly TSource _source;
     private readonly TTarget _target;
 
@@ -36,8 +36,8 @@ internal sealed class OneWayPropertyBinding<TSource, TTarget, TValue> : IBindHan
 internal sealed class OneWayPropertyBinding<TSource, TTarget, TSourceValue, TTargetValue> : IBindHandle
 {
     public OneWayPropertyBinding(
-        IObservablePropertyEndpoint<TSource, TSourceValue> from,
-        IWritablePropertyEndpoint<TTarget, TTargetValue> to,
+        IPropertyObservableEndpoint<TSource, TSourceValue> from,
+        IPropertyWritableEndpoint<TTarget, TTargetValue> to,
         TSource source, TTarget target, Func<TSourceValue, TTargetValue> converter
     )
     {
@@ -51,8 +51,8 @@ internal sealed class OneWayPropertyBinding<TSource, TTarget, TSourceValue, TTar
         _to.SetValue(_target, _converter.Invoke(_from.GetValue(_source)));
     }
 
-    private readonly IObservablePropertyEndpoint<TSource, TSourceValue> _from;
-    private readonly IWritablePropertyEndpoint<TTarget, TTargetValue> _to;
+    private readonly IPropertyObservableEndpoint<TSource, TSourceValue> _from;
+    private readonly IPropertyWritableEndpoint<TTarget, TTargetValue> _to;
     private readonly TSource _source;
     private readonly TTarget _target;
     private readonly Func<TSourceValue, TTargetValue> _converter;
