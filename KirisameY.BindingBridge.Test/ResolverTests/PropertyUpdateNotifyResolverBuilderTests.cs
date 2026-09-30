@@ -6,7 +6,8 @@ using KirisameY.BindingBridge.Test.TestDoubles;
 namespace KirisameY.BindingBridge.Test.ResolverTests;
 
 /// <summary>
-///     <c>PropertyUpdateNotifyResolverBuilder</c>：按成员名手工登记解析方式，未登记的名字落到兜底。
+///     <c>PropertyUpdateNotifyResolverBuilder</c>：按成员名手工登记解析方式；
+///     没登记的名字返回 <c>null</c>，由绑定器的兜底路由接手。
 /// </summary>
 public class PropertyUpdateNotifyResolverBuilderTests
 {
@@ -61,7 +62,6 @@ public class PropertyUpdateNotifyResolverBuilderTests
     public void RecordedNamesAreMatchedByMemberNameOnlyAndIgnoreTheType()
     {
         var resolver = new PropertyUpdateNotifyResolverBuilder<NotifyObject>()
-                      .WithFallback(new NullPropertyUpdateNotifyResolver())
                       .WithProperty("Number", (_, _) => { }, (_, _) => { })
                       .Build();
 
@@ -70,37 +70,22 @@ public class PropertyUpdateNotifyResolverBuilderTests
     }
 
     [Fact]
-    public void UnregisteredNamesFallThroughToTheFallback()
+    public void UnregisteredNamesReturnsNull()
     {
-        var fallback = new NullPropertyUpdateNotifyResolver();
         var resolver = new PropertyUpdateNotifyResolverBuilder<NotifyObject>()
-                      .WithFallback(fallback)
                       .WithProperty("Number", (_, _) => { }, (_, _) => { })
                       .Build();
 
         Assert.Null(resolver.Resolve(typeof(NotifyObject), NotifyProp(nameof(NotifyObject.Text))));
-        Assert.Single(fallback.Seen);
     }
 
     [Fact]
-    public void ResolvingWithANullMemberInfoFallsThroughToTheFallback()
+    public void ResolvingWithANullMemberInfoReturnsNull()
     {
-        var fallback = new NullPropertyUpdateNotifyResolver();
         var resolver = new PropertyUpdateNotifyResolverBuilder<NotifyObject>()
-                      .WithFallback(fallback)
                       .Build();
 
         Assert.Null(resolver.Resolve(typeof(NotifyObject), null));
-        Assert.Single(fallback.Seen);
-    }
-
-    [Fact]
-    public void TheDefaultFallbackIsTheNotifyPropertyChangedResolver()
-    {
-        var resolver = new PropertyUpdateNotifyResolverBuilder<NotifyObject>().Build();
-
-        Assert.NotNull(resolver.Resolve(typeof(NotifyObject), NotifyProp(nameof(NotifyObject.Text))));
-        Assert.Null(resolver.Resolve(typeof(PlainObject), PlainProp(nameof(PlainObject.Number))));
     }
 
     [Fact]
@@ -116,7 +101,6 @@ public class PropertyUpdateNotifyResolverBuilderTests
     public void BuildSnapshotsTheRegistrations()
     {
         var builder = new PropertyUpdateNotifyResolverBuilder<NotifyObject>()
-                     .WithFallback(new NullPropertyUpdateNotifyResolver())
                      .WithProperty(nameof(NotifyObject.Number), (_, _) => { }, (_, _) => { });
         var built = builder.Build();
 
@@ -125,18 +109,5 @@ public class PropertyUpdateNotifyResolverBuilderTests
 
         Assert.NotNull(built.Resolve(typeof(NotifyObject), NotifyProp(nameof(NotifyObject.Number))));
         Assert.Null(built.Resolve(typeof(NotifyObject), NotifyProp(nameof(NotifyObject.Text))));
-    }
-
-    [Fact]
-    public void BuilderCopiesShareTheSameRegistrationTable()
-    {
-        // PropertyUpdateNotifyResolverBuilder 是 readonly struct，注册表字段按引用拷贝：
-        // with / WithXxx 得到的副本与原值看到的是同一张表——这既是链式写法能累积注册的原因，
-        // 也意味着"原值"会看到之后在副本上做的登记。
-        var original = new PropertyUpdateNotifyResolverBuilder<NotifyObject>().WithFallback(new NullPropertyUpdateNotifyResolver());
-
-        _ = original.WithProperty(nameof(NotifyObject.Number), (_, _) => { }, (_, _) => { });
-
-        Assert.NotNull(original.Build().Resolve(typeof(NotifyObject), NotifyProp(nameof(NotifyObject.Number))));
     }
 }

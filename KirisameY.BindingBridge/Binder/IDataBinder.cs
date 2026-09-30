@@ -25,6 +25,10 @@ public interface IPropertyDataBinder
         TTarget target, Expression<Func<TTarget, TTargetValue>> targetProperty,
         Func<TSourceValue, TTargetValue> converter, Func<TTargetValue, TSourceValue> reversedConverter
     ) where TSource : notnull where TTarget : notnull;
+
+    // collections
+    IBindHandle BindCollection<TSource, TTarget, TElement>(TSource source, TTarget target)
+        where TSource : notnull where TTarget : notnull;
 }
 
 public interface IDataBinder : IPropertyDataBinder;

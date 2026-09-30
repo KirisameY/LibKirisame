@@ -17,10 +17,11 @@ internal class RegistryDataBinder(
         var t = type;
         while (t is not null && !propertyResolvers.TryGetValue(t, out resolver))
         {
-            t = t.BaseType;
+            t = t is { IsGenericType: true, IsGenericTypeDefinition: false }
+                ? t.GetGenericTypeDefinition()
+                : t.BaseType;
         }
-        resolver ??= propertyFallback;
 
-        return resolver.Resolve(type, memberInfo);
+        return resolver?.Resolve(type, memberInfo) ?? propertyFallback.Resolve(type, memberInfo);
     }
 }

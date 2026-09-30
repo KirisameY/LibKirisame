@@ -9,14 +9,11 @@ namespace KirisameY.BindingBridge.Test.TestDoubles;
 /// </summary>
 public sealed class NullPropertyUpdateNotifyResolver : IPropertyUpdateNotifyResolver
 {
-    public int Calls { get; private set; }
-
     /// <summary>按调用顺序记录下来每次解析请求。</summary>
     public List<(Type Type, string? MemberName)> Seen { get; } = [];
 
     public PropertyUpdateNotifyProxy? Resolve(Type type, MemberInfo? memberInfo)
     {
-        Calls++;
         Seen.Add((type, memberInfo?.Name));
         return null;
     }
@@ -27,14 +24,11 @@ public sealed class NullPropertyUpdateNotifyResolver : IPropertyUpdateNotifyReso
 /// </summary>
 public sealed class AlwaysResolvePropertyUpdateNotifyResolver : IPropertyUpdateNotifyResolver
 {
-    public int Calls { get; private set; }
-
     /// <summary>按调用顺序记录下来每次解析请求。</summary>
     public List<(Type Type, string? MemberName)> Seen { get; } = [];
 
     public PropertyUpdateNotifyProxy? Resolve(Type type, MemberInfo? memberInfo)
     {
-        Calls++;
         Seen.Add((type, memberInfo?.Name));
         return new PropertyUpdateNotifyProxy((_, _) => { }, (_, _) => { });
     }

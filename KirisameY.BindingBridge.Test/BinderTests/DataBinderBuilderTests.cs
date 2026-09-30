@@ -1,11 +1,13 @@
 ﻿using KirisameY.BindingBridge.Binder;
+using KirisameY.BindingBridge.PropertyBinding.Resolver;
 using KirisameY.BindingBridge.Test.TestDoubles;
 
 namespace KirisameY.BindingBridge.Test.BinderTests;
 
 /// <summary>
 ///     <c>DataBinderBuilder</c> + <c>RegistryDataBinder</c>：按类型挑解析器，
-///     先精确匹配声明类型，再沿 <c>BaseType</c> 向上找，都没有就落到兜底。
+///     先精确匹配声明类型，再退到泛型定义、沿 <c>BaseType</c> 向上找。
+///     挑中的解析器没认领的成员，以及一个类型都没挑中时，都由绑定器的兜底路由接手。
 /// </summary>
 public class DataBinderBuilderTests
 {
@@ -15,6 +17,27 @@ public class DataBinderBuilderTests
     }
 
     private sealed class DerivedSource : BaseSource;
+
+    /// <summary>自带事件通知的泛型源，注册表里登记的键是开放泛型定义 <c>GenericSource&lt;&gt;</c>。</summary>
+    private class GenericSource<T>
+    {
+        public event Action? Changed;
+
+        private int _number;
+
+        public int Number
+        {
+            get => _number;
+            set
+            {
+                if (_number == value) return;
+                _number = value;
+                Changed?.Invoke();
+            }
+        }
+    }
+
+    private sealed class DerivedGenericSource<T> : GenericSource<T>;
 
     [Fact]
     public void WithResolverMakesANonNotifyingTypeBindable()
@@ -108,6 +131,45 @@ public class DataBinderBuilderTests
     }
 
     [Fact]
+    public void AResolverRegisteredForAnOpenGenericTypeServesItsConstructedInstances()
+    {
+        // 登记的是开放泛型定义，绑定时的声明类型是构造后的 GenericSource<int>
+        var resolver = new PropertyUpdateNotifyResolverBuilder<GenericSource<int>>()
+                      .WithProperty(nameof(GenericSource<int>.Number), (o, h) => o.Changed += h, (o, h) => o.Changed -= h)
+                      .Build();
+        var binder = new DataBinderBuilder().WithResolver(typeof(GenericSource<>), resolver).Build();
+
+        var source = new GenericSource<int> { Number = 3 };
+        var target = new PlainObject();
+
+        using var handle = binder.BindPropertyOneWay(source, s => s.Number, target, t => t.Number);
+
+        Assert.Equal(3, target.Number);
+
+        source.Number = 8;
+        Assert.Equal(8, target.Number);
+    }
+
+    [Fact]
+    public void AnOpenGenericRegistrationIsAlsoFoundThroughAGenericBaseType()
+    {
+        var resolver = new PropertyUpdateNotifyResolverBuilder<DerivedGenericSource<int>>()
+                      .WithProperty(nameof(GenericSource<int>.Number), (o, h) => o.Changed += h, (o, h) => o.Changed -= h)
+                      .Build();
+        var binder = new DataBinderBuilder().WithResolver(typeof(GenericSource<>), resolver).Build();
+
+        var source = new DerivedGenericSource<int> { Number = 4 };
+        var target = new PlainObject();
+
+        using var handle = binder.BindPropertyOneWay(source, s => s.Number, target, t => t.Number);
+
+        Assert.Equal(4, target.Number);
+
+        source.Number = 6;
+        Assert.Equal(6, target.Number);
+    }
+
+    [Fact]
     public void WithFallbackResolverIsUsedWhenNoTypeIsRegistered()
     {
         // 刻意只设兜底、一个类型都不登记：ManualNotifySource 不是 INotifyPropertyChanged，
@@ -152,6 +214,64 @@ public class DataBinderBuilderTests
     public void TheDefaultFallbackResolverRejectsTypesThatDoNotNotify() =>
         Assert.Throws<ArgumentException>(() =>
             new DataBinderBuilder().Build().BindPropertyOneWay(new PlainObject(), s => s.Number, new PlainObject(), t => t.Number));
+
+    [Fact]
+    public void AMemberTheRegisteredResolverDidNotClaimFallsThroughToTheBindersFallback()
+    {
+        // 类型级解析器只登记了 Number；Text 没人认领，
+        // 它不会卡在类型级解析器那里，而是落到绑定器的兜底路由（默认那套 INotifyPropertyChanged）。
+        var binder = new DataBinderBuilder()
+                    .WithResolver(typeof(SplitNotifySource), SplitNotifySource.NumberResolver())
+                    .Build();
+
+        var source = new SplitNotifySource { Number = 3, Text = "a" };
+        var target = new PlainObject();
+
+        using var numberHandle = binder.BindPropertyOneWay(source, s => s.Number, target, t => t.Number);
+        using var textHandle   = binder.BindPropertyOneWay(source, s => s.Text, target, t => t.Text);
+
+        Assert.Equal(3, target.Number);
+        Assert.Equal("a", target.Text);
+
+        source.Number = 5; // 只会响 NumberChanged
+        source.Text   = "b"; // 只会响 PropertyChanged
+
+        Assert.Equal(5, target.Number);
+        Assert.Equal("b", target.Text);
+    }
+
+    [Fact]
+    public void AResolverDoesNotCarryItsOwnFallbackSoTheBindersOneDecides()
+    {
+        var resolver = new PropertyUpdateNotifyResolverBuilder<NotifyObject>()
+                      .WithProperty(nameof(NotifyObject.Number), (_, _) => { }, (_, _) => { })
+                      .Build();
+
+        // NotifyObject.Text 没被登记：兜底换成什么都不认的解析器之后，它就绑不上了——
+        // 说明接手的是绑定器的兜底，而不是类型级解析器自带的那套 NotifyPropertyChanged 默认。
+        var nullFallback = new DataBinderBuilder()
+                          .WithResolver(typeof(NotifyObject), resolver)
+                          .WithFallbackResolver(new NullPropertyUpdateNotifyResolver())
+                          .Build();
+
+        Assert.Throws<ArgumentException>(() =>
+            nullFallback.BindPropertyOneWay(new NotifyObject(), s => s.Text, new PlainObject(), t => t.Text));
+
+        // 换回默认兜底，同一个成员就又绑得上、而且真的会跟着变。
+        var source = new NotifyObject { Text = "a" };
+        var target = new PlainObject();
+
+        using var handle = new DataBinderBuilder()
+                          .WithResolver(typeof(NotifyObject), resolver)
+                          .WithFallbackResolver(DefaultPropertyUpdateNotifyResolver.Instance)
+                          .Build()
+                          .BindPropertyOneWay(source, s => s.Text, target, t => t.Text);
+
+        Assert.Equal("a", target.Text);
+
+        source.Text = "b";
+        Assert.Equal("b", target.Text);
+    }
 
     [Fact]
     public void ResolverSelectionAlsoAppliesToTheTargetExpression()

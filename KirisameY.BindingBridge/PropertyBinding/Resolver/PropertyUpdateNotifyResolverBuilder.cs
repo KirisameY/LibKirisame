@@ -5,7 +5,6 @@ namespace KirisameY.BindingBridge.PropertyBinding.Resolver;
 public readonly struct PropertyUpdateNotifyResolverBuilder<TObject>()
 {
     private readonly Dictionary<string, PropertyUpdateNotifyProxy> _notifies = [];
-    private IPropertyUpdateNotifyResolver Fallback { get; init; } = DefaultPropertyUpdateNotifyResolver.Instance;
 
     public PropertyUpdateNotifyResolverBuilder<TObject> WithProperty(
         string name, Action<TObject, Action> subscribeUpdate, Action<TObject, Action> unsubscribeUpdate
@@ -19,7 +18,5 @@ public readonly struct PropertyUpdateNotifyResolverBuilder<TObject>()
         return this;
     }
 
-    public PropertyUpdateNotifyResolverBuilder<TObject> WithFallback(IPropertyUpdateNotifyResolver fallback) => this with { Fallback = fallback };
-
-    public IPropertyUpdateNotifyResolver Build() => new RecordedPropertyUpdateNotifyResolver(_notifies.ToFrozenDictionary(), Fallback);
+    public IPropertyUpdateNotifyResolver Build() => new RecordedPropertyUpdateNotifyResolver(_notifies.ToFrozenDictionary());
 }

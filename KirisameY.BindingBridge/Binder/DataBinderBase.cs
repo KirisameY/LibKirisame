@@ -187,4 +187,13 @@ public abstract class DataBinderBase : IDataBinder
     protected abstract PropertyUpdateNotifyProxy? ResolveProperty(Type type, MemberInfo? memberInfo);
 
     #endregion
+
+    #region Collection
+
+    public IBindHandle BindCollection<TSource, TTarget, TElement>(TSource source, TTarget target) where TSource : notnull where TTarget : notnull
+    {
+        throw new NotImplementedException();
+    }
+
+    #endregion
 }
