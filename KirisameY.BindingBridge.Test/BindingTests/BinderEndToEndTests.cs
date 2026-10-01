@@ -13,7 +13,7 @@ public class BinderEndToEndTests
 
     private static IDataBinder CustomSourceBinder() =>
         new DataBinderBuilder()
-           .WithResolver(typeof(ManualNotifySource), ManualNotifySource.CreateResolver())
+           .WithPropertyResolver(typeof(ManualNotifySource), ManualNotifySource.CreateResolver())
            .Build();
 
     // ---------- 默认路径：INotifyPropertyChanged 数据源 ----------

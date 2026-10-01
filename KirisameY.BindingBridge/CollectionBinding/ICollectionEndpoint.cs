@@ -1,8 +1,10 @@
 ﻿namespace KirisameY.BindingBridge.CollectionBinding;
 
-public interface ICollectionEndpoint<in TObj, TElement>;
+public interface ICollectionObservableEndpointBase<in TObj, out TElement> where TObj : class;
 
-public interface ICollectionObservableEndpoint<in TObj, TElement> : ICollectionEndpoint<TObj, TElement>
+public interface ICollectionObserverEndpointBase<in TObj, in TElement> where TObj : class;
+
+public interface ICollectionObservableEndpoint<in TObj, out TElement> : ICollectionObservableEndpointBase<TObj, TElement> where TObj : class
 {
     IReadOnlyCollection<TElement> GetCollectionView(TObj obj);
 
@@ -23,7 +25,7 @@ public interface ICollectionObservableEndpoint<in TObj, TElement> : ICollectionE
     );
 }
 
-public interface ICollectionObserverEndpoint<in TObj, TElement> : ICollectionEndpoint<TObj, TElement>
+public interface ICollectionObserverEndpoint<in TObj, in TElement> : ICollectionObserverEndpointBase<TObj, TElement> where TObj : class
 {
     void CollectionItemAdded(TObj obj, IEnumerable<TElement> added);
     void CollectionItemRemoved(TObj obj, IEnumerable<TElement> removed);
@@ -31,9 +33,7 @@ public interface ICollectionObserverEndpoint<in TObj, TElement> : ICollectionEnd
     void CollectionReset(TObj obj, IReadOnlyCollection<TElement> collectionView);
 }
 
-public interface IListEndpoint<in TObj, TItem> : ICollectionEndpoint<TObj, TItem>;
-
-public interface IListObservableEndpoint<in TObj, TItem> : IListEndpoint<TObj, TItem>
+public interface IListObservableEndpoint<in TObj, out TItem> : ICollectionObservableEndpointBase<TObj, TItem> where TObj : class
 {
     IReadOnlyList<TItem> GetListView(TObj obj);
 
@@ -56,7 +56,7 @@ public interface IListObservableEndpoint<in TObj, TItem> : IListEndpoint<TObj, T
     );
 }
 
-public interface IListObserverEndpoint<in TObj, TItem> : IListEndpoint<TObj, TItem>
+public interface IListObserverEndpoint<in TObj, in TItem> : ICollectionObserverEndpointBase<TObj, TItem> where TObj : class
 {
     void ListItemAdded(TObj obj, IEnumerable<TItem> added, IEnumerable<int>? indexes);
     void ListItemRemoved(TObj obj, IEnumerable<TItem> removed, IEnumerable<int>? indexes);

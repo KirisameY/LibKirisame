@@ -1,6 +1,6 @@
 ﻿namespace KirisameY.BindingBridge.CollectionBinding.Binding;
 
-internal class ListToCollectionBinding<TSource, TTarget, TItem> : IBindHandle
+internal class ListToCollectionBinding<TSource, TTarget, TItem> : IBindHandle where TSource : class where TTarget : class
 {
     public ListToCollectionBinding(
         IListObservableEndpoint<TSource, TItem> from,

@@ -4,7 +4,7 @@ namespace KirisameY.BindingBridge.CollectionBinding;
 
 public static class CollectionEndpointExtensions
 {
-    extension<TSource, TTarget, TElement>(ICollectionObservableEndpoint<TSource, TElement> from)
+    extension<TSource, TTarget, TElement>(ICollectionObservableEndpoint<TSource, TElement> from) where TSource : class where TTarget : class
     {
         public IBindHandle CollectionBindTo(
             ICollectionObserverEndpoint<TTarget, TElement> to,
@@ -17,7 +17,7 @@ public static class CollectionEndpointExtensions
         ) => new CollectionToListBinding<TSource, TTarget, TElement>(from, to, source, target);
     }
 
-    extension<TSource, TTarget, TItem>(IListObservableEndpoint<TSource, TItem> from)
+    extension<TSource, TTarget, TItem>(IListObservableEndpoint<TSource, TItem> from) where TSource : class where TTarget : class
     {
         public IBindHandle ListBindTo(
             IListObserverEndpoint<TTarget, TItem> to,

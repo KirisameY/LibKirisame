@@ -1,5 +1,7 @@
 ﻿using System.Linq.Expressions;
 
+using KirisameY.GenericUtils;
+
 namespace KirisameY.BindingBridge.Binder;
 
 public interface IPropertyDataBinder
@@ -27,8 +29,8 @@ public interface IPropertyDataBinder
     ) where TSource : notnull where TTarget : notnull;
 
     // collections
-    IBindHandle BindCollection<TSource, TTarget, TElement>(TSource source, TTarget target)
-        where TSource : notnull where TTarget : notnull;
+    IBindHandle BindCollection<TSource, TTarget, TElement>(TSource source, TTarget target, TypeA<TElement> elementType)
+        where TSource : class where TTarget : class;
 }
 
 public interface IDataBinder : IPropertyDataBinder;

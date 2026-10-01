@@ -43,7 +43,7 @@ public class DataBinderBuilderTests
     public void WithResolverMakesANonNotifyingTypeBindable()
     {
         var binder = new DataBinderBuilder()
-                    .WithResolver(typeof(PlainObject), new AlwaysResolvePropertyUpdateNotifyResolver())
+                    .WithPropertyResolver(typeof(PlainObject), new AlwaysResolvePropertyUpdateNotifyResolver())
                     .Build();
 
         var source = new PlainObject { Number = 4 };
@@ -58,7 +58,7 @@ public class DataBinderBuilderTests
     public void AResolverRegisteredForABaseTypeAlsoServesDerivedInstancesTypedAsTheBase()
     {
         var binder = new DataBinderBuilder()
-                    .WithResolver(typeof(BaseSource), new AlwaysResolvePropertyUpdateNotifyResolver())
+                    .WithPropertyResolver(typeof(BaseSource), new AlwaysResolvePropertyUpdateNotifyResolver())
                     .Build();
 
         BaseSource source = new DerivedSource { Number = 2 };
@@ -73,7 +73,7 @@ public class DataBinderBuilderTests
     public void AResolverRegisteredForABaseTypeIsFoundByWalkingUpFromTheDeclaredType()
     {
         var registered = new AlwaysResolvePropertyUpdateNotifyResolver();
-        var binder = new DataBinderBuilder().WithResolver(typeof(BaseSource), registered).Build();
+        var binder = new DataBinderBuilder().WithPropertyResolver(typeof(BaseSource), registered).Build();
 
         // TSource 推导为 DerivedSource，注册表里只有 BaseSource
         var source = new DerivedSource { Number = 2 };
@@ -96,8 +96,8 @@ public class DataBinderBuilderTests
         var baseResolver = new AlwaysResolvePropertyUpdateNotifyResolver();
         var derivedResolver = new AlwaysResolvePropertyUpdateNotifyResolver();
         var binder = new DataBinderBuilder()
-                    .WithResolver(typeof(BaseSource), baseResolver)
-                    .WithResolver(typeof(DerivedSource), derivedResolver)
+                    .WithPropertyResolver(typeof(BaseSource), baseResolver)
+                    .WithPropertyResolver(typeof(DerivedSource), derivedResolver)
                     .Build();
 
         var source = new DerivedSource { Number = 3 };
@@ -117,8 +117,8 @@ public class DataBinderBuilderTests
     {
         var derivedResolver = new AlwaysResolvePropertyUpdateNotifyResolver();
         var binder = new DataBinderBuilder()
-                    .WithResolver(typeof(DerivedSource), derivedResolver)
-                    .WithFallbackResolver(new NullPropertyUpdateNotifyResolver())
+                    .WithPropertyResolver(typeof(DerivedSource), derivedResolver)
+                    .WithPropertyFallbackResolver(new NullPropertyUpdateNotifyResolver())
                     .Build();
 
         var source = new BaseSource { Number = 3 };
@@ -137,7 +137,7 @@ public class DataBinderBuilderTests
         var resolver = new PropertyUpdateNotifyResolverBuilder<GenericSource<int>>()
                       .WithProperty(nameof(GenericSource<int>.Number), (o, h) => o.Changed += h, (o, h) => o.Changed -= h)
                       .Build();
-        var binder = new DataBinderBuilder().WithResolver(typeof(GenericSource<>), resolver).Build();
+        var binder = new DataBinderBuilder().WithPropertyResolver(typeof(GenericSource<>), resolver).Build();
 
         var source = new GenericSource<int> { Number = 3 };
         var target = new PlainObject();
@@ -156,7 +156,7 @@ public class DataBinderBuilderTests
         var resolver = new PropertyUpdateNotifyResolverBuilder<DerivedGenericSource<int>>()
                       .WithProperty(nameof(GenericSource<int>.Number), (o, h) => o.Changed += h, (o, h) => o.Changed -= h)
                       .Build();
-        var binder = new DataBinderBuilder().WithResolver(typeof(GenericSource<>), resolver).Build();
+        var binder = new DataBinderBuilder().WithPropertyResolver(typeof(GenericSource<>), resolver).Build();
 
         var source = new DerivedGenericSource<int> { Number = 4 };
         var target = new PlainObject();
@@ -175,7 +175,7 @@ public class DataBinderBuilderTests
         // 刻意只设兜底、一个类型都不登记：ManualNotifySource 不是 INotifyPropertyChanged，
         // 它能被绑上、还能收到后续变更，就说明兜底确实被选中了。
         var binder = new DataBinderBuilder()
-                    .WithFallbackResolver(ManualNotifySource.CreateResolver())
+                    .WithPropertyFallbackResolver(ManualNotifySource.CreateResolver())
                     .Build();
 
         var source = new ManualNotifySource { Number = 5 };
@@ -192,7 +192,7 @@ public class DataBinderBuilderTests
     [Fact]
     public void WithFallbackResolverReplacesTheDefaultNotifyPropertyChangedFallback()
     {
-        var binder = new DataBinderBuilder().WithFallbackResolver(new NullPropertyUpdateNotifyResolver()).Build();
+        var binder = new DataBinderBuilder().WithPropertyFallbackResolver(new NullPropertyUpdateNotifyResolver()).Build();
 
         // NotifyObject 本来能被默认兜底解析，换成 Null 解析器之后就不行了
         Assert.Throws<ArgumentException>(() =>
@@ -221,7 +221,7 @@ public class DataBinderBuilderTests
         // 类型级解析器只登记了 Number；Text 没人认领，
         // 它不会卡在类型级解析器那里，而是落到绑定器的兜底路由（默认那套 INotifyPropertyChanged）。
         var binder = new DataBinderBuilder()
-                    .WithResolver(typeof(SplitNotifySource), SplitNotifySource.NumberResolver())
+                    .WithPropertyResolver(typeof(SplitNotifySource), SplitNotifySource.NumberResolver())
                     .Build();
 
         var source = new SplitNotifySource { Number = 3, Text = "a" };
@@ -250,8 +250,8 @@ public class DataBinderBuilderTests
         // NotifyObject.Text 没被登记：兜底换成什么都不认的解析器之后，它就绑不上了——
         // 说明接手的是绑定器的兜底，而不是类型级解析器自带的那套 NotifyPropertyChanged 默认。
         var nullFallback = new DataBinderBuilder()
-                          .WithResolver(typeof(NotifyObject), resolver)
-                          .WithFallbackResolver(new NullPropertyUpdateNotifyResolver())
+                          .WithPropertyResolver(typeof(NotifyObject), resolver)
+                          .WithPropertyFallbackResolver(new NullPropertyUpdateNotifyResolver())
                           .Build();
 
         Assert.Throws<ArgumentException>(() =>
@@ -262,8 +262,8 @@ public class DataBinderBuilderTests
         var target = new PlainObject();
 
         using var handle = new DataBinderBuilder()
-                          .WithResolver(typeof(NotifyObject), resolver)
-                          .WithFallbackResolver(DefaultPropertyUpdateNotifyResolver.Instance)
+                          .WithPropertyResolver(typeof(NotifyObject), resolver)
+                          .WithPropertyFallbackResolver(DefaultPropertyUpdateNotifyResolver.Instance)
                           .Build()
                           .BindPropertyOneWay(source, s => s.Text, target, t => t.Text);
 
@@ -279,7 +279,7 @@ public class DataBinderBuilderTests
         // 目标侧的表达式同样要走解析器选择：双向绑定要求目标也能解析出"可观察"端点，
         // 而 ManualNotifySource 不是 INotifyPropertyChanged，全靠兜底。
         var binder = new DataBinderBuilder()
-                    .WithFallbackResolver(ManualNotifySource.CreateResolver())
+                    .WithPropertyFallbackResolver(ManualNotifySource.CreateResolver())
                     .Build();
 
         var source = new ManualNotifySource { Number = 4 };
@@ -301,20 +301,20 @@ public class DataBinderBuilderTests
     public void RegisteringTheSameTypeTwiceThrows()
     {
         var builder = new DataBinderBuilder()
-                     .WithResolver(typeof(PlainObject), new AlwaysResolvePropertyUpdateNotifyResolver());
+                     .WithPropertyResolver(typeof(PlainObject), new AlwaysResolvePropertyUpdateNotifyResolver());
 
         Assert.Throws<ArgumentException>(() =>
-            builder.WithResolver(typeof(PlainObject), new AlwaysResolvePropertyUpdateNotifyResolver()));
+            builder.WithPropertyResolver(typeof(PlainObject), new AlwaysResolvePropertyUpdateNotifyResolver()));
     }
 
     [Fact]
     public void BuildSnapshotsTheRegistrations()
     {
-        var builder = new DataBinderBuilder().WithFallbackResolver(new NullPropertyUpdateNotifyResolver());
+        var builder = new DataBinderBuilder().WithPropertyFallbackResolver(new NullPropertyUpdateNotifyResolver());
         var built = builder.Build();
 
         // Build 之后再登记，不该影响已经建出来的绑定器
-        builder.WithResolver(typeof(PlainObject), new AlwaysResolvePropertyUpdateNotifyResolver());
+        builder.WithPropertyResolver(typeof(PlainObject), new AlwaysResolvePropertyUpdateNotifyResolver());
 
         Assert.Throws<ArgumentException>(() =>
             built.BindPropertyOneWay(new PlainObject(), s => s.Number, new PlainObject(), t => t.Number));

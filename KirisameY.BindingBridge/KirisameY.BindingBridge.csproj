@@ -13,6 +13,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="KirisameY.GenericUtils" Version="0.0.1" />
       <PackageReference Include="KirisameY.Relinq" Version="0.1.1" />
     </ItemGroup>
 
