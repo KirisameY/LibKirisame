@@ -8,6 +8,8 @@ namespace KirisameY.BindingBridge.Test.BinderTests;
 /// <summary>
 ///     覆盖 <c>DataBinderBase.ResolveProperty</c> 对表达式树形状的分支：
 ///     属性 / 字段 / 索引器 / 数组元素分别怎么解析，以及各种非法形状报什么错。
+///     报错文案里带的是整个表达式文本（如 <c>s =&gt; s.Number is not observable.</c>）——
+///     刻意如此，比只报参数名更有用。
 /// </summary>
 /// <remarks>
 ///     实测：C# 编译器为元素访问生成的节点并不是 <c>IndexExpression</c>——
@@ -101,7 +103,7 @@ public class PropertyExpressionResolutionTests
         var ex = Assert.Throws<ArgumentException>(() =>
             Binder().BindPropertyOneWay(SourceOf(5), s => s.Number, new PlainObject(), t => t.ReadOnlyNumber));
 
-        Assert.Equal("targetProperty is not writable.", ex.Message);
+        Assert.Equal("t => t.ReadOnlyNumber is not writable.", ex.Message);
     }
 
     [Fact]
@@ -110,7 +112,7 @@ public class PropertyExpressionResolutionTests
         var ex = Assert.Throws<ArgumentException>(() =>
             Binder().BindPropertyOneWay(SourceOf(5), s => s.Number, new NotifyObject(), t => t.ReadOnlyField));
 
-        Assert.Equal("targetProperty is not writable.", ex.Message);
+        Assert.Equal("t => t.ReadOnlyField is not writable.", ex.Message);
     }
 
     // ---------- 不可观察的源 ----------
@@ -121,7 +123,7 @@ public class PropertyExpressionResolutionTests
         var ex = Assert.Throws<ArgumentException>(() =>
             Binder().BindPropertyOneWay(new PlainObject(), s => s.Number, new PlainObject(), t => t.Number));
 
-        Assert.Equal("sourceProperty is not observable.", ex.Message);
+        Assert.Equal("s => s.Number is not observable.", ex.Message);
     }
 
     [Fact]
@@ -130,7 +132,7 @@ public class PropertyExpressionResolutionTests
         var ex = Assert.Throws<ArgumentException>(() =>
             Binder().BindPropertyTwoWay(new NotifyObject(), s => s.ReadOnlyNumber, new NotifyObject(), t => t.Number));
 
-        Assert.Equal("sourceProperty is not writable or not observable.", ex.Message);
+        Assert.Equal("s => s.ReadOnlyNumber is not writable or not observable.", ex.Message);
     }
 
     [Fact]
@@ -139,7 +141,7 @@ public class PropertyExpressionResolutionTests
         var ex = Assert.Throws<ArgumentException>(() =>
             Binder().BindPropertyTwoWay(new NotifyObject(), s => s.Number, new PlainObject(), t => t.Number));
 
-        Assert.Equal("targetProperty is not writable or not observable.", ex.Message);
+        Assert.Equal("t => t.Number is not writable or not observable.", ex.Message);
     }
 
     // ---------- 表达式树形状不合法 ----------

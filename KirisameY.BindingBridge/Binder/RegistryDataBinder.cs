@@ -25,18 +25,18 @@ internal class RegistryDataBinder(
         return resolver?.Resolve(type, memberInfo) ?? propertyFallback.Resolve(type, memberInfo);
     }
 
-    protected override ICollectionObservableEndpointBase<TObj, TElement>? ResolveCollectionSource<TObj, TElement>(Type type)
+    protected override ICollectionObservableEndpointBase<TObj, TElement>? ResolveCollectionSource<TObj, TElement>()
     {
-        var resolver = TraceType(type)
+        var resolver = TraceType(typeof(TObj))
                       .Select(collectionSourceResolvers.GetValueOrDefault)
                       .FirstOrDefault(r => r is not null);
 
         return resolver?.Resolve<TObj, TElement>() ?? collectionSourceFallback.Resolve<TObj, TElement>();
     }
 
-    protected override ICollectionObserverEndpointBase<TObj, TElement>? ResolveCollectionTarget<TObj, TElement>(Type type)
+    protected override ICollectionObserverEndpointBase<TObj, TElement>? ResolveCollectionTarget<TObj, TElement>()
     {
-        var resolver = TraceType(type)
+        var resolver = TraceType(typeof(TObj))
                       .Select(collectionTargetResolvers.GetValueOrDefault)
                       .FirstOrDefault(r => r is not null);
 

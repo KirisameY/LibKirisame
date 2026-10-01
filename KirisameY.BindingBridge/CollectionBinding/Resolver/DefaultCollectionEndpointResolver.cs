@@ -11,8 +11,8 @@ public class DefaultCollectionEndpointSourceResolver : ICollectionEndpointSource
 
     public ICollectionObservableEndpointBase<TObject, TElement>? Resolve<TObject, TElement>() where TObject : class
     {
-        if (typeof(TObject).IsAssignableTo(typeof(IReadOnlyCollection<TElement>))) return null;
-        if (typeof(TObject).IsAssignableTo(typeof(INotifyCollectionChanged))) return null;
+        if (!typeof(TObject).IsAssignableTo(typeof(IReadOnlyCollection<TElement>))) return null;
+        if (!typeof(TObject).IsAssignableTo(typeof(INotifyCollectionChanged))) return null;
 
         return typeof(TObject).IsAssignableTo(typeof(IReadOnlyList<TElement>))
             ? new NotifyListObservableEndpoint<TObject, TElement>(

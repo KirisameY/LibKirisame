@@ -79,8 +79,8 @@ public abstract partial class DataBinderBase : IDataBinder
     public IBindHandle BindCollection<TSource, TTarget, TElement>(TSource source, TTarget target, TypeA<TElement> elementType)
         where TSource : class where TTarget : class
     {
-        var sourceEndpoint = ResolveCollectionSource<TSource, TElement>(typeof(TSource));
-        var targetEndpoint = ResolveCollectionTarget<TSource, TElement>(typeof(TSource));
+        var sourceEndpoint = ResolveCollectionSource<TSource, TElement>();
+        var targetEndpoint = ResolveCollectionTarget<TTarget, TElement>();
 
         if (sourceEndpoint is not (ICollectionObservableEndpoint<TSource, TElement> or IListObservableEndpoint<TSource, TElement>))
             throw new ArgumentException($"{typeof(TSource)} is not a observable collection of {typeof(TElement)}");
@@ -102,8 +102,8 @@ public abstract partial class DataBinderBase : IDataBinder
         };
     }
 
-    protected abstract ICollectionObservableEndpointBase<TObj, TElement>? ResolveCollectionSource<TObj, TElement>(Type type) where TObj : class;
-    protected abstract ICollectionObserverEndpointBase<TObj, TElement>? ResolveCollectionTarget<TObj, TElement>(Type type) where TObj : class;
+    protected abstract ICollectionObservableEndpointBase<TObj, TElement>? ResolveCollectionSource<TObj, TElement>() where TObj : class;
+    protected abstract ICollectionObserverEndpointBase<TObj, TElement>? ResolveCollectionTarget<TObj, TElement>() where TObj : class;
 
     #endregion
 }

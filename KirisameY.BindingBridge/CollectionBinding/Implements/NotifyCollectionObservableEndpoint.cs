@@ -65,7 +65,7 @@ internal class NotifyCollectionObservableEndpoint<TCollection, TElement>(
         >? list;
         using (_cacheLock.EnterScope())
         {
-            if (!_cache.TryGetValue(sender, out list)) return;
+            if (!_cache.TryGetValue(sender!, out list)) return;
         }
 
         switch (args)
