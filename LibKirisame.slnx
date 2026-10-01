@@ -1,28 +1,31 @@
-<Solution>
-  <Folder Name="/A0.Base/">
-    <Project Path="KirisameY.CollectionViews/KirisameY.CollectionViews.csproj" />
-    <Project Path="KirisameY.GenericUtils/KirisameY.GenericUtils.csproj" />
-    <Project Path="KirisameY.MathPlus/KirisameY.MathPlus.csproj" />
-    <Project Path="KirisameY.Relinq/KirisameY.Relinq.csproj" />
-  </Folder>
-  <Folder Name="/A0T.BaseTest/" />
-  <Folder Name="/B0.Frame/">
-    <Project Path="KirisameY.BindingBridge/KirisameY.BindingBridge.csproj" />
-    <Project Path="KirisameY.EventBus/KirisameY.EventBus.csproj" />
-    <Project Path="KirisameY.NotifiableCollections/KirisameY.NotifiableCollections.csproj" />
-    <Project Path="KirisameY.Numeric/KirisameY.Numeric.csproj" />
-    <Project Path="KirisameY.Registration/KirisameY.Registration.csproj" />
-    <Project Path="KirisameY.SyncOrder/KirisameY.SyncOrder.csproj" />
-  </Folder>
-  <Folder Name="/B0T.FrameTest/">
-    <Project Path="KirisameY.BindingBridge.Test/KirisameY.BindingBridge.Test.csproj" />
-    <Project Path="KirisameY.EventBus.Test/KirisameY.EventBus.Test.csproj" />
-    <Project Path="KirisameY.NotifiableCollections.Test/KirisameY.NotifiableCollections.Test.csproj" />
-    <Project Path="KirisameY.Numeric.Test/KirisameY.Numeric.Test.csproj" />
-    <Project Path="KirisameY.SyncOrder.Test/KirisameY.SyncOrder.Test.csproj" />
-  </Folder>
-  <Folder Name="/B1.FrameExtension/">
-    <Project Path="KirisameY.BindingBridge.NotifiableCollections/KirisameY.BindingBridge.NotifiableCollections.csproj" />
-    <Project Path="KirisameY.GodotExtra/KirisameY.GodotExtra.csproj" />
-  </Folder>
+﻿<Solution>
+    <Folder Name="/A0.Base/">
+        <Project Path="KirisameY.CollectionViews/KirisameY.CollectionViews.csproj" />
+        <Project Path="KirisameY.GenericUtils/KirisameY.GenericUtils.csproj" />
+        <Project Path="KirisameY.MathPlus/KirisameY.MathPlus.csproj" />
+        <Project Path="KirisameY.Relinq/KirisameY.Relinq.csproj" />
+    </Folder>
+    <Folder Name="/A0T.BaseTest/" />
+    <Folder Name="/B0.Frame/">
+        <Project Path="KirisameY.BindingBridge/KirisameY.BindingBridge.csproj" />
+        <Project Path="KirisameY.EventBus/KirisameY.EventBus.csproj" />
+        <Project Path="KirisameY.NotifiableCollections/KirisameY.NotifiableCollections.csproj" />
+        <Project Path="KirisameY.Numeric/KirisameY.Numeric.csproj" />
+        <Project Path="KirisameY.Registration/KirisameY.Registration.csproj" />
+        <Project Path="KirisameY.SyncOrder/KirisameY.SyncOrder.csproj" />
+    </Folder>
+    <Folder Name="/B0T.FrameTest/">
+        <Project Path="KirisameY.BindingBridge.Test/KirisameY.BindingBridge.Test.csproj" />
+        <Project Path="KirisameY.EventBus.Test/KirisameY.EventBus.Test.csproj" />
+        <Project Path="KirisameY.NotifiableCollections.Test/KirisameY.NotifiableCollections.Test.csproj" />
+        <Project Path="KirisameY.Numeric.Test/KirisameY.Numeric.Test.csproj" />
+        <Project Path="KirisameY.SyncOrder.Test/KirisameY.SyncOrder.Test.csproj" />
+    </Folder>
+    <Folder Name="/B1.FrameExtension/">
+        <Project Path="KirisameY.BindingBridge.NotifiableCollections/KirisameY.BindingBridge.NotifiableCollections.csproj" />
+        <Project Path="KirisameY.GodotExtra/KirisameY.GodotExtra.csproj" />
+    </Folder>
+    <Folder Name="/B1T.FrameExtensionTest/">
+        <Project Path="KirisameY.BindingBridge.NotifiableCollections.Test/KirisameY.BindingBridge.NotifiableCollections.Test.csproj" />
+    </Folder>
 </Solution>
