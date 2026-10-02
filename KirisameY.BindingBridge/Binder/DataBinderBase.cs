@@ -76,7 +76,7 @@ public abstract partial class DataBinderBase : IDataBinder
 
     #region Collection
 
-    public IBindHandle BindCollection<TSource, TTarget, TElement>(TSource source, TTarget target, TypeA<TElement> elementType)
+    public IBindHandle BindCollection<TSource, TTarget, TElement>(TSource source, TTarget target, TypeA<TElement> elementType = default)
         where TSource : class where TTarget : class
     {
         var sourceEndpoint = ResolveCollectionSource<TSource, TElement>();
@@ -100,6 +100,18 @@ public abstract partial class DataBinderBase : IDataBinder
 
             _ => throw new Exception("this exception should never be thrown")
         };
+    }
+
+    public IBindHandle BindCollection<TSourceObj, TTargetObj, TSourceCollection, TTargetCollection, TElement>(
+        TSourceObj sourceObj, Expression<Func<TSourceObj, TSourceCollection>> sourceCollection,
+        TTargetObj targetObj, Expression<Func<TTargetObj, TTargetCollection>> targetCollection,
+        TypeA<TElement> elementType = default)
+        where TSourceObj : notnull
+        where TTargetObj : notnull
+        where TSourceCollection : class
+        where TTargetCollection : class
+    {
+        throw new NotImplementedException();
     }
 
     protected abstract ICollectionObservableEndpointBase<TObj, TElement>? ResolveCollectionSource<TObj, TElement>() where TObj : class;

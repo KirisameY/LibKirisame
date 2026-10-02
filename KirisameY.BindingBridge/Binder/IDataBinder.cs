@@ -29,8 +29,17 @@ public interface IPropertyDataBinder
     ) where TSource : notnull where TTarget : notnull;
 
     // collections
-    IBindHandle BindCollection<TSource, TTarget, TElement>(TSource source, TTarget target, TypeA<TElement> elementType)
+    IBindHandle BindCollection<TSource, TTarget, TElement>(TSource source, TTarget target, TypeA<TElement> elementType = default)
         where TSource : class where TTarget : class;
+
+    IBindHandle BindCollection<TSourceObj, TTargetObj, TSourceCollection, TTargetCollection, TElement>(
+        TSourceObj sourceObj, Expression<Func<TSourceObj, TSourceCollection>> sourceCollection,
+        TTargetObj targetObj, Expression<Func<TTargetObj, TTargetCollection>> targetCollection,
+        TypeA<TElement> elementType = default)
+        where TSourceObj : notnull
+        where TTargetObj : notnull
+        where TSourceCollection : class
+        where TTargetCollection : class;
 }
 
 public interface IDataBinder : IPropertyDataBinder;
