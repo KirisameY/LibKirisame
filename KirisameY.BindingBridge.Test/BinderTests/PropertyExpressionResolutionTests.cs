@@ -154,7 +154,7 @@ public class PropertyExpressionResolutionTests
         var ex = Assert.Throws<ArgumentException>(() =>
             Binder().BindPropertyOneWay(SourceOf(1), s => s.Number, new PlainObject(), staticMember));
 
-        Assert.Equal($"Expression is not from an instance of type <{typeof(PlainObject)}>.", ex.Message);
+        Assert.Contains("is neither an instance property, field, indexer with constant index, nor the source instance.", ex.Message);
     }
 
     [Fact]
@@ -166,7 +166,7 @@ public class PropertyExpressionResolutionTests
         var ex = Assert.Throws<ArgumentException>(() =>
             Binder().BindPropertyOneWay(SourceOf(1), s => s.Number, new PlainObject(), capturedMember));
 
-        Assert.Equal($"Expression is not from an instance of type <{typeof(PlainObject)}>.", ex.Message);
+        Assert.Contains("is neither an instance property, field, indexer with constant index, nor the source instance.", ex.Message);
     }
 
     [Fact]
@@ -177,7 +177,7 @@ public class PropertyExpressionResolutionTests
         var ex = Assert.Throws<ArgumentException>(() =>
             Binder().BindPropertyOneWay(SourceOf(1), s => s.Number, new PlainObject(), methodCall));
 
-        Assert.Equal("Expression is neither a property, field, nor indexer with constant index.", ex.Message);
+        Assert.Contains("is neither an instance property, field, indexer with constant index, nor the source instance.", ex.Message);
     }
 
     [Fact]
@@ -188,6 +188,6 @@ public class PropertyExpressionResolutionTests
         var ex = Assert.Throws<ArgumentException>(() =>
             Binder().BindPropertyOneWay(SourceOf(1), s => s.Number, new PlainObject(), constant));
 
-        Assert.Equal("Expression is neither a property, field, nor indexer with constant index.", ex.Message);
+        Assert.Contains("is neither an instance property, field, indexer with constant index, nor the source instance.", ex.Message);
     }
 }

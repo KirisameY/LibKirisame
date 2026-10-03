@@ -208,7 +208,7 @@ file static class PropertyResolveUtils
         while (true)
         {
             if (exp == objParam) break;
-            var (parent, member) = expBody switch
+            var (parent, member) = exp switch
             {
                 MemberExpression { Expression: { } e, Member: var m }                 => (e, m),
                 IndexExpression { Object: { } o, Indexer: var i }                     => (o, i),
@@ -224,7 +224,7 @@ file static class PropertyResolveUtils
                     type.GetProperty(propName) is { } property &&
                     arguments.All(e => e is ConstantExpression)
                 ) => (obj, property),
-                _ => throw new ArgumentException($"Expression {sourceExp} is neither a instance property, field, "
+                _ => throw new ArgumentException($"Expression {sourceExp} is neither an instance property, field, "
                                                + $"indexer with constant index, nor the source instance.")
             };
 
