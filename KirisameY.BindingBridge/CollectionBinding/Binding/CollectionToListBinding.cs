@@ -1,6 +1,4 @@
-﻿using System.Collections.Immutable;
-
-namespace KirisameY.BindingBridge.CollectionBinding.Binding;
+﻿namespace KirisameY.BindingBridge.CollectionBinding.Binding;
 
 internal sealed class CollectionToListBinding<TSource, TTarget, TElement> : IBindHandle where TSource : class where TTarget : class
 {

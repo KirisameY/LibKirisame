@@ -1,11 +1,8 @@
-﻿using System.Collections.Immutable;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 
 using KirisameY.BindingBridge.CollectionBinding;
-using KirisameY.BindingBridge.CollectionBinding.Binding;
 using KirisameY.BindingBridge.PropertyBinding;
-using KirisameY.BindingBridge.PropertyBinding.Implements;
 using KirisameY.BindingBridge.PropertyBinding.Resolver;
 using KirisameY.GenericUtils;
 

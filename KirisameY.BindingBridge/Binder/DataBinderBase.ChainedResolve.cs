@@ -41,8 +41,8 @@ public abstract partial class DataBinderBase
         var setter = PropertyResolveUtils.GetSetter(exp);
 
         // fin
-        Action<TObject, Action>? subscriber = notify is null ? null : (obj, action) => notify?.SubscribeUpdate(obj, action);
-        Action<TObject, Action>? unsubscriber = notify is null ? null : (obj, action) => notify?.UnsubscribeUpdate(obj, action);
+        Action<TObject, Action>? subscriber = notify is null ? null : (obj, action) => notify.Value.SubscribeUpdate(obj, action);
+        Action<TObject, Action>? unsubscriber = notify is null ? null : (obj, action) => notify.Value.UnsubscribeUpdate(obj, action);
         var result = (notify, setter) switch
         {
             (null, null)         => new DelegatePropertyEndpoint<TObject, TProperty>(getter),
@@ -84,6 +84,7 @@ public abstract partial class DataBinderBase
         return endpoint;
     }
 
+    // ReSharper disable once UnusedParameter.Local
     private ICollectionObservableEndpointBase<TObj, TElement>? ResolveChainedCollectionSource<TObj, TCollection, TElement>(
         Expression<Func<TObj, TCollection>> exp, TypeA<TElement> elementType
     ) where TObj : class where TCollection : class
@@ -112,6 +113,7 @@ public abstract partial class DataBinderBase
         return endpoint;
     }
 
+    // ReSharper disable once UnusedParameter.Local
     private ICollectionObserverEndpointBase<TObj, TElement>? ResolveChainedCollectionTarget<TObj, TCollection, TElement>(
         Expression<Func<TObj, TCollection>> exp, TypeA<TElement> elementType
     ) where TObj : class where TCollection : class
@@ -317,7 +319,7 @@ file static class PropertyResolveUtils
             {
                 list.ForEach((i, t) =>
                 {
-                    if (t is not (var parentGetter, { } notify)) return;
+                    if (t is not (_, { } notify)) return;
                     if (
                         (parentObjs[i], sourceHandlers[i]) is not
                         ({ } oldOp /*我超，op！*/, { } sh)
