@@ -79,8 +79,8 @@ public abstract partial class DataBinderBase : IDataBinder
     public IBindHandle BindCollection<TSource, TTarget, TElement>(TSource source, TTarget target, TypeA<TElement> elementType = default)
         where TSource : class where TTarget : class
     {
-        var sourceEndpoint = ResolveCollectionSource<TSource, TElement>();
-        var targetEndpoint = ResolveCollectionTarget<TTarget, TElement>();
+        var sourceEndpoint = ResolveSimpleCollectionSource<TSource, TElement>();
+        var targetEndpoint = ResolveSimpleCollectionTarget<TTarget, TElement>();
 
         if (sourceEndpoint is not (ICollectionObservableEndpoint<TSource, TElement> or IListObservableEndpoint<TSource, TElement>))
             throw new ArgumentException($"{typeof(TSource)} is not a observable collection of {typeof(TElement)}");
@@ -106,12 +106,32 @@ public abstract partial class DataBinderBase : IDataBinder
         TSourceObj sourceObj, Expression<Func<TSourceObj, TSourceCollection>> sourceCollection,
         TTargetObj targetObj, Expression<Func<TTargetObj, TTargetCollection>> targetCollection,
         TypeA<TElement> elementType = default)
-        where TSourceObj : notnull
-        where TTargetObj : notnull
+        where TSourceObj : class
+        where TTargetObj : class
         where TSourceCollection : class
         where TTargetCollection : class
     {
-        throw new NotImplementedException();
+        var sourceEndpoint = ResolveChainedCollectionSource(sourceCollection, elementType);
+        var targetEndpoint = ResolveChainedCollectionTarget(targetCollection, elementType);
+
+        if (sourceEndpoint is not (ICollectionObservableEndpoint<TSourceObj, TElement> or IListObservableEndpoint<TSourceObj, TElement>))
+            throw new ArgumentException($"{typeof(TSourceCollection)} is not a observable collection of {typeof(TElement)}");
+        if (targetEndpoint is not (ICollectionObserverEndpoint<TTargetObj, TElement> or IListObserverEndpoint<TTargetObj, TElement>))
+            throw new ArgumentException($"{typeof(TTargetCollection)} is not a observer for {typeof(TElement)} collection");
+
+        return (sourceEndpoint, targetEndpoint) switch
+        {
+            (ICollectionObservableEndpoint<TSourceObj, TElement> cse, ICollectionObserverEndpoint<TTargetObj, TElement> cte) =>
+                cse.CollectionBindTo(cte, sourceObj, targetObj),
+            (IListObservableEndpoint<TSourceObj, TElement> lse, IListObserverEndpoint<TTargetObj, TElement> lte) =>
+                lse.ListBindTo(lte, sourceObj, targetObj),
+            (ICollectionObservableEndpoint<TSourceObj, TElement> cse, IListObserverEndpoint<TTargetObj, TElement> lte) =>
+                cse.CollectionBindToList(lte, sourceObj, targetObj),
+            (IListObservableEndpoint<TSourceObj, TElement> lse, ICollectionObserverEndpoint<TTargetObj, TElement> cte) =>
+                lse.ListBindToCollection(cte, sourceObj, targetObj),
+
+            _ => throw new Exception("this exception should never be thrown")
+        };
     }
 
     protected abstract ICollectionObservableEndpointBase<TObj, TElement>? ResolveCollectionSource<TObj, TElement>() where TObj : class;

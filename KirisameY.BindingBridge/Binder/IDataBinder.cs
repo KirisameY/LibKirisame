@@ -36,8 +36,8 @@ public interface IPropertyDataBinder
         TSourceObj sourceObj, Expression<Func<TSourceObj, TSourceCollection>> sourceCollection,
         TTargetObj targetObj, Expression<Func<TTargetObj, TTargetCollection>> targetCollection,
         TypeA<TElement> elementType = default)
-        where TSourceObj : notnull
-        where TTargetObj : notnull
+        where TSourceObj : class
+        where TTargetObj : class
         where TSourceCollection : class
         where TTargetCollection : class;
 }

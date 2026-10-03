@@ -2,17 +2,22 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using KirisameY.BindingBridge.CollectionBinding;
+using KirisameY.BindingBridge.CollectionBinding.Implements;
 using KirisameY.BindingBridge.PropertyBinding.Implements;
 using KirisameY.BindingBridge.PropertyBinding.Resolver;
+using KirisameY.GenericUtils;
 using KirisameY.Relinq.Extensions;
 
 namespace KirisameY.BindingBridge.Binder;
 
 public abstract partial class DataBinderBase
 {
-    private readonly Dictionary<(Type Type, string Exp), object> _propertyCache = [];
-    private readonly Dictionary<(Type Type, MemberInfo? Member), PropertyUpdateNotifyProxy?> _propertyNotifyCache = [];
     private readonly Lock _cacheLock = new();
+    private readonly Dictionary<(Type Type, MemberInfo? Member), PropertyUpdateNotifyProxy?> _propertyNotifyCache = [];
+    private readonly Dictionary<(Type Type, string Exp), object> _propertyCache = [];
+    private readonly Dictionary<(Type collectionType, Type ElementType, string Exp), object?> _collectionSourceCache = [];
+    private readonly Dictionary<(Type collectionType, Type ElementType, string Exp), object?> _collectionTargetCache = [];
 
     private DelegatePropertyEndpoint<TObject, TProperty> ResolveProperty<TObject, TProperty>(Expression<Func<TObject, TProperty>> exp)
         where TObject : notnull
@@ -47,6 +52,91 @@ public abstract partial class DataBinderBase
         };
         _propertyCache.Add(cacheKey, result);
         return result;
+    }
+
+    private ICollectionObservableEndpointBase<TObj, TElement>? ResolveSimpleCollectionSource<TObj, TElement>() where TObj : class
+    {
+        using var _ = _cacheLock.EnterScope();
+
+        var cacheKey = (typeof(TObj), typeof(TElement), "");
+        if (_collectionSourceCache.TryGetValue(cacheKey, out var value))
+        {
+            return (ICollectionObservableEndpointBase<TObj, TElement>?)value;
+        }
+
+        var endpoint = ResolveCollectionSource<TObj, TElement>();
+        _collectionSourceCache.Add(cacheKey, endpoint);
+        return endpoint;
+    }
+
+    private ICollectionObserverEndpointBase<TObj, TElement>? ResolveSimpleCollectionTarget<TObj, TElement>() where TObj : class
+    {
+        using var _ = _cacheLock.EnterScope();
+
+        var cacheKey = (typeof(TObj), typeof(TElement), "");
+        if (_collectionTargetCache.TryGetValue(cacheKey, out var value))
+        {
+            return (ICollectionObserverEndpointBase<TObj, TElement>?)value;
+        }
+
+        var endpoint = ResolveCollectionTarget<TObj, TElement>();
+        _collectionTargetCache.Add(cacheKey, endpoint);
+        return endpoint;
+    }
+
+    private ICollectionObservableEndpointBase<TObj, TElement>? ResolveChainedCollectionSource<TObj, TCollection, TElement>(
+        Expression<Func<TObj, TCollection>> exp, TypeA<TElement> elementType
+    ) where TObj : class where TCollection : class
+    {
+        using var _ = _cacheLock.EnterScope();
+
+        var cacheKey = (typeof(TObj), typeof(TElement), exp.ToString());
+        if (_collectionSourceCache.TryGetValue(cacheKey, out var value))
+        {
+            return (ICollectionObservableEndpointBase<TObj, TElement>?)value;
+        }
+
+        var collectionSource = ResolveCollectionSource<TCollection, TElement>();
+        var notify = PropertyResolveUtils.ResolveChainedNotify(exp, ResolveProperty, _propertyNotifyCache);
+        ICollectionObservableEndpointBase<TObj, TElement>? endpoint = collectionSource switch
+        {
+            null => null,
+            IListObservableEndpoint<TCollection, TElement> ep =>
+                new ChainedListObservableEndpoint<TObj, TCollection, TElement>(ep, exp.Compile(), notify),
+            ICollectionObservableEndpoint<TCollection, TElement> ep =>
+                new ChainedCollectionObservableEndpoint<TObj, TCollection, TElement>(ep, exp.Compile(), notify),
+            _ => throw new Exception($"Unexpected collection source endpoint type {collectionSource.GetType()}")
+        };
+
+        _collectionSourceCache.Add(cacheKey, endpoint);
+        return endpoint;
+    }
+
+    private ICollectionObserverEndpointBase<TObj, TElement>? ResolveChainedCollectionTarget<TObj, TCollection, TElement>(
+        Expression<Func<TObj, TCollection>> exp, TypeA<TElement> elementType
+    ) where TObj : class where TCollection : class
+    {
+        using var _ = _cacheLock.EnterScope();
+
+        var cacheKey = (typeof(TObj), typeof(TElement), exp.ToString());
+        if (_collectionTargetCache.TryGetValue(cacheKey, out var value))
+        {
+            return (ICollectionObserverEndpointBase<TObj, TElement>?)value;
+        }
+
+        var collectionTarget = ResolveCollectionTarget<TCollection, TElement>();
+        ICollectionObserverEndpointBase<TObj, TElement>? endpoint = collectionTarget switch
+        {
+            null => null,
+            IListObserverEndpoint<TCollection, TElement> ep =>
+                new ChainedListObserverEndpoint<TObj, TCollection, TElement>(ep, exp.Compile()),
+            ICollectionObserverEndpoint<TCollection, TElement> ep =>
+                new ChainedCollectionObserverEndpoint<TObj, TCollection, TElement>(ep, exp.Compile()),
+            _ => throw new Exception($"Unexpected collection target endpoint type {collectionTarget.GetType()}")
+        };
+
+        _collectionTargetCache.Add(cacheKey, endpoint);
+        return endpoint;
     }
 }
 
