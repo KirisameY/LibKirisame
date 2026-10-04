@@ -275,6 +275,8 @@ public class NotifiableList<T> : INotifiableList<T>
     #endregion
 
 
+    //event
+
     private ImmutableList<EventHandler<ListUpdateEventArgs<T>>> _updatedEventHandlers = [];
 
     private void RaiseUpdate(ListUpdateEventArgs<T> args)

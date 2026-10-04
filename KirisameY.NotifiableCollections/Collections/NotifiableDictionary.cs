@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Immutable;
+using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 
 using KirisameY.NotifiableCollections.Collections.WrappedViews;
 using KirisameY.NotifiableCollections.EventArgs;
@@ -35,8 +37,7 @@ namespace KirisameY.NotifiableCollections.Collections;
 ///         Changes are reported in terms of key-value pairs (see the
 ///         <see cref="IDictionaryUpdateEventArgs{TKey, TValue}"/> family), and a removal notification carries the
 ///         values the keys held <b>at the time</b> they were removed. <see cref="Keys"/> and
-///         <see cref="Values"/> are notifying views in their own right, so either side can be subscribed to
-///         independently.
+///         <see cref="Values"/> are notifying views in their own right, so either side can be independently subscribed to.
 ///         <br/>
 ///         Notifications are raised synchronously <b>after</b> the underlying dictionary has been modified, and
 ///         the views carried by the event arguments are live views rather than snapshots.
@@ -48,6 +49,33 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
     private readonly Dictionary<TKey, TValue> _innerDict = [];
 
     private IReadOnlyDictionary<TKey, TValue> Readonly => field ??= _innerDict.AsReadOnly();
+
+
+    /// <inheritdoc cref="INotifiableDictionary{TKey,TValue}.this" />
+    public TValue this[TKey key]
+    {
+        get => _innerDict[key];
+        set
+        {
+            if (_innerDict.TryGetValue(key, out var oldValue))
+            {
+                _innerDict[key] = value;
+                RaiseUpdate(new DictionaryItemReplacedEventArgs<TKey, TValue>(
+                                Readonly,
+                                new Dictionary<TKey, TValue> { { key, oldValue } }.AsReadOnly(),
+                                new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
+                            ));
+            }
+            else
+            {
+                _innerDict[key] = value;
+                RaiseUpdate(new DictionaryItemAddedEventArgs<TKey, TValue>(
+                                Readonly,
+                                new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
+                            ));
+            }
+        }
+    }
 
 
     #region Reading
@@ -87,31 +115,7 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
     #endregion
 
 
-    /// <inheritdoc cref="INotifiableDictionary{TKey,TValue}.this" />
-    public TValue this[TKey key]
-    {
-        get => _innerDict[key];
-        set
-        {
-            if (_innerDict.TryGetValue(key, out var oldValue))
-            {
-                _innerDict[key] = value;
-                RaiseUpdate(new DictionaryItemReplacedEventArgs<TKey, TValue>(
-                                Readonly,
-                                new Dictionary<TKey, TValue> { { key, oldValue } }.AsReadOnly(),
-                                new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
-                            ));
-            }
-            else
-            {
-                _innerDict[key] = value;
-                RaiseUpdate(new DictionaryItemAddedEventArgs<TKey, TValue>(
-                                Readonly,
-                                new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
-                            ));
-            }
-        }
-    }
+    #region Writing
 
     /// <inheritdoc/>
     public void Add(TKey key, TValue value)
@@ -123,8 +127,22 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
                     ));
     }
 
-    /// <inheritdoc/>
+    // 这里原本继承的ICollection<T>上的注释，那个太泛了应该重写一个
     public void Add(KeyValuePair<TKey, TValue> item) => Add(item.Key, item.Value);
+
+    public void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> values)
+    {
+        var dict = values.ToImmutableDictionary();
+        if (dict.IsEmpty) return;
+
+        foreach (var pair in dict)
+        {
+            _innerDict.Add(pair.Key, pair.Value);
+        }
+        RaiseUpdate(new DictionaryItemAddedEventArgs<TKey, TValue>(
+                        Readonly, dict
+                    ));
+    }
 
     /// <inheritdoc cref="Dictionary{TKey,TValue}.TryAdd" />
     public bool TryAdd(TKey key, TValue value)
@@ -137,16 +155,72 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
         return true;
     }
 
-    /// <inheritdoc/>
-    public bool Remove(TKey key)
+    public bool TryAdd(KeyValuePair<TKey, TValue> item) => TryAdd(item.Key, item.Value);
+
+    public IReadOnlyDictionary<TKey, TValue> TryAddRange(IEnumerable<KeyValuePair<TKey, TValue>> values)
     {
-        if (!_innerDict.Remove(key, out var value)) return false;
+        List<KeyValuePair<TKey, TValue>> addedValues = [];
+        foreach (var pair in values)
+        {
+            if (_innerDict.TryAdd(pair.Key, pair.Value)) addedValues.Add(pair);
+        }
+
+        if (addedValues.Count == 0) return ReadOnlyDictionary<TKey, TValue>.Empty;
+
+        var dict = addedValues.ToImmutableDictionary();
+
+        RaiseUpdate(new DictionaryItemAddedEventArgs<TKey, TValue>(
+                        Readonly, dict
+                    ));
+        return dict;
+    }
+
+    public void PutRange(IEnumerable<KeyValuePair<TKey, TValue>> values)
+    {
+        List<KeyValuePair<TKey, TValue>> addedValues = [];
+        List<KeyValuePair<TKey, TValue>> replacedOldValues = [];
+        List<KeyValuePair<TKey, TValue>> replacedNewValues = [];
+        foreach (var pair in values)
+        {
+            if (_innerDict.TryAdd(pair.Key, pair.Value)) addedValues.Add(pair);
+            else
+            {
+                replacedOldValues.Add(new(pair.Key, _innerDict[pair.Key]));
+                _innerDict[pair.Key] = pair.Value;
+                replacedNewValues.Add(pair);
+            }
+        }
+
+        if (replacedNewValues.Count > 0)
+        {
+            RaiseUpdate(new DictionaryItemReplacedEventArgs<TKey, TValue>(
+                            Readonly,
+                            replacedOldValues.ToImmutableDictionary(),
+                            replacedNewValues.ToImmutableDictionary()
+                        ));
+        }
+        if (addedValues.Count > 0)
+        {
+            RaiseUpdate(new DictionaryItemAddedEventArgs<TKey, TValue>(
+                            Readonly,
+                            addedValues.ToImmutableDictionary()
+                        ));
+        }
+    }
+
+    /// <inheritdoc cref="Dictionary{TKey,TValue}.Remove(TKey, out TValue)" />
+    public bool Remove(TKey key, [MaybeNullWhen(false)] out TValue value)
+    {
+        if (!_innerDict.Remove(key, out value)) return false;
         RaiseUpdate(new DictionaryItemRemovedEventArgs<TKey, TValue>(
                         Readonly,
                         new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
                     ));
         return true;
     }
+
+    /// <inheritdoc/>
+    public bool Remove(TKey key) => Remove(key, out _);
 
     /// <inheritdoc/>
     public bool Remove(KeyValuePair<TKey, TValue> item)
@@ -159,6 +233,23 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
         return true;
     }
 
+    public IReadOnlyDictionary<TKey, TValue> RemoveRange(IEnumerable<TKey> keys)
+    {
+        List<KeyValuePair<TKey, TValue>> removed = [];
+        foreach (var key in keys)
+        {
+            if (!_innerDict.Remove(key, out var value)) continue;
+            removed.Add(new(key, value));
+        }
+
+        if (removed.Count == 0) return ReadOnlyDictionary<TKey, TValue>.Empty;
+        var dict = removed.ToImmutableDictionary();
+        RaiseUpdate(new DictionaryItemRemovedEventArgs<TKey, TValue>(
+                        Readonly, dict
+                    ));
+        return dict;
+    }
+
     /// <inheritdoc/>
     public void Clear()
     {
@@ -167,6 +258,10 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
         RaiseUpdate(new DictionaryItemClearedEventArgs<TKey, TValue>(Readonly, before));
     }
 
+    #endregion
+
+
+    // event
 
     private ImmutableList<EventHandler<DictionaryUpdateEventArgs<TKey, TValue>>> _updatedEventHandlers = [];
 
