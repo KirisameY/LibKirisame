@@ -127,17 +127,61 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
                     ));
     }
 
-    // 这里原本继承的ICollection<T>上的注释，那个太泛了应该重写一个
+    /// <summary>
+    ///     添加一个键值对，结果与 <see cref="Add(TKey, TValue)"/> 完全相同。
+    ///     <br/>
+    ///     Adds a key-value pair; identical in effect to <see cref="Add(TKey, TValue)"/>.
+    /// </summary>
+    /// <param name="item">
+    ///     要添加的键值对。
+    ///     <br/>
+    ///     The key-value pair to add.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    ///     键已存在。
+    ///     <br/>
+    ///     The key already exists.
+    /// </exception>
     public void Add(KeyValuePair<TKey, TValue> item) => Add(item.Key, item.Value);
 
+    /// <summary>
+    ///     追加一批键值对，并发出<b>一次</b>携带整批键值对的添加通知。
+    ///     <br/>
+    ///     Adds a batch of key-value pairs and raises a <b>single</b> addition notification carrying the whole batch.
+    /// </summary>
+    /// <param name="values">
+    ///     要添加的键值对。
+    ///     <br/>
+    ///     The key-value pairs to add.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    ///     入参里有键已经存在于字典中，或者入参<b>内部</b>有重复的键——和逐个 <see cref="Add(TKey, TValue)"/> 一样，
+    ///     撞上已有的键是错误用法而不是「跳过」。两种情况都不发通知：前者会把本次已经写进去的部分撤回去，
+    ///     字典回到调用前的状态；后者因为入参先被整体快照，一个都还没写进去。
+    ///     <br/>
+    ///     A key in the argument already exists in the dictionary, or the argument contains duplicate keys — as with
+    ///     calling <see cref="Add(TKey, TValue)"/> one by one, hitting an existing key is an error rather than a
+    ///     skip. Neither raises a notification: in the first case everything this call already wrote is rolled back
+    ///     and the dictionary returns to its previous state; in the second nothing was written at all, because the
+    ///     argument is snapshot up front.
+    /// </exception>
     public void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> values)
     {
         var dict = values.ToImmutableDictionary();
         if (dict.IsEmpty) return;
 
-        foreach (var pair in dict)
+        var items = dict.ToArray();
+        foreach (var (index, pair) in items.Index())
         {
-            _innerDict.Add(pair.Key, pair.Value);
+            try
+            {
+                _innerDict.Add(pair.Key, pair.Value);
+            }
+            catch (ArgumentException)
+            {
+                for (int i = 0; i < index; i++) _innerDict.Remove(items[i].Key);
+                throw;
+            }
         }
         RaiseUpdate(new DictionaryItemAddedEventArgs<TKey, TValue>(
                         Readonly, dict
@@ -155,8 +199,47 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
         return true;
     }
 
+    /// <summary>
+    ///     尝试添加一个键值对，结果与 <see cref="TryAdd(TKey, TValue)"/> 完全相同。
+    ///     <br/>
+    ///     Tries to add a key-value pair; identical in effect to <see cref="TryAdd(TKey, TValue)"/>.
+    /// </summary>
+    /// <param name="item">
+    ///     要添加的键值对。
+    ///     <br/>
+    ///     The key-value pair to add.
+    /// </param>
+    /// <returns>
+    ///     添加成功返回 <see langword="true"/>；键已存在则返回 <see langword="false"/>。
+    ///     <br/>
+    ///     <see langword="true"/> when the pair was added; <see langword="false"/> when the key already exists.
+    /// </returns>
     public bool TryAdd(KeyValuePair<TKey, TValue> item) => TryAdd(item.Key, item.Value);
 
+    /// <summary>
+    ///     尝试追加一批键值对，并发出<b>一次</b>携带<b>真正加进去的</b>那些键值对的添加通知。
+    ///     <br/>
+    ///     Tries to add a batch of key-value pairs and raises a <b>single</b> addition notification carrying
+    ///     <b>only the pairs that made it in</b>.
+    /// </summary>
+    /// <param name="values">
+    ///     要添加的键值对。
+    ///     <br/>
+    ///     The key-value pairs to add.
+    /// </param>
+    /// <returns>
+    ///     真正被添加进去的那些键值对；一个都没加进去时为空字典。
+    ///     <br/>
+    ///     The pairs that were actually added; an empty dictionary when nothing was added.
+    /// </returns>
+    /// <remarks>
+    ///     已有的键会被跳过——既不抛异常，也不出现在返回值和通知里；入参内部重复的键只有第一个能进得去。
+    ///     一个都没加进去时不发通知。
+    ///     <br/>
+    ///     Keys that already exist are skipped: they neither throw nor show up in the return value or the
+    ///     notification, and of duplicate keys inside the argument only the first one makes it in. When nothing
+    ///     was added, no notification is raised.
+    /// </remarks>
     public IReadOnlyDictionary<TKey, TValue> TryAddRange(IEnumerable<KeyValuePair<TKey, TValue>> values)
     {
         List<KeyValuePair<TKey, TValue>> addedValues = [];
@@ -175,6 +258,22 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
         return dict;
     }
 
+    /// <summary>
+    ///     写入一批键值对：没有的键按添加处理，已有的键按替换处理。
+    ///     <br/>
+    ///     Writes a batch of key-value pairs: missing keys are added, existing ones are replaced.
+    /// </summary>
+    /// <param name="values">
+    ///     要写入的键值对。
+    ///     <br/>
+    ///     The key-value pairs to write.
+    /// </param>
+    /// <remarks>
+    ///     可能发出<b>最多两次</b>通知——替换和通知，替换通知总是会早于添加通知被发出。
+    ///     <br/>
+    ///     <b>Up to two</b> notifications may be raised — one for the replacements, then one for the additions,
+    ///     always in that order.
+    /// </remarks>
     public void PutRange(IEnumerable<KeyValuePair<TKey, TValue>> values)
     {
         List<KeyValuePair<TKey, TValue>> addedValues = [];
@@ -233,6 +332,28 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
         return true;
     }
 
+    /// <summary>
+    ///     按 key 移除一批键值对，并发出<b>一次</b>携带这批被移除键值对的移除通知。
+    ///     <br/>
+    ///     Removes a batch of keys and raises a <b>single</b> removal notification carrying the pairs removed.
+    /// </summary>
+    /// <param name="keys">
+    ///     要移除的键。
+    ///     <br/>
+    ///     The keys to remove.
+    /// </param>
+    /// <returns>
+    ///     真正被移除的那些键值对，带的是它们被移除<b>时</b>的值；一个都没删掉时为空字典。
+    ///     <br/>
+    ///     The pairs that were actually removed, carrying the values they held <b>at the time</b>; an empty
+    ///     dictionary when nothing was removed.
+    /// </returns>
+    /// <remarks>
+    ///     不存在的键会被静默跳过，重复的键只有第一次能删到。一个都没删掉时不发通知。
+    ///     <br/>
+    ///     Keys that are not present are skipped silently, and a repeated key is only removed once. When nothing
+    ///     was removed, no notification is raised.
+    /// </remarks>
     public IReadOnlyDictionary<TKey, TValue> RemoveRange(IEnumerable<TKey> keys)
     {
         List<KeyValuePair<TKey, TValue>> removed = [];
