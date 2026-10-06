@@ -43,6 +43,7 @@ internal class ChainedListObservableEndpoint<TObj, TList, TItem>(
             endpoint.UnsubscribeListUpdate(list, addHandler, removedHandler, replacedHandler, movedHandler, resetHandler);
             endpoint.SubscribeListUpdate(newList, addHandler, removedHandler, replacedHandler, movedHandler, resetHandler);
             resetHandler.Invoke(endpoint.GetListView(newList));
+            list = newList;
         };
         if (!_updateDicts.TryGetValue(obj, out var dict))
         {

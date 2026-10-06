@@ -41,6 +41,7 @@ internal class ChainedCollectionObservableEndpoint<TObj, TCollection, TElement>(
             endpoint.UnsubscribeCollectionUpdate(collection, addHandler, removedHandler, replacedHandler, resetHandler);
             endpoint.SubscribeCollectionUpdate(newCollection, addHandler, removedHandler, replacedHandler, resetHandler);
             resetHandler.Invoke(endpoint.GetCollectionView(newCollection));
+            collection = newCollection;
         };
         if (!_updateDicts.TryGetValue(obj, out var dict))
         {

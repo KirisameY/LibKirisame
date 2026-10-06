@@ -10,7 +10,7 @@ public class DefaultEventEndpointSourceResolver : IEventEndpointSourceResolver
     public IEventNotifierEndpoint<TObject, TDelegate>? Resolve<TObject, TDelegate>(string eventName) where TObject : class where TDelegate : Delegate
     {
         var eventInfo = typeof(TObject).GetEvent(eventName);
-        if (eventInfo is not { EventHandlerType: { } handlerType, AddMethod: { } addMethod, RaiseMethod: { } removeMethod }) return null;
+        if (eventInfo is not { EventHandlerType: { } handlerType, AddMethod: { } addMethod, RemoveMethod: { } removeMethod }) return null;
         if (!typeof(TDelegate).IsAssignableTo(handlerType)) return null;
 
         var add = addMethod.CreateDelegate<Action<TObject, TDelegate>>();

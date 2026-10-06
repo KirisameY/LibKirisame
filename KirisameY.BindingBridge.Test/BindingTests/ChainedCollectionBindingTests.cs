@@ -1,4 +1,6 @@
-﻿using KirisameY.BindingBridge.Binder;
+﻿using System.Collections.ObjectModel;
+
+using KirisameY.BindingBridge.Binder;
 using KirisameY.BindingBridge.Test.TestDoubles;
 using KirisameY.GenericUtils;
 
@@ -123,6 +125,48 @@ public class ChainedCollectionBindingTests
 
         source.Items.Add(9);
         Assert.Equal(new[] { 7, 8 }, target.Items);
+    }
+
+    [Fact]
+    public void EveryListThatWasReplacedIsAlsoUnsubscribedFrom()
+    {
+        var source = new ChainedCollectionHolder { Items = [1] };
+        var target = new ChainedCollectionHolder();
+
+        using var handle = DefaultBinder().BindCollection(source, s => s.Items, target, t => t.Items, TypeA.Of<int>());
+
+        var middleItems = new ObservableCollection<int>();
+        source.Items = middleItems;
+        var lastItems = new ObservableCollection<int>();
+        source.Items = lastItems;
+
+        lastItems.Add(2);
+        Assert.Equal(new[] { 2 }, target.Items);
+
+        // 已经被换下去的那个集合也不该再影响目标
+        middleItems.Add(3);
+        Assert.Equal(new[] { 2 }, target.Items);
+    }
+
+    [Fact]
+    public void EveryNonListCollectionThatWasReplacedIsAlsoUnsubscribedFrom()
+    {
+        var source = new ChainedSetHolder { Items = [1] };
+        var target = new ChainedCollectionHolder();
+
+        using var handle = DefaultBinder().BindCollection(source, s => s.Items, target, t => t.Items, TypeA.Of<int>());
+
+        var middleItems = new ObservableSet<int>();
+        source.Items = middleItems;
+        var lastItems = new ObservableSet<int>();
+        source.Items = lastItems;
+
+        lastItems.Add(2);
+        Assert.Equal(new[] { 2 }, target.Items);
+
+        // 已经被换下去的那个集合也不该再影响目标
+        middleItems.Add(3);
+        Assert.Equal(new[] { 2 }, target.Items);
     }
 
     [Fact]

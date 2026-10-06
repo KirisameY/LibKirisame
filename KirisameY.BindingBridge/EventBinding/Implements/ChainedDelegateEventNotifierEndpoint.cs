@@ -27,6 +27,7 @@ internal class ChainedDelegateEventNotifierEndpoint<TRoot, TNotifier, TDelegate>
             var newNotifier = notifierGetter.Invoke(obj);
             endpoint.UnsubscribeEvent(notifier, handler);
             endpoint.SubscribeEvent(newNotifier, handler);
+            notifier = newNotifier;
         };
         if (!_updateDicts.TryGetValue(obj, out var dict))
         {
@@ -50,6 +51,6 @@ internal class ChainedDelegateEventNotifierEndpoint<TRoot, TNotifier, TDelegate>
             !dict.Remove(handler, out var rebindHandler)
         ) throw new Exception("this exception should never be thrown");
 
-        rebindNotify.Value.SubscribeUpdate(obj, rebindHandler);
+        rebindNotify.Value.UnsubscribeUpdate(obj, rebindHandler);
     }
 }
