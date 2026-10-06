@@ -32,14 +32,25 @@ public interface IPropertyDataBinder
     IBindHandle BindCollection<TSource, TTarget, TElement>(TSource source, TTarget target, TypeA<TElement> elementType = default)
         where TSource : class where TTarget : class;
 
-    IBindHandle BindCollection<TSourceObj, TTargetObj, TSourceCollection, TTargetCollection, TElement>(
-        TSourceObj sourceObj, Expression<Func<TSourceObj, TSourceCollection>> sourceCollection,
-        TTargetObj targetObj, Expression<Func<TTargetObj, TTargetCollection>> targetCollection,
+    IBindHandle BindCollection<TSourceRoot, TTargetRoot, TSourceCollection, TTargetCollection, TElement>(
+        TSourceRoot sourceObj, Expression<Func<TSourceRoot, TSourceCollection>> sourceCollection,
+        TTargetRoot targetObj, Expression<Func<TTargetRoot, TTargetCollection>> targetCollection,
         TypeA<TElement> elementType = default)
-        where TSourceObj : class
-        where TTargetObj : class
+        where TSourceRoot : class
+        where TTargetRoot : class
         where TSourceCollection : class
         where TTargetCollection : class;
+
+    // events
+    IBindHandle BindEvent<TSource, TTarget, TDelegate>(
+        TSource source, string eventName,
+        TTarget target, Expression<Func<TTarget, TDelegate>> handler
+    ) where TSource : class where TDelegate : Delegate;
+
+    IBindHandle BindEvent<TSourceRoot, TSourceNotifier, TTarget, TDelegate>(
+        TSourceRoot source, Expression<Func<TSourceRoot, TSourceNotifier>> sourceNotifier, string eventName,
+        TTarget target, Expression<Func<TTarget, TDelegate>> handler
+    ) where TSourceRoot : class where TSourceNotifier : class where TDelegate : Delegate;
 }
 
 public interface IDataBinder : IPropertyDataBinder;

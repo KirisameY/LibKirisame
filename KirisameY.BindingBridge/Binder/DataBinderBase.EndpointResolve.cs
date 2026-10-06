@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 
 using KirisameY.BindingBridge.CollectionBinding;
 using KirisameY.BindingBridge.CollectionBinding.Implements;
+using KirisameY.BindingBridge.EventBinding;
+using KirisameY.BindingBridge.EventBinding.Implements;
 using KirisameY.BindingBridge.PropertyBinding.Implements;
 using KirisameY.BindingBridge.PropertyBinding.Resolver;
 using KirisameY.GenericUtils;
@@ -16,8 +18,10 @@ public abstract partial class DataBinderBase
     private readonly Lock _cacheLock = new();
     private readonly Dictionary<(Type Type, MemberInfo? Member), PropertyUpdateNotifyProxy?> _propertyNotifyCache = [];
     private readonly Dictionary<(Type Type, string Exp), object> _propertyCache = [];
-    private readonly Dictionary<(Type collectionType, Type ElementType, string Exp), object?> _collectionSourceCache = [];
-    private readonly Dictionary<(Type collectionType, Type ElementType, string Exp), object?> _collectionTargetCache = [];
+    private readonly Dictionary<(Type Type, Type ElementType, string Exp), object?> _collectionSourceCache = [];
+    private readonly Dictionary<(Type Type, Type ElementType, string Exp), object?> _collectionTargetCache = [];
+    private readonly Dictionary<(Type Type, string EventName), object?> _eventSourceCache = [];
+    private readonly Dictionary<(Type Type, string Exp), object?> _eventTargetCache = [];
 
     private DelegatePropertyEndpoint<TObject, TProperty> ResolveProperty<TObject, TProperty>(Expression<Func<TObject, TProperty>> exp)
         where TObject : notnull
@@ -138,6 +142,58 @@ public abstract partial class DataBinderBase
         };
 
         _collectionTargetCache.Add(cacheKey, endpoint);
+        return endpoint;
+    }
+
+    private IEventNotifierEndpoint<TObj, TDelegate>? ResolveSimpleEventSource<TObj, TDelegate>(string eventName)
+        where TObj : class where TDelegate : Delegate
+    {
+        using var _ = _cacheLock.EnterScope();
+
+        var cacheKey = (typeof(TObj), eventName);
+        if (_eventSourceCache.TryGetValue(cacheKey, out var value))
+        {
+            return value as IEventNotifierEndpoint<TObj, TDelegate>;
+        }
+
+        var endpoint = ResolveEventNotifierEndpoint<TObj, TDelegate>(eventName);
+        _eventSourceCache.Add(cacheKey, endpoint);
+        return endpoint;
+    }
+
+    private IEventNotifierEndpoint<TRoot, TDelegate>? ResolveChainedEventSource<TRoot, TNotifier, TDelegate>(
+        Expression<Func<TRoot, TNotifier>> notifier, string eventName, TypeA<TDelegate> delegateType
+    ) where TRoot : class where TNotifier : class where TDelegate : Delegate
+    {
+        using var _ = _cacheLock.EnterScope();
+
+        var cacheKey = (typeof(TRoot), $"{notifier}@{eventName}");
+        if (_eventSourceCache.TryGetValue(cacheKey, out var value))
+        {
+            return value as IEventNotifierEndpoint<TRoot, TDelegate>;
+        }
+
+        var notify = PropertyResolveUtils.ResolveChainedNotify(notifier, ResolveProperty, _propertyNotifyCache);
+        var eventSource = ResolveEventNotifierEndpoint<TNotifier, TDelegate>(eventName);
+        var endpoint = eventSource is null ? null :
+            new ChainedDelegateEventNotifierEndpoint<TRoot, TNotifier, TDelegate>(eventSource, notifier.Compile(), notify);
+
+        _eventSourceCache.Add(cacheKey, endpoint);
+        return endpoint;
+    }
+
+    private IEventHandlerEndpoint<TObj, TDelegate> ResolveEventTarget<TObj, TDelegate>(Expression<Func<TObj, TDelegate>> exp) where TDelegate : Delegate
+    {
+        using var _ = _cacheLock.EnterScope();
+
+        var cacheKey = (typeof(TObj), exp.ToString());
+        if (_eventTargetCache.TryGetValue(cacheKey, out var value))
+        {
+            return (IEventHandlerEndpoint<TObj, TDelegate>)value!;
+        }
+
+        var endpoint = new DelegateEventHandlerEndpoint<TObj, TDelegate>(exp.Compile());
+        _eventTargetCache.Add(cacheKey, endpoint);
         return endpoint;
     }
 }

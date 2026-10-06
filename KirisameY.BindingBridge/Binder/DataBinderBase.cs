@@ -2,6 +2,7 @@
 using System.Reflection;
 
 using KirisameY.BindingBridge.CollectionBinding;
+using KirisameY.BindingBridge.EventBinding;
 using KirisameY.BindingBridge.PropertyBinding;
 using KirisameY.BindingBridge.PropertyBinding.Resolver;
 using KirisameY.GenericUtils;
@@ -133,6 +134,40 @@ public abstract partial class DataBinderBase : IDataBinder
 
     protected abstract ICollectionObservableEndpointBase<TObj, TElement>? ResolveCollectionSource<TObj, TElement>() where TObj : class;
     protected abstract ICollectionObserverEndpointBase<TObj, TElement>? ResolveCollectionTarget<TObj, TElement>() where TObj : class;
+
+    #endregion
+
+
+    #region Event
+
+    public IBindHandle BindEvent<TSource, TTarget, TDelegate>(
+        TSource source, string eventName,
+        TTarget target, Expression<Func<TTarget, TDelegate>> handler
+    ) where TSource : class where TDelegate : Delegate
+    {
+        var from = ResolveSimpleEventSource<TSource, TDelegate>(eventName);
+        var to = ResolveEventTarget(handler);
+
+        if (from is null) throw new ArgumentException($"Type {typeof(TSource)} does not have observable event {eventName}");
+
+        return from.EventBindTo(to, source, target);
+    }
+
+    public IBindHandle BindEvent<TSourceRoot, TSourceNotifier, TTarget, TDelegate>(
+        TSourceRoot source, Expression<Func<TSourceRoot, TSourceNotifier>> sourceNotifier, string eventName,
+        TTarget target, Expression<Func<TTarget, TDelegate>> handler
+    ) where TSourceRoot : class where TSourceNotifier : class where TDelegate : Delegate
+    {
+        var from = ResolveChainedEventSource(sourceNotifier, eventName, TypeA.Of<TDelegate>());
+        var to = ResolveEventTarget(handler);
+
+        if (from is null) throw new ArgumentException($"Type {typeof(TSourceNotifier)} does not have observable event {eventName}");
+
+        return from.EventBindTo(to, source, target);
+    }
+
+    protected abstract IEventNotifierEndpoint<TObject, TDelegate>? ResolveEventNotifierEndpoint<TObject, TDelegate>(string eventName)
+        where TObject : class where TDelegate : Delegate;
 
     #endregion
 }

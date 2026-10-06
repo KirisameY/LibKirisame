@@ -3,6 +3,8 @@ using System.Reflection;
 
 using KirisameY.BindingBridge.CollectionBinding;
 using KirisameY.BindingBridge.CollectionBinding.Resolver;
+using KirisameY.BindingBridge.EventBinding;
+using KirisameY.BindingBridge.EventBinding.Resolver;
 using KirisameY.BindingBridge.PropertyBinding.Resolver;
 
 namespace KirisameY.BindingBridge.Binder;
@@ -13,8 +15,9 @@ internal class RegistryDataBinder(
     FrozenDictionary<Type, ICollectionEndpointSourceResolver> collectionSourceResolvers,
     ICollectionEndpointSourceResolver collectionSourceFallback,
     FrozenDictionary<Type, ICollectionEndpointTargetResolver> collectionTargetResolvers,
-    ICollectionEndpointTargetResolver collectionTargetFallback
-) : DataBinderBase
+    ICollectionEndpointTargetResolver collectionTargetFallback,
+    FrozenDictionary<Type, IEventEndpointSourceResolver> eventSourceResolvers,
+    IEventEndpointSourceResolver eventSourceFallback) : DataBinderBase
 {
     protected override PropertyUpdateNotifyProxy? ResolveProperty(Type type, MemberInfo? memberInfo)
     {
@@ -41,6 +44,15 @@ internal class RegistryDataBinder(
                       .FirstOrDefault(r => r is not null);
 
         return resolver?.Resolve<TObj, TElement>() ?? collectionTargetFallback.Resolve<TObj, TElement>();
+    }
+
+    protected override IEventNotifierEndpoint<TObject, TDelegate>? ResolveEventNotifierEndpoint<TObject, TDelegate>(string eventName)
+    {
+        var resolver = TraceType(typeof(TObject))
+                      .Select(eventSourceResolvers.GetValueOrDefault)
+                      .FirstOrDefault(r => r is not null);
+
+        return resolver?.Resolve<TObject, TDelegate>(eventName) ?? eventSourceFallback.Resolve<TObject, TDelegate>(eventName);
     }
 
     private static IEnumerable<Type> TraceType(Type type)
