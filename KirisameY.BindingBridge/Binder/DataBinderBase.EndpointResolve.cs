@@ -206,7 +206,7 @@ file static class PropertyResolveUtils
         var objParam = exp.Parameters[0];
         var expBody = exp.Body;
 
-        if (expBody is BinaryExpression { NodeType: ExpressionType.Convert }) return null;
+        if (expBody is UnaryExpression { NodeType: ExpressionType.Convert }) return null;
 
         var targetExp = expBody switch
         {
@@ -267,10 +267,10 @@ file static class PropertyResolveUtils
         while (true)
         {
             if (exp == objParam) break;
-            if (exp is BinaryExpression
+            if (exp is UnaryExpression
                 {
                     NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked,
-                    Left: { } unconverted
+                    Operand: { } unconverted
                 }) exp = unconverted;
             var (parent, member) = exp switch
             {
