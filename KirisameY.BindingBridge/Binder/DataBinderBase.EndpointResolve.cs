@@ -161,6 +161,7 @@ public abstract partial class DataBinderBase
         return endpoint;
     }
 
+    // ReSharper disable once UnusedParameter.Local
     private IEventNotifierEndpoint<TRoot, TDelegate>? ResolveChainedEventSource<TRoot, TNotifier, TDelegate>(
         Expression<Func<TRoot, TNotifier>> notifier, string eventName, TypeA<TDelegate> delegateType
     ) where TRoot : class where TNotifier : class where TDelegate : Delegate
@@ -204,6 +205,8 @@ file static class PropertyResolveUtils
     {
         var objParam = exp.Parameters[0];
         var expBody = exp.Body;
+
+        if (expBody is BinaryExpression { NodeType: ExpressionType.Convert }) return null;
 
         var targetExp = expBody switch
         {
@@ -264,6 +267,11 @@ file static class PropertyResolveUtils
         while (true)
         {
             if (exp == objParam) break;
+            if (exp is BinaryExpression
+                {
+                    NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked,
+                    Left: { } unconverted
+                }) exp = unconverted;
             var (parent, member) = exp switch
             {
                 MemberExpression { Expression: { } e, Member: var m }                 => (e, m),
