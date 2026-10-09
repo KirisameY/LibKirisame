@@ -47,10 +47,22 @@ public interface IPropertyDataBinder
         TTarget target, Expression<Func<TTarget, TDelegate>> handler
     ) where TSource : class where TDelegate : Delegate;
 
+    IBindHandle BindEvent<TSource, TTarget, TSourceDelegate, TTargetDelegate>(
+        TSource source, string eventName,
+        TTarget target, Expression<Func<TTarget, TTargetDelegate>> handler,
+        Func<TTargetDelegate, TSourceDelegate> converter
+    ) where TSource : class where TSourceDelegate : Delegate where TTargetDelegate : Delegate;
+
     IBindHandle BindEvent<TSourceRoot, TSourceNotifier, TTarget, TDelegate>(
         TSourceRoot source, Expression<Func<TSourceRoot, TSourceNotifier>> sourceNotifier, string eventName,
         TTarget target, Expression<Func<TTarget, TDelegate>> handler
     ) where TSourceRoot : class where TSourceNotifier : class where TDelegate : Delegate;
+
+    IBindHandle BindEvent<TSourceRoot, TSourceNotifier, TTarget, TSourceDelegate, TTargetDelegate>(
+        TSourceRoot source, Expression<Func<TSourceRoot, TSourceNotifier>> sourceNotifier, string eventName,
+        TTarget target, Expression<Func<TTarget, TTargetDelegate>> handler,
+        Func<TTargetDelegate, TSourceDelegate> converter
+    ) where TSourceRoot : class where TSourceNotifier : class where TSourceDelegate : Delegate where TTargetDelegate : Delegate;
 }
 
 public interface IDataBinder : IPropertyDataBinder;

@@ -153,6 +153,16 @@ public abstract partial class DataBinderBase : IDataBinder
         return from.EventBindTo(to, source, target);
     }
 
+    public IBindHandle BindEvent<TSource, TTarget, TSourceDelegate, TTargetDelegate>(TSource source, string eventName, TTarget target, Expression<Func<TTarget, TTargetDelegate>> handler, Func<TTargetDelegate, TSourceDelegate> converter) where TSource : class where TSourceDelegate : Delegate where TTargetDelegate : Delegate
+    {
+        var from = ResolveSimpleEventSource<TSource, TSourceDelegate>(eventName);
+        var to = ResolveEventTarget(handler);
+
+        if (from is null) throw new ArgumentException($"Type {typeof(TSource)} does not have observable event {eventName}");
+
+        return from.EventBindTo(to, source, target, converter);
+    }
+
     public IBindHandle BindEvent<TSourceRoot, TSourceNotifier, TTarget, TDelegate>(
         TSourceRoot source, Expression<Func<TSourceRoot, TSourceNotifier>> sourceNotifier, string eventName,
         TTarget target, Expression<Func<TTarget, TDelegate>> handler
@@ -164,6 +174,16 @@ public abstract partial class DataBinderBase : IDataBinder
         if (from is null) throw new ArgumentException($"Type {typeof(TSourceNotifier)} does not have observable event {eventName}");
 
         return from.EventBindTo(to, source, target);
+    }
+
+    public IBindHandle BindEvent<TSourceRoot, TSourceNotifier, TTarget, TSourceDelegate, TTargetDelegate>(TSourceRoot source, Expression<Func<TSourceRoot, TSourceNotifier>> sourceNotifier, string eventName, TTarget target, Expression<Func<TTarget, TTargetDelegate>> handler, Func<TTargetDelegate, TSourceDelegate> converter) where TSourceRoot : class where TSourceNotifier : class where TSourceDelegate : Delegate where TTargetDelegate : Delegate
+    {
+        var from = ResolveChainedEventSource(sourceNotifier, eventName, TypeA.Of<TSourceDelegate>());
+        var to = ResolveEventTarget(handler);
+
+        if (from is null) throw new ArgumentException($"Type {typeof(TSourceNotifier)} does not have observable event {eventName}");
+
+        return from.EventBindTo(to, source, target, converter);
     }
 
     protected abstract IEventNotifierEndpoint<TObject, TDelegate>? ResolveEventNotifierEndpoint<TObject, TDelegate>(string eventName)
