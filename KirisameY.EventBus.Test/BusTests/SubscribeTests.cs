@@ -7,7 +7,7 @@ public class SubscribeTests
     [Fact]
     public void HandlerReceivesPublishedEvent()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<TestEvent> received = [];
         bus.Subscribe<TestEvent>(received.Add);
 
@@ -21,7 +21,7 @@ public class SubscribeTests
     [Fact]
     public void MultipleHandlersAllReceiveEvent()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<TestEvent> first = [];
         List<TestEvent> second = [];
         bus.Subscribe<TestEvent>(first.Add);
@@ -36,7 +36,7 @@ public class SubscribeTests
     [Fact]
     public void SameHandlerSubscribedTwiceIsInvokedTwice()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         var count = 0;
         Action<TestEvent> handler = _ => count++;
         bus.Subscribe(handler);
@@ -50,7 +50,7 @@ public class SubscribeTests
     [Fact]
     public void HandlersAreIsolatedPerEventType()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<TestEvent> testEvents = [];
         List<OtherEvent> otherEvents = [];
         bus.Subscribe<TestEvent>(testEvents.Add);
@@ -65,7 +65,7 @@ public class SubscribeTests
     [Fact]
     public void BaseTypeHandlerReceivesDerivedEvent()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<TestEvent> received = [];
         bus.Subscribe<TestEvent>(received.Add);
 
@@ -79,7 +79,7 @@ public class SubscribeTests
     [Fact]
     public void BothBaseAndDerivedHandlersReceiveDerivedEvent()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<TestEvent> baseReceived = [];
         List<DerivedTestEvent> derivedReceived = [];
         bus.Subscribe<TestEvent>(baseReceived.Add);
@@ -94,7 +94,7 @@ public class SubscribeTests
     [Fact]
     public void ReceivedEventIsSingleInstanceWithoutDuplicateDispatch()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<TestEvent> received = [];
         bus.Subscribe<TestEvent>(received.Add);
 
@@ -106,7 +106,7 @@ public class SubscribeTests
     [Fact]
     public void UnrelatedEventTypeHandlerIsNotInvoked()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         var invoked = false;
         bus.Subscribe<OtherEvent>(_ => invoked = true);
 

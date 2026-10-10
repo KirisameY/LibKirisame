@@ -2,11 +2,12 @@
 
 namespace KirisameY.EventBus.Bus;
 
-public class SimpleEventBus : IEventBus
+public class SimpleEventBus<TBaseEvent> : IEventBus<TBaseEvent>
+    where TBaseEvent : BaseEvent
 {
     private readonly Dictionary<Type, HandlerInfos> _handlersDict = [];
 
-    public SubscriptionToken Subscribe<TEvent>(Action<TEvent> handler) where TEvent : BaseEvent
+    public SubscriptionToken Subscribe<TEvent>(Action<TEvent> handler) where TEvent : TBaseEvent
     {
         if (!_handlersDict.TryGetValue(typeof(TEvent), out var infos))
         {
@@ -22,7 +23,7 @@ public class SimpleEventBus : IEventBus
         return new(() => Unsubscribe(handler));
     }
 
-    public bool Unsubscribe<TEvent>(Action<TEvent> handler) where TEvent : BaseEvent
+    public bool Unsubscribe<TEvent>(Action<TEvent> handler) where TEvent : TBaseEvent
     {
         if (!_handlersDict.TryGetValue(typeof(TEvent), out var infos)) return false;
 
@@ -30,22 +31,22 @@ public class SimpleEventBus : IEventBus
         return prev.Count > infos.Handlers.Count;
     }
 
-    public void Publish<TEvent>(TEvent @event) where TEvent : BaseEvent
+    public void Publish<TEvent>(TEvent @event) where TEvent : TBaseEvent
     {
-        Type type = typeof(TEvent);
-        while (type != typeof(object))
+        var type = typeof(TEvent);
+        while (type?.IsAssignableTo(typeof(TBaseEvent)) is true)
         {
             if (_handlersDict.TryGetValue(type, out var infos))
             {
                 infos.Handlers.ForEach(t => t.handler.Invoke(@event));
             }
-            type = type.BaseType!;
+            type = type.BaseType;
         }
     }
 
 
     private class HandlerInfos
     {
-        public ImmutableList<(Action<BaseEvent> handler, Delegate? source)> Handlers { get; set; } = [];
+        public ImmutableList<(Action<TBaseEvent> handler, Delegate? source)> Handlers { get; set; } = [];
     }
 }

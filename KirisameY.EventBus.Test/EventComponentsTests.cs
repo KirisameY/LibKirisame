@@ -150,7 +150,7 @@ public class EventComponentsTests
     [Fact]
     public void HandlerCanUpdateSettingThroughTheEvent()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         bus.Subscribe<MutableTestEvent>(e => e.Setting.Value = "handled");
         var @event = new MutableTestEvent();
 

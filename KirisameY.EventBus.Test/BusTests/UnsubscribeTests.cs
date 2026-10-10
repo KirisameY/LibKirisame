@@ -7,7 +7,7 @@ public class UnsubscribeTests
     [Fact]
     public void ReturnsTrueWhenHandlerWasSubscribed()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         Action<TestEvent> handler = _ => { };
         bus.Subscribe(handler);
 
@@ -17,7 +17,7 @@ public class UnsubscribeTests
     [Fact]
     public void ReturnsFalseWhenHandlerWasNotSubscribed()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         Action<TestEvent> handler = _ => { };
         bus.Subscribe<TestEvent>(_ => { });
 
@@ -27,7 +27,7 @@ public class UnsubscribeTests
     [Fact]
     public void ReturnsFalseWhenEventTypeHasNoSubscription()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
 
         Assert.False(bus.Unsubscribe<TestEvent>(_ => { }));
     }
@@ -35,7 +35,7 @@ public class UnsubscribeTests
     [Fact]
     public void ReturnsFalseWhenRemovedTwice()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         Action<TestEvent> handler = _ => { };
         bus.Subscribe(handler);
 
@@ -46,7 +46,7 @@ public class UnsubscribeTests
     [Fact]
     public void HandlerStopsReceivingEventsAfterUnsubscribe()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<TestEvent> received = [];
         Action<TestEvent> handler = received.Add;
         bus.Subscribe(handler);
@@ -63,7 +63,7 @@ public class UnsubscribeTests
     [Fact]
     public void OnlyMatchingHandlerIsRemoved()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<TestEvent> removed = [];
         List<TestEvent> kept = [];
         Action<TestEvent> removedHandler = removed.Add;
@@ -80,7 +80,7 @@ public class UnsubscribeTests
     [Fact]
     public void RemovingOneSubscriptionOfADuplicateHandlerKeepsTheOther()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         var count = 0;
         Action<TestEvent> handler = _ => count++;
         bus.Subscribe(handler);
@@ -96,7 +96,7 @@ public class UnsubscribeTests
     [Fact]
     public void DisposingTokenUnsubscribesHandler()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<TestEvent> received = [];
         Action<TestEvent> handler = received.Add;
 
@@ -114,7 +114,7 @@ public class UnsubscribeTests
     [Fact]
     public void DisposingTokenTwiceDoesNotThrow()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         var token = bus.Subscribe<TestEvent>(_ => { });
 
         token.Dispose();
@@ -126,7 +126,7 @@ public class UnsubscribeTests
     [Fact]
     public void DisposingTokenDoesNotAffectOtherHandlers()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<TestEvent> kept = [];
         using (bus.Subscribe<TestEvent>(_ => { }))
         {

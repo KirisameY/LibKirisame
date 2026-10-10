@@ -7,7 +7,7 @@ public class PublishTests
     [Fact]
     public void HandlersRunSynchronouslyInsidePublish()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<string> trace = [];
         bus.Subscribe<TestEvent>(_ => trace.Add("handler"));
 
@@ -22,7 +22,7 @@ public class PublishTests
     [Fact]
     public void PublishWithNoSubscribersDoesNotThrow()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
 
         var exception = Record.Exception(() => bus.Publish(new TestEvent(1)));
 
@@ -32,7 +32,7 @@ public class PublishTests
     [Fact]
     public void PublishWithOnlyUnrelatedSubscribersDoesNotThrow()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         bus.Subscribe<OtherEvent>(_ => { });
 
         var exception = Record.Exception(() => bus.Publish(new TestEvent(1)));
@@ -43,7 +43,7 @@ public class PublishTests
     [Fact]
     public void HandlersAreInvokedInSubscriptionOrder()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<string> order = [];
         bus.Subscribe<TestEvent>(_ => order.Add("first"));
         bus.Subscribe<TestEvent>(_ => order.Add("second"));
@@ -57,7 +57,7 @@ public class PublishTests
     [Fact]
     public void PublishesAreDeliveredInCallOrder()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<int> values = [];
         bus.Subscribe<TestEvent>(e => values.Add(e.Value));
 
@@ -71,7 +71,7 @@ public class PublishTests
     [Fact]
     public void DerivedHandlersRunBeforeBaseHandlers()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<string> order = [];
         bus.Subscribe<TestEvent>(_ => order.Add("base"));
         bus.Subscribe<DerivedTestEvent>(_ => order.Add("derived"));
@@ -85,7 +85,7 @@ public class PublishTests
     [Fact]
     public void BaseEventHandlerReceivesEveryEvent()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<BaseEvent> received = [];
         bus.Subscribe<BaseEvent>(received.Add);
 
@@ -99,7 +99,7 @@ public class PublishTests
     [Fact]
     public void PublishingThroughBaseStaticTypeOnlyReachesBaseHandlers()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<string> order = [];
         bus.Subscribe<TestEvent>(_ => order.Add("base"));
         bus.Subscribe<DerivedTestEvent>(_ => order.Add("derived"));
@@ -114,7 +114,7 @@ public class PublishTests
     [Fact]
     public void HandlerExceptionPropagatesOutOfPublish()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         bus.Subscribe<TestEvent>(_ => throw new InvalidOperationException("boom"));
 
         Assert.Throws<InvalidOperationException>(() => bus.Publish(new TestEvent(1)));
@@ -123,7 +123,7 @@ public class PublishTests
     [Fact]
     public void HandlerExceptionStopsRemainingHandlers()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         var laterHandlerRan = false;
         bus.Subscribe<TestEvent>(_ => throw new InvalidOperationException("boom"));
         bus.Subscribe<TestEvent>(_ => laterHandlerRan = true);
@@ -137,10 +137,11 @@ public class PublishTests
     [Fact]
     public void BusKeepsWorkingAfterHandlerThrows()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         var shouldThrow = true;
         bus.Subscribe<TestEvent>(_ =>
         {
+            // ReSharper disable once AccessToModifiedClosure
             if (shouldThrow) throw new InvalidOperationException("boom");
         });
 
@@ -158,7 +159,7 @@ public class PublishTests
     [Fact]
     public void HandlerCanPublishNestedEvent()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<string> order = [];
         bus.Subscribe<TestEvent>(_ =>
         {
@@ -177,7 +178,7 @@ public class PublishTests
     [Fact]
     public void HandlerUnsubscribingAnotherHandlerDoesNotAffectCurrentDispatch()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<string> order = [];
         Action<TestEvent> second = _ => order.Add("second");
         bus.Subscribe<TestEvent>(_ =>
@@ -201,7 +202,7 @@ public class PublishTests
     [Fact]
     public void HandlerSubscribingDuringPublishIsNotCalledInCurrentDispatch()
     {
-        var bus = new SimpleEventBus();
+        var bus = new SimpleEventBus<BaseEvent>();
         List<string> order = [];
         var subscribed = false;
         bus.Subscribe<TestEvent>(_ =>

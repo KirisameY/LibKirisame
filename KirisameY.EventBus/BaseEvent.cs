@@ -3,4 +3,4 @@
 namespace KirisameY.EventBus;
 
 [PublicAPI]
-public record BaseEvent();
+public abstract record BaseEvent();
