@@ -78,6 +78,58 @@ public static class EnumerableExtensions
             from x in source
             from y in second
             select resultSelector(x, y);
+
+        [PublicAPI, Pure]
+        public IEnumerable<TResult> Zip<TSecond, TThird, TResult>(
+            IEnumerable<TSecond> second, IEnumerable<TThird> third,
+            Func<TSource, TSecond, TThird, TResult> resultSelector
+        ) => source.Zip(second, third)
+                   .Select(t => resultSelector.Invoke(t.First, t.Second, t.Third));
+
+        [PublicAPI, Pure]
+        public IEnumerable<TResult> ZipChecked<TSecond, TResult>(IEnumerable<TSecond> second, Func<TSource, TSecond, TResult> resultSelector)
+        {
+            using var sourceEnumerator = source.GetEnumerator();
+            using var secondEnumerator = second.GetEnumerator();
+            while (true)
+            {
+                switch (sourceEnumerator.MoveNext(), secondEnumerator.MoveNext())
+                {
+                    case (true, true):   yield return resultSelector.Invoke(sourceEnumerator.Current, secondEnumerator.Current); break;
+                    case (false, false): yield break;
+                    default:             throw new ArgumentException("Zipping collections has mismatched length.");
+                }
+            }
+        }
+
+        [PublicAPI, Pure]
+        public IEnumerable<(TSource, TSecond)> ZipChecked<TSecond>(IEnumerable<TSecond> second) =>
+            source.ZipChecked(second, (f, s) => (f, s));
+
+        [PublicAPI, Pure]
+        public IEnumerable<TResult> ZipChecked<TSecond, TThird, TResult>(
+            IEnumerable<TSecond> second, IEnumerable<TThird> third,
+            Func<TSource, TSecond, TThird, TResult> resultSelector
+        )
+        {
+            using var sourceEnumerator = source.GetEnumerator();
+            using var secondEnumerator = second.GetEnumerator();
+            using var thirdEnumerator = third.GetEnumerator();
+            while (true)
+            {
+                switch (sourceEnumerator.MoveNext(), secondEnumerator.MoveNext(), thirdEnumerator.MoveNext())
+                {
+                    case (true, true, true):    yield return resultSelector.Invoke(sourceEnumerator.Current, secondEnumerator.Current, thirdEnumerator.Current); break;
+                    case (false, false, false): yield break;
+                    default:                    throw new ArgumentException("Zipping collections has mismatched length.");
+                }
+            }
+        }
+
+        [PublicAPI, Pure]
+        public IEnumerable<(TSource, TSecond, TThird)> ZipChecked<TSecond, TThird>(
+            IEnumerable<TSecond> second, IEnumerable<TThird> third
+        ) => source.ZipChecked(second, third, (f, s, t) => (f, s, t));
     }
 
     extension<TSource>(IEnumerable<IEnumerable<TSource>> source)
