@@ -27,20 +27,14 @@ namespace KirisameY.NotifiableCollections.Collections;
 /// </typeparam>
 /// <remarks>
 ///     <para>
-///         变更以键值对为单位报告（见 <see cref="IDictionaryUpdateEventArgs{TKey, TValue}"/> 一族），
-///         且移除通知里带的是键被移除<b>时</b>的值。
-///         <see cref="Keys"/> 与 <see cref="Values"/> 本身就是可通知的视图，可以只订阅其中一边。
+///         变更以键值对为单位报告（见 <see cref="IDictionaryUpdateEventArgs{TKey, TValue}"/> 一族）.
 ///         <br/>
-///         通知是在内部字典<b>改完之后</b>同步发出的，事件参数里携带的视图是活视图而非快照。
+///         <see cref="Keys"/> 与 <see cref="Values"/> 本身就是可通知的视图，可以只订阅其中一边。
 ///     </para>
 ///     <para>
-///         Changes are reported in terms of key-value pairs (see the
-///         <see cref="IDictionaryUpdateEventArgs{TKey, TValue}"/> family), and a removal notification carries the
-///         values the keys held <b>at the time</b> they were removed. <see cref="Keys"/> and
-///         <see cref="Values"/> are notifying views in their own right, so either side can be independently subscribed to.
+///         Changes are reported in terms of key-value pairs (see the <see cref="IDictionaryUpdateEventArgs{TKey, TValue}"/> family).
 ///         <br/>
-///         Notifications are raised synchronously <b>after</b> the underlying dictionary has been modified, and
-///         the views carried by the event arguments are live views rather than snapshots.
+///         <see cref="Keys"/> and <see cref="Values"/> are notifying views in their own right, so either side can be independently subscribed to.
 ///     </para>
 /// </remarks>
 public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TValue>
@@ -145,9 +139,9 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
     public void Add(KeyValuePair<TKey, TValue> item) => Add(item.Key, item.Value);
 
     /// <summary>
-    ///     追加一批键值对，并发出<b>一次</b>携带整批键值对的添加通知。
+    ///     追加一批键值对。
     ///     <br/>
-    ///     Adds a batch of key-value pairs and raises a <b>single</b> addition notification carrying the whole batch.
+    ///     Adds a batch of key-value pairs.
     /// </summary>
     /// <param name="values">
     ///     要添加的键值对。
@@ -155,15 +149,9 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
     ///     The key-value pairs to add.
     /// </param>
     /// <exception cref="ArgumentException">
-    ///     入参里有键已经存在于字典中，或者入参<b>内部</b>有重复的键——和逐个 <see cref="Add(TKey, TValue)"/> 一样，
-    ///     撞上已有的键是错误用法而不是「跳过」。两种情况都不发通知：前者会把本次已经写进去的部分撤回去，
-    ///     字典回到调用前的状态；后者因为入参先被整体快照，一个都还没写进去。
+    ///     入参里有键已经存在于字典中，或者入参内部有重复的键。
     ///     <br/>
-    ///     A key in the argument already exists in the dictionary, or the argument contains duplicate keys — as with
-    ///     calling <see cref="Add(TKey, TValue)"/> one by one, hitting an existing key is an error rather than a
-    ///     skip. Neither raises a notification: in the first case everything this call already wrote is rolled back
-    ///     and the dictionary returns to its previous state; in the second nothing was written at all, because the
-    ///     argument is snapshot up front.
+    ///     A key in the argument already exists in the dictionary, or the argument contains duplicate keys.
     /// </exception>
     public void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> values)
     {
@@ -217,10 +205,9 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
     public bool TryAdd(KeyValuePair<TKey, TValue> item) => TryAdd(item.Key, item.Value);
 
     /// <summary>
-    ///     尝试追加一批键值对，并发出<b>一次</b>携带<b>真正加进去的</b>那些键值对的添加通知。
+    ///     尝试追加一批键值对。
     ///     <br/>
-    ///     Tries to add a batch of key-value pairs and raises a <b>single</b> addition notification carrying
-    ///     <b>only the pairs that made it in</b>.
+    ///     Tries to add a batch of key-value pairs.
     /// </summary>
     /// <param name="values">
     ///     要添加的键值对。
@@ -228,9 +215,9 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
     ///     The key-value pairs to add.
     /// </param>
     /// <returns>
-    ///     真正被添加进去的那些键值对；一个都没加进去时为空字典。
+    ///     被成功添加的键值对集合。
     ///     <br/>
-    ///     The pairs that were actually added; an empty dictionary when nothing was added.
+    ///     The pairs that were actually added.
     /// </returns>
     /// <remarks>
     ///     已有的键会被跳过——既不抛异常，也不出现在返回值和通知里；入参内部重复的键只有第一个能进得去。
@@ -333,9 +320,9 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
     }
 
     /// <summary>
-    ///     按 key 移除一批键值对，并发出<b>一次</b>携带这批被移除键值对的移除通知。
+    ///     按 key 移除一批键值对。
     ///     <br/>
-    ///     Removes a batch of keys and raises a <b>single</b> removal notification carrying the pairs removed.
+    ///     Removes a batch of keys.
     /// </summary>
     /// <param name="keys">
     ///     要移除的键。
@@ -343,10 +330,9 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
     ///     The keys to remove.
     /// </param>
     /// <returns>
-    ///     真正被移除的那些键值对，带的是它们被移除<b>时</b>的值；一个都没删掉时为空字典。
+    ///     被成功移除的键值对集合。
     ///     <br/>
-    ///     The pairs that were actually removed, carrying the values they held <b>at the time</b>; an empty
-    ///     dictionary when nothing was removed.
+    ///     The pairs that were actually removed.
     /// </returns>
     /// <remarks>
     ///     不存在的键会被静默跳过，重复的键只有第一次能删到。一个都没删掉时不发通知。

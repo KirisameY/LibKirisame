@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Immutable;
 
+using KirisameY.NotifiableCollections.Data;
 using KirisameY.NotifiableCollections.EventArgs;
 
 namespace KirisameY.NotifiableCollections.Collections;
@@ -16,29 +17,6 @@ namespace KirisameY.NotifiableCollections.Collections;
 ///     <br/>
 ///     The type of the elements.
 /// </typeparam>
-/// <remarks>
-///     <para>
-///         与 <c>ObservableCollection&lt;T&gt;</c> 只报告"发生了什么"不同，这里的事件参数连变更项带它们的原始索引
-///         一并给出（见 <see cref="IListUpdateEventArgs{T}"/> 一族），订阅方不必回头再读一遍列表就能定位变化。
-///     </para>
-///     <para>
-///         通知是在内部列表<b>改完之后</b>同步发出的：事件参数里的视图是活视图而非快照，
-///         而各类 <c>Indexes</c> 记的仍是变更<b>前</b>的原始索引。
-///         另外，排序与反转发出的是重排通知，不携带任何索引信息，需要新顺序请直接读视图。
-///     </para>
-///     <para>
-///         Unlike <c>ObservableCollection&lt;T&gt;</c>, which merely reports that something happened, the event
-///         arguments here carry the changed items together with their original indices (see the
-///         <see cref="IListUpdateEventArgs{T}"/> family), so subscribers can locate a change without re-reading
-///         the list.
-///     </para>
-///     <para>
-///         Notifications are raised synchronously <b>after</b> the underlying list has been modified: the view
-///         carried by the event arguments is a live view rather than a snapshot, while the various <c>Indexes</c>
-///         still record the original indices from <b>before</b> the change. Sorting and reversing raise reorder
-///         notifications, which carry no index information at all — read the view directly for the new order.
-///     </para>
-/// </remarks>
 public class NotifiableList<T> : INotifiableList<T>
 {
     private readonly List<T> _innerList = [];
@@ -92,9 +70,9 @@ public class NotifiableList<T> : INotifiableList<T>
     }
 
     /// <summary>
-    ///     在末尾追加一批元素，并发出<b>一次</b>携带整批元素的添加通知。
+    ///     在末尾追加一批元素。
     ///     <br/>
-    ///     Appends a batch of elements and raises a <b>single</b> addition notification carrying the whole batch.
+    ///     Appends a batch of elements.
     /// </summary>
     public void AddRange(ICollection<T> items)
     {
@@ -114,10 +92,9 @@ public class NotifiableList<T> : INotifiableList<T>
     }
 
     /// <summary>
-    ///     从指定位置起插入一批元素，并发出<b>一次</b>携带整批元素的添加通知。
+    ///     从指定位置起插入一批元素。
     ///     <br/>
-    ///     Inserts a batch of elements at the given position and raises a <b>single</b> addition notification
-    ///     carrying the whole batch.
+    ///     Inserts a batch of elements at the given position.
     /// </summary>
     public void InsertRange(int index, ICollection<T> items)
     {
@@ -127,6 +104,52 @@ public class NotifiableList<T> : INotifiableList<T>
 
     /// <inheritdoc cref="InsertRange(int, ICollection{T})"/>
     public void InsertRange(int index, IEnumerable<T> items) => InsertRange(index, [..items]);
+
+    /// <summary>
+    ///     将一组指定索引的项插入列表中。
+    ///     <br/>
+    ///     Inserts a batch of items with given index into the list.
+    /// </summary>
+    /// <param name="items">
+    ///     要加入的项和要加入至的索引的集合，应当按照索引被升序排列且没有重复索引项。
+    ///     <br/>
+    ///     A collection of items and their indexes to insert, should be ascending ordered by indexes and have no duplicated indexes.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    ///     <paramref name="items"/> 中存在非法或重复的的索引项，或未按照索引被升序排列。
+    ///     <br/>
+    ///     <paramref name="items"/> containes invalid or duplicated index, or is not ascending ordered by indexes.
+    /// </exception>
+    public void MultiInsert(IReadOnlyList<IItemWithIndex<T>> items)
+    {
+        foreach (var (i, item) in items.Index())
+        {
+            try
+            {
+                if (i > 0 && item.Index <= items[i - 1].Index)
+                {
+                    throw new ArgumentException("Items to insert should be in ascending order and have no duplicated index");
+                }
+                _innerList.Insert(item.Index, item.Item);
+            }
+            catch (ArgumentException)
+            {
+                // reverse
+                for (int j = i - 1; j >= 0; j--)
+                {
+                    _innerList.RemoveAt(items[j].Index);
+                }
+                throw;
+            }
+        }
+        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, items.ItemsView, items.IndexesView));
+    }
+
+    /// <inheritdoc cref="MultiInsert(IReadOnlyList{IItemWithIndex{T}})"/>
+    public void MultiInsert(IEnumerable<IItemWithIndex<T>> items) => MultiInsert(items.ToImmutableList());
+
+    /// <inheritdoc cref="MultiInsert(IReadOnlyList{IItemWithIndex{T}})"/>
+    public void MultiInsert(IEnumerable<int> indexes, IEnumerable<T> items) => MultiInsert(indexes.Zip(items, ItemWithIndex.From));
 
     /// <inheritdoc/>
     public void Clear()
@@ -156,25 +179,71 @@ public class NotifiableList<T> : INotifiableList<T>
     }
 
     /// <summary>
-    ///     移除指定范围内的元素，并发出<b>一次</b>携带这批元素及其原始索引的移除通知。
+    ///     移除指定范围内的元素。
     ///     <br/>
-    ///     Removes the elements in the given range and raises a <b>single</b> removal notification carrying those
-    ///     elements together with their original indices.
+    ///     Removes the elements in the given range.
     /// </summary>
-    public void RemoveRange(int index, int count)
+    public IReadOnlyList<T> RemoveRange(int index, int count)
     {
-        var removed = _innerList[index..(index + count)];
+        var removed = _innerList[index..(index + count)].ToImmutableList();
         // 升序连续，且与 removed 逐位对应
         var removedIndexes = Enumerable.Range(index, count).ToImmutableList();
         _innerList.RemoveRange(index, count);
         RaiseUpdate(new ListItemRemovedEventArgs<T>(Readonly, removed, removedIndexes));
+        return removed;
     }
 
     /// <summary>
-    ///     移除所有满足条件的元素，并发出<b>一次</b>移除通知，被移除元素的索引按升序排列。
+    ///     从列表中指定的一组指定的索引处移除相应的值。
     ///     <br/>
-    ///     Removes every element matching the predicate and raises a <b>single</b> removal notification whose
-    ///     indices are in ascending order.
+    ///     Remove the elements in a given batch of indexes.
+    /// </summary>
+    /// <param name="indexes">
+    ///     要移除的索引的集合，应当按照索引被升序排列且没有重复索引项。
+    ///     <br/>
+    ///     A collection of indexes to remove, should be ascending ordered and have no duplicated indexes.
+    /// </param>
+    /// <returns>
+    ///     被移除的项的列表，与 <paramref name="indexes"/> 逐位对齐。
+    ///     <br/>
+    ///     A list of removed items, aligned in the same order with <paramref name="indexes"/>.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    ///     <paramref name="indexes"/> 中存在非法或重复的的索引项，或未被升序排列。
+    ///     <br/>
+    ///     <paramref name="indexes"/> containes invalid or duplicated index, or is not ascending ordered.
+    /// </exception>
+    public IReadOnlyList<T> MultiRemove(IEnumerable<int> indexes)
+    {
+        var indexesList = indexes.ToArray();
+        var removed = new T[indexesList.Length];
+        foreach (var (i, index) in indexesList.Index().Reverse())
+        {
+            try
+            {
+                if (i > 0 && index <= indexesList[i - 1])
+                    throw new ArgumentException("Items to remove should be in ascending order and have no duplicated index");
+                removed[i] = _innerList[index];
+                _innerList.RemoveAt(index);
+            }
+            catch (ArgumentException)
+            {
+                for (int j = i + 1; j < indexesList.Length; j++)
+                {
+                    _innerList.Insert(indexesList[j], removed[j]);
+                }
+                throw;
+            }
+        }
+        var finalRemoved = removed.ToImmutableList();
+        RaiseUpdate(new ListItemRemovedEventArgs<T>(Readonly, finalRemoved, indexesList.ToImmutableList()));
+        return finalRemoved;
+    }
+
+    /// <summary>
+    ///     移除所有满足条件的元素。
+    ///     <br/>
+    ///     Removes every element matching the predicate.
     /// </summary>
     public void RemoveAll(Predicate<T> predicate)
     {
@@ -193,9 +262,64 @@ public class NotifiableList<T> : INotifiableList<T>
     }
 
     /// <summary>
-    ///     将指定索引的列表项移动至另一索引，并发出一次移动通知。
+    ///     将一组指定索引的项替换至列表中。
     ///     <br/>
-    ///     Move the list item at the specified index to another index and raise a single move notification.
+    ///     Replace list items with a batch of items with given index.
+    /// </summary>
+    /// <param name="items">
+    ///     要替换的项和相应索引的集合，应当按照索引被升序排列且没有重复索引项。
+    ///     <br/>
+    ///     A collection of items and their indexes to replace, should be ascending ordered by indexes and have no duplicated indexes.
+    /// </param>
+    /// <returns>
+    ///     被替换的项的列表，与 <paramref name="items"/> 逐位对齐。
+    ///     <br/>
+    ///     A list of replaced items, aligned in the same order with <paramref name="items"/>.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    ///     <paramref name="items"/> 中存在非法或重复的的索引项，或未按照索引被升序排列。
+    ///     <br/>
+    ///     <paramref name="items"/> containes invalid or duplicated index, or is not ascending ordered by indexes.
+    /// </exception>
+    public IReadOnlyList<T> MultiReplace(IReadOnlyList<IItemWithIndex<T>> items)
+    {
+        var oldItems = new T[items.Count];
+        foreach (var (i, item) in items.Index())
+        {
+            try
+            {
+                if (i > 0 && item.Index <= items[i - 1].Index)
+                {
+                    throw new ArgumentException("Items to insert should be in ascending order and have no duplicated index");
+                }
+                oldItems[i]            = _innerList[item.Index];
+                _innerList[item.Index] = item.Item;
+            }
+            catch (ArgumentException)
+            {
+                // reverse
+                for (int j = i - 1; j >= 0; j--)
+                {
+                    _innerList[items[j].Index] = oldItems[j];
+                }
+                throw;
+            }
+        }
+        var finalOldItems = oldItems.ToImmutableList();
+        RaiseUpdate(new ListItemReplacedEventArgs<T>(Readonly, finalOldItems, items.ItemsView, items.IndexesView));
+        return finalOldItems;
+    }
+
+    /// <inheritdoc cref="MultiReplace(IReadOnlyList{IItemWithIndex{T}})"/>
+    public IReadOnlyList<T> MultiReplace(IEnumerable<IItemWithIndex<T>> items) => MultiReplace(items.ToImmutableList());
+
+    /// <inheritdoc cref="MultiReplace(IReadOnlyList{IItemWithIndex{T}})"/>
+    public IReadOnlyList<T> MultiReplace(IEnumerable<int> indexes, IEnumerable<T> items) => MultiReplace(indexes.Zip(items, ItemWithIndex.From));
+
+    /// <summary>
+    ///     将指定索引的列表项移动至另一索引。
+    ///     <br/>
+    ///     Move the list item at the specified index to another index.
     /// </summary>
     public void Move(int index, int to)
     {
@@ -206,10 +330,62 @@ public class NotifiableList<T> : INotifiableList<T>
         RaiseUpdate(new ListItemMovedEventArgs<T>(Readonly, [item], [index], [to]));
     }
 
+    // todo: sort remake
+    // /// <summary>
+    // ///     按照给定的一组源索引与目标索引移动列表中的元素。
+    // ///     <br/>
+    // ///     Move items by a set of given origin and target index.
+    // /// </summary>
+    // /// <exception cref="ArgumentException">
+    // ///     <paramref name="steps"/> 中存在非法的索引项。
+    // ///     <br/>
+    // ///     <paramref name="steps"/> containes invalid index.
+    // /// </exception>
+    // public void MultiMove(IEnumerable<(int From, int To)> steps)
+    // {
+    //     var stepsList = steps.ToArray();
+    //     var movedItems = new T[stepsList.Length];
+    //     foreach (var (i, (from, to)) in stepsList.Index())
+    //     {
+    //         try
+    //         {
+    //             var item = _innerList[from];
+    //             _innerList.RemoveAt(from);
+    //             // if insert failed, rollback this turn
+    //             try { _innerList.Insert(to, item); }
+    //             catch (ArgumentException)
+    //             {
+    //                 _innerList.Insert(from, item);
+    //                 throw;
+    //             }
+    //             movedItems[i] = item;
+    //         }
+    //         catch (ArgumentException)
+    //         {
+    //             for (int j = i - 1; j >= 0; j--)
+    //             {
+    //                 var (from1, to1) = stepsList[j];
+    //                 var item1 = _innerList[to1];
+    //                 _innerList.RemoveAt(to1);
+    //                 _innerList.Insert(from1, item1);
+    //             }
+    //             throw;
+    //         }
+    //     }
+    //
+    //     RaiseUpdate(
+    //         new ListItemMovedEventArgs<T>(
+    //             Readonly, [..movedItems],
+    //             [..stepsList.Select(t => t.From)],
+    //             [..stepsList.Select(t => t.To)]
+    //         )
+    //     );
+    // }
+
     /// <summary>
-    ///     就地排序，并发出一次重排通知。
+    ///     就地排序。
     ///     <br/>
-    ///     Sorts in place and raises a single reorder notification.
+    ///     Sorts in place.
     /// </summary>
     public void Sort()
     {
@@ -218,9 +394,9 @@ public class NotifiableList<T> : INotifiableList<T>
     }
 
     /// <summary>
-    ///     按给定比较方式就地排序，并发出一次重排通知。
+    ///     按给定比较方式就地排序。
     ///     <br/>
-    ///     Sorts in place using the given comparison and raises a single reorder notification.
+    ///     Sorts in place using the given comparison.
     /// </summary>
     public void Sort(Comparison<T> comparison)
     {
@@ -229,9 +405,9 @@ public class NotifiableList<T> : INotifiableList<T>
     }
 
     /// <summary>
-    ///     按给定比较器就地排序，并发出一次重排通知。
+    ///     按给定比较器就地排序。
     ///     <br/>
-    ///     Sorts in place using the given comparer and raises a single reorder notification.
+    ///     Sorts in place using the given comparer.
     /// </summary>
     public void Sort(IComparer<T> comparer)
     {
@@ -240,9 +416,9 @@ public class NotifiableList<T> : INotifiableList<T>
     }
 
     /// <summary>
-    ///     对指定范围就地排序，并发出一次重排通知。
+    ///     对指定范围就地排序。
     ///     <br/>
-    ///     Sorts the given range in place and raises a single reorder notification.
+    ///     Sorts the given range in place.
     /// </summary>
     public void Sort(int index, int count, IComparer<T> comparer)
     {
@@ -251,9 +427,9 @@ public class NotifiableList<T> : INotifiableList<T>
     }
 
     /// <summary>
-    ///     就地反转整个列表，并发出一次重排通知。
+    ///     就地反转整个列表。
     ///     <br/>
-    ///     Reverses the whole list in place and raises a single reorder notification.
+    ///     Reverses the whole list in place.
     /// </summary>
     public void Reverse()
     {
@@ -262,9 +438,9 @@ public class NotifiableList<T> : INotifiableList<T>
     }
 
     /// <summary>
-    ///     就地反转指定范围，并发出一次重排通知。
+    ///     就地反转指定范围。
     ///     <br/>
-    ///     Reverses the given range in place and raises a single reorder notification.
+    ///     Reverses the given range in place.
     /// </summary>
     public void Reverse(int index, int count)
     {
