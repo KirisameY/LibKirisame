@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 
 using KirisameY.NotifiableCollections.Data;
 using KirisameY.NotifiableCollections.EventArgs;
+using KirisameY.Relinq.Extensions;
 
 namespace KirisameY.NotifiableCollections.Collections;
 
@@ -148,8 +149,28 @@ public class NotifiableList<T> : INotifiableList<T>
     /// <inheritdoc cref="MultiInsert(IReadOnlyList{IItemWithIndex{T}})"/>
     public void MultiInsert(IEnumerable<IItemWithIndex<T>> items) => MultiInsert(items.ToImmutableList());
 
-    /// <inheritdoc cref="MultiInsert(IReadOnlyList{IItemWithIndex{T}})"/>
-    public void MultiInsert(IEnumerable<int> indexes, IEnumerable<T> items) => MultiInsert(indexes.Zip(items, ItemWithIndex.From));
+    /// <summary>
+    ///     将一组指定索引的项插入列表中。
+    ///     <br/>
+    ///     Inserts a batch of items with given index into the list.
+    /// </summary>
+    /// <param name="indexes">
+    ///     要插入到的目标索引的集合，应当被升序排列且没有重复索引项。
+    ///     <br/>
+    ///     A collection of target indexes to add to, should be ascending ordered and have no duplicated indexes.
+    /// </param>
+    /// <param name="items">
+    ///     要添加的项的集合，应当与 <paramref name="indexes"/> 逐位对齐。
+    ///     <br/>
+    ///     A collection of items to add, should be aligned in the same order with <paramref name="indexes"/>.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    ///     <paramref name="indexes"/> 中存在非法或重复的的索引项或未按照索引被升序排列，或长度与 <paramref name="items"/> 不匹配。
+    ///     <br/>
+    ///     <paramref name="indexes"/> containes invalid or duplicated index or is not ascending ordered by indexes,
+    ///     or length mismatched with <paramref name="items"/>.
+    /// </exception>
+    public void MultiInsert(IEnumerable<int> indexes, IEnumerable<T> items) => MultiInsert(indexes.ZipChecked(items, ItemWithIndex.From));
 
     /// <inheritdoc/>
     public void Clear()
@@ -290,7 +311,7 @@ public class NotifiableList<T> : INotifiableList<T>
             {
                 if (i > 0 && item.Index <= items[i - 1].Index)
                 {
-                    throw new ArgumentException("Items to insert should be in ascending order and have no duplicated index");
+                    throw new ArgumentException("Items to replace should be in ascending order and have no duplicated index");
                 }
                 oldItems[i]            = _innerList[item.Index];
                 _innerList[item.Index] = item.Item;
@@ -313,8 +334,33 @@ public class NotifiableList<T> : INotifiableList<T>
     /// <inheritdoc cref="MultiReplace(IReadOnlyList{IItemWithIndex{T}})"/>
     public IReadOnlyList<T> MultiReplace(IEnumerable<IItemWithIndex<T>> items) => MultiReplace(items.ToImmutableList());
 
-    /// <inheritdoc cref="MultiReplace(IReadOnlyList{IItemWithIndex{T}})"/>
-    public IReadOnlyList<T> MultiReplace(IEnumerable<int> indexes, IEnumerable<T> items) => MultiReplace(indexes.Zip(items, ItemWithIndex.From));
+    /// <summary>
+    ///     将一组指定索引的项替换至列表中。
+    ///     <br/>
+    ///     Replace list items with a batch of items with given index.
+    /// </summary>
+    /// <param name="indexes">
+    ///     要替换的项所在索引的集合，应当被升序排列且没有重复索引项。
+    ///     <br/>
+    ///     A collection of indexes of items to replace, should be ascending ordered and have no duplicated indexes.
+    /// </param>
+    /// <param name="items">
+    ///     要替换的项的集合，应当与 <paramref name="indexes"/> 逐位对齐。
+    ///     <br/>
+    ///     A collection of items to replace, should be aligned in the same order with <paramref name="indexes"/>.
+    /// </param>
+    /// <returns>
+    ///     被替换的项的列表，与 <paramref name="items"/> 逐位对齐。
+    ///     <br/>
+    ///     A list of replaced items, aligned in the same order with <paramref name="items"/>.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    ///     <paramref name="indexes"/> 中存在非法或重复的的索引项或未按照索引被升序排列，或长度与 <paramref name="items"/> 不匹配。
+    ///     <br/>
+    ///     <paramref name="indexes"/> containes invalid or duplicated index or is not ascending ordered by indexes,
+    ///     or length mismatched with <paramref name="items"/>.
+    /// </exception>
+    public IReadOnlyList<T> MultiReplace(IEnumerable<int> indexes, IEnumerable<T> items) => MultiReplace(indexes.ZipChecked(items, ItemWithIndex.From));
 
     /// <summary>
     ///     将指定索引的列表项移动至另一索引。
@@ -339,7 +385,7 @@ public class NotifiableList<T> : INotifiableList<T>
     // /// <exception cref="ArgumentException">
     // ///     <paramref name="steps"/> 中存在非法的索引项。
     // ///     <br/>
-    // ///     <paramref name="steps"/> containes invalid index.
+    // ///     <paramref name="steps"/> contains invalid index.
     // /// </exception>
     // public void MultiMove(IEnumerable<(int From, int To)> steps)
     // {
