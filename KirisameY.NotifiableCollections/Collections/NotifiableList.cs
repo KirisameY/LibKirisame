@@ -376,57 +376,81 @@ public class NotifiableList<T> : INotifiableList<T>
         RaiseUpdate(new ListItemMovedEventArgs<T>(Readonly, [item], [index], [to]));
     }
 
-    // todo: sort remake
-    // /// <summary>
-    // ///     按照给定的一组源索引与目标索引移动列表中的元素。
-    // ///     <br/>
-    // ///     Move items by a set of given origin and target index.
-    // /// </summary>
-    // /// <exception cref="ArgumentException">
-    // ///     <paramref name="steps"/> 中存在非法的索引项。
-    // ///     <br/>
-    // ///     <paramref name="steps"/> contains invalid index.
-    // /// </exception>
-    // public void MultiMove(IEnumerable<(int From, int To)> steps)
-    // {
-    //     var stepsList = steps.ToArray();
-    //     var movedItems = new T[stepsList.Length];
-    //     foreach (var (i, (from, to)) in stepsList.Index())
-    //     {
-    //         try
-    //         {
-    //             var item = _innerList[from];
-    //             _innerList.RemoveAt(from);
-    //             // if insert failed, rollback this turn
-    //             try { _innerList.Insert(to, item); }
-    //             catch (ArgumentException)
-    //             {
-    //                 _innerList.Insert(from, item);
-    //                 throw;
-    //             }
-    //             movedItems[i] = item;
-    //         }
-    //         catch (ArgumentException)
-    //         {
-    //             for (int j = i - 1; j >= 0; j--)
-    //             {
-    //                 var (from1, to1) = stepsList[j];
-    //                 var item1 = _innerList[to1];
-    //                 _innerList.RemoveAt(to1);
-    //                 _innerList.Insert(from1, item1);
-    //             }
-    //             throw;
-    //         }
-    //     }
-    //
-    //     RaiseUpdate(
-    //         new ListItemMovedEventArgs<T>(
-    //             Readonly, [..movedItems],
-    //             [..stepsList.Select(t => t.From)],
-    //             [..stepsList.Select(t => t.To)]
-    //         )
-    //     );
-    // }
+    /// <summary>
+    ///     将指定范围内的列表项移动至从另一索引起始处。
+    ///     <br/>
+    ///     Move the list items at the given range to a position starting from another index.
+    /// </summary>
+    public void MoveRange(int index, int count, int to)
+    {
+        if (index == to || count == 0) return;
+
+        var items = _innerList[index..(index + count)];
+        _innerList.RemoveRange(index, count);
+        try { _innerList.InsertRange(to, items); }
+        catch (ArgumentException)
+        {
+            _innerList.InsertRange(index, items);
+            throw;
+        }
+
+        if (index > to) items.Reverse();
+        var (fromIndexes, toIndexes) = index < to
+            ? (Enumerable.Repeat(index, count), Enumerable.Repeat(to + count - 1, count))
+            : (Enumerable.Repeat(index + count - 1, count), Enumerable.Repeat(to, count));
+        RaiseUpdate(new ListItemMovedEventArgs<T>(Readonly, [..items], [..fromIndexes], [..toIndexes]));
+    }
+
+    /// <summary>
+    ///     按照给定的一组源索引与目标索引移动列表中的元素。
+    ///     <br/>
+    ///     Move items by a set of given origin and target index.
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    ///     <paramref name="steps"/> 中存在非法的索引项。
+    ///     <br/>
+    ///     <paramref name="steps"/> contains invalid index.
+    /// </exception>
+    public void MultiMove(IEnumerable<(int From, int To)> steps)
+    {
+        var stepsList = steps.ToArray();
+        var movedItems = new T[stepsList.Length];
+        foreach (var (i, (from, to)) in stepsList.Index())
+        {
+            try
+            {
+                var item = _innerList[from];
+                _innerList.RemoveAt(from);
+                // if insert failed, rollback this turn
+                try { _innerList.Insert(to, item); }
+                catch (ArgumentException)
+                {
+                    _innerList.Insert(from, item);
+                    throw;
+                }
+                movedItems[i] = item;
+            }
+            catch (ArgumentException)
+            {
+                for (int j = i - 1; j >= 0; j--)
+                {
+                    var (from1, to1) = stepsList[j];
+                    var item1 = _innerList[to1];
+                    _innerList.RemoveAt(to1);
+                    _innerList.Insert(from1, item1);
+                }
+                throw;
+            }
+        }
+
+        RaiseUpdate(
+            new ListItemMovedEventArgs<T>(
+                Readonly, [..movedItems],
+                [..stepsList.Select(t => t.From)],
+                [..stepsList.Select(t => t.To)]
+            )
+        );
+    }
 
     /// <summary>
     ///     就地排序。
@@ -435,8 +459,9 @@ public class NotifiableList<T> : INotifiableList<T>
     /// </summary>
     public void Sort()
     {
+        var snapshot = _innerList.ToArray();
         _innerList.Sort();
-        RaiseUpdate(new ListSortedEventArgs<T>(Readonly));
+        RaiseUpdate(ListSortedEventArgs<T>.From(Readonly, snapshot));
     }
 
     /// <summary>
@@ -446,8 +471,9 @@ public class NotifiableList<T> : INotifiableList<T>
     /// </summary>
     public void Sort(Comparison<T> comparison)
     {
+        var snapshot = _innerList.ToArray();
         _innerList.Sort(comparison);
-        RaiseUpdate(new ListSortedEventArgs<T>(Readonly));
+        RaiseUpdate(ListSortedEventArgs<T>.From(Readonly, snapshot));
     }
 
     /// <summary>
@@ -457,8 +483,9 @@ public class NotifiableList<T> : INotifiableList<T>
     /// </summary>
     public void Sort(IComparer<T> comparer)
     {
+        var snapshot = _innerList.ToArray();
         _innerList.Sort(comparer);
-        RaiseUpdate(new ListSortedEventArgs<T>(Readonly));
+        RaiseUpdate(ListSortedEventArgs<T>.From(Readonly, snapshot));
     }
 
     /// <summary>
@@ -468,8 +495,9 @@ public class NotifiableList<T> : INotifiableList<T>
     /// </summary>
     public void Sort(int index, int count, IComparer<T> comparer)
     {
+        var snapshot = _innerList.ToArray();
         _innerList.Sort(index, count, comparer);
-        RaiseUpdate(new ListSortedEventArgs<T>(Readonly));
+        RaiseUpdate(ListSortedEventArgs<T>.From(Readonly, snapshot));
     }
 
     /// <summary>
@@ -480,7 +508,11 @@ public class NotifiableList<T> : INotifiableList<T>
     public void Reverse()
     {
         _innerList.Reverse();
-        RaiseUpdate(new ListSortedEventArgs<T>(Readonly));
+        RaiseUpdate(new ListSortedEventArgs<T>(
+                        Readonly, [.._innerList.SkipLast(1)],
+                        [..Enumerable.Repeat(_innerList.Count - 1, _innerList.Count - 1)],
+                        [..Enumerable.Range(0, _innerList.Count - 1)]
+                    ));
     }
 
     /// <summary>
@@ -491,7 +523,11 @@ public class NotifiableList<T> : INotifiableList<T>
     public void Reverse(int index, int count)
     {
         _innerList.Reverse(index, count);
-        RaiseUpdate(new ListSortedEventArgs<T>(Readonly));
+        RaiseUpdate(new ListSortedEventArgs<T>(
+                        Readonly, [.._innerList[index..(index + count - 1)]],
+                        [..Enumerable.Repeat(index + count - 1, count - 1)],
+                        [..Enumerable.Range(index, count - 1)]
+                    ));
     }
 
     #endregion

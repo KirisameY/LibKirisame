@@ -68,7 +68,7 @@ internal class ObservableListWrapper<T>(IReadOnlyNotifiableList<T> list, int not
                     ),
                 _ => [new(NotifyCollectionChangedAction.Reset)]
             },
-            IListSortedEventArgs<T> or IListResetEventArgs<T> => [new(NotifyCollectionChangedAction.Reset)],
+            IListResetEventArgs<T> => [new(NotifyCollectionChangedAction.Reset)],
 
             _ => []
         };

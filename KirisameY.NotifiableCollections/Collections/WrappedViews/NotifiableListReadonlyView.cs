@@ -40,11 +40,13 @@ internal class NotifiableListReadonlyView<T>(IReadOnlyNotifiableList<T> list) : 
                 this, replaced.OldItems,
                 replaced.NewItems, replaced.Indexes
             ),
+            IListSortedEventArgs<T> sorted => new ListSortedEventArgs<T>(
+                this, sorted.Items, sorted.OldIndexes, sorted.NewIndexes
+            ),
             IListItemMovedEventArgs<T> moved => new ListItemMovedEventArgs<T>(
                 this, moved.Items, moved.OldIndexes, moved.NewIndexes
             ),
-            IListSortedEventArgs<T> => new ListSortedEventArgs<T>(this),
-            IListResetEventArgs<T>  => new ListResetEventArgs<T>(this),
+            IListResetEventArgs<T> => new ListResetEventArgs<T>(this),
 
             _ => null
         };
@@ -90,11 +92,13 @@ internal class NotifiableListReadonlyView<TSource, TValue>(
                 this, [..replaced.OldItems.Select(valueSelector)],
                 [..replaced.NewItems.Select(valueSelector)], replaced.Indexes
             ),
+            IListSortedEventArgs<TSource> sorted => new ListSortedEventArgs<TValue>(
+                this, [..sorted.Items.Select(valueSelector)], sorted.OldIndexes, sorted.NewIndexes
+            ),
             IListItemMovedEventArgs<TSource> moved => new ListItemMovedEventArgs<TValue>(
                 this, [..moved.Items.Select(valueSelector)], moved.OldIndexes, moved.NewIndexes
             ),
-            IListSortedEventArgs<TSource> => new ListSortedEventArgs<TValue>(this),
-            IListResetEventArgs<TSource>  => new ListResetEventArgs<TValue>(this),
+            IListResetEventArgs<TSource> => new ListResetEventArgs<TValue>(this),
 
             _ => null
         };

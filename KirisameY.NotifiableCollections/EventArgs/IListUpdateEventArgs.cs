@@ -267,6 +267,8 @@ public interface IListItemMovedEventArgs<out T> : IListUpdateEventArgs<T>
     [PublicAPI] public IReadOnlyList<IListItemMovedInfo<T>> ItemMoves { get; }
 }
 
+// todo: make this a MovedEvent
+
 /// <summary>
 ///     列表中的元素被重新排序。
 ///     <br/>
@@ -277,12 +279,5 @@ public interface IListItemMovedEventArgs<out T> : IListUpdateEventArgs<T>
 ///     <br/>
 ///     The type of the elements.
 /// </typeparam>
-/// <remarks>
-///     元素本身没有增减，只是整表重排，因此不携带任何索引信息；
-///     需要新顺序请直接读 <see cref="IListUpdateEventArgs{T}.ListView"/>。
-///     <br/>
-///     No elements were added or removed — the whole list was merely reordered — so no index information is
-///     carried. Read <see cref="IListUpdateEventArgs{T}.ListView"/> directly for the new order.
-/// </remarks>
 [PublicAPI]
-public interface IListSortedEventArgs<out T> : IListUpdateEventArgs<T> { }
+public interface IListSortedEventArgs<out T> : IListItemMovedEventArgs<T> { }
