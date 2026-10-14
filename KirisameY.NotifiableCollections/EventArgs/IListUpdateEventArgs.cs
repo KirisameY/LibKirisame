@@ -267,8 +267,6 @@ public interface IListItemMovedEventArgs<out T> : IListUpdateEventArgs<T>
     [PublicAPI] public IReadOnlyList<IListItemMovedInfo<T>> ItemMoves { get; }
 }
 
-// todo: make this a MovedEvent
-
 /// <summary>
 ///     列表中的元素被重新排序。
 ///     <br/>

@@ -139,7 +139,7 @@ public class ObservableListTests
     }
 
     [Fact]
-    public void SortRaisesReset()
+    public void SortRaisesMovesInsteadOfReset()
     {
         NotifiableList<int> list = [3, 1, 2];
         IReadOnlyNotifiableList<int> source = list;
@@ -148,12 +148,13 @@ public class ObservableListTests
 
         list.Sort();
 
-        var args = Assert.Single(events);
-        Assert.Equal(NotifyCollectionChangedAction.Reset, args.Action);
+        // 排序被拆成一串移动，默认阈值下逐条发出去，不再整表 Reset
+        Assert.NotEmpty(events);
+        Assert.All(events, e => Assert.Equal(NotifyCollectionChangedAction.Move, e.Action));
     }
 
     [Fact]
-    public void ReverseRaisesReset()
+    public void ReverseRaisesMovesInsteadOfReset()
     {
         NotifiableList<int> list = [1, 2, 3];
         IReadOnlyNotifiableList<int> source = list;
@@ -162,7 +163,8 @@ public class ObservableListTests
 
         list.Reverse();
 
-        Assert.Equal(NotifyCollectionChangedAction.Reset, Assert.Single(events).Action);
+        Assert.NotEmpty(events);
+        Assert.All(events, e => Assert.Equal(NotifyCollectionChangedAction.Move, e.Action));
     }
 
     [Fact]

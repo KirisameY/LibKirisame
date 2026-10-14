@@ -149,16 +149,31 @@ public class NotifyThresholdTests
     }
 
     [Fact]
-    public void ListSortRaisesResetEvenWithAnUnlimitedThreshold()
+    public void ListSortDispatchesMovesUnderAnUnlimitedThreshold()
     {
-        NotifiableList<int> list = [2, 1];
+        NotifiableList<int> list = [1, 2, 3];
         IReadOnlyNotifiableList<int> source = list;
         var view = source.AsReadOnlyObservableCollection();
         var events = ObservableTestUtils.RecordCollectionChanged(view);
 
-        list.Sort();
+        list.Sort(Comparer<int>.Create((a, b) => b.CompareTo(a)));
 
-        // 排序无法逐项表达，跟阈值无关，一律 Reset
+        // 排序现在和别的变更一样是逐项表达的，不设上限就逐条发移动
+        Assert.NotEmpty(events);
+        Assert.All(events, e => Assert.Equal(NotifyCollectionChangedAction.Move, e.Action));
+    }
+
+    [Fact]
+    public void ListSortCollapsesToResetBeyondTheThreshold()
+    {
+        NotifiableList<int> list = [1, 2, 3];
+        IReadOnlyNotifiableList<int> source = list;
+        var view = source.AsReadOnlyObservableCollection(1);
+        var events = ObservableTestUtils.RecordCollectionChanged(view);
+
+        list.Sort(Comparer<int>.Create((a, b) => b.CompareTo(a)));
+
+        // 倒序整表要挪两次，超过阈值 1，于是塌缩成一次 Reset
         Assert.Equal(NotifyCollectionChangedAction.Reset, Assert.Single(events).Action);
     }
 

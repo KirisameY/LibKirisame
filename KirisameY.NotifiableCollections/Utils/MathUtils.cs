@@ -7,6 +7,8 @@ internal static class MathUtils
 {
     public static int[] ResolveLis(IReadOnlyList<int> list)
     {
+        if (list.Count == 0) return [];
+
         var tail = new List<int>(capacity: list.Count);
         var prev = new int[list.Count];
         Array.Fill(prev, -1);
@@ -27,7 +29,7 @@ internal static class MathUtils
             prev[i] = l == 0 ? -1 : tail[l - 1];
         }
 
-        var result = Enumerable.Generate(Optional.From(tail.Last()), i => Optional.From(prev[i], j => j < 0))
+        var result = Enumerable.Generate(Optional.From(tail.Last()), i => Optional.From(prev[i], j => j >= 0))
                                .Reverse()
                                .ToArray();
         return result;

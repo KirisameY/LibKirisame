@@ -367,11 +367,23 @@ public class NotifiableList<T> : INotifiableList<T>
     ///     <br/>
     ///     Move the list item at the specified index to another index.
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     源索引或目标索引不合法。
+    ///     <br/>
+    ///     Origin index or target index is invalid.
+    /// </exception>
     public void Move(int index, int to)
     {
+        if (index == to) return;
+
         var item = _innerList[index];
         _innerList.RemoveAt(index);
-        _innerList.Insert(to, item);
+        try { _innerList.Insert(to, item); }
+        catch (ArgumentOutOfRangeException)
+        {
+            _innerList.Insert(index, item);
+            throw;
+        }
 
         RaiseUpdate(new ListItemMovedEventArgs<T>(Readonly, [item], [index], [to]));
     }
@@ -381,6 +393,11 @@ public class NotifiableList<T> : INotifiableList<T>
     ///     <br/>
     ///     Move the list items at the given range to a position starting from another index.
     /// </summary>
+    /// <exception cref="ArgumentException">
+    ///     源范围或目标索引不合法。
+    ///     <br/>
+    ///     Origin range or target index is invalid.
+    /// </exception>
     public void MoveRange(int index, int count, int to)
     {
         if (index == to || count == 0) return;
@@ -507,6 +524,7 @@ public class NotifiableList<T> : INotifiableList<T>
     /// </summary>
     public void Reverse()
     {
+        if (_innerList.Count == 0) return;
         _innerList.Reverse();
         RaiseUpdate(new ListSortedEventArgs<T>(
                         Readonly, [.._innerList.SkipLast(1)],
@@ -522,6 +540,8 @@ public class NotifiableList<T> : INotifiableList<T>
     /// </summary>
     public void Reverse(int index, int count)
     {
+        if (count == 0) return;
+
         _innerList.Reverse(index, count);
         RaiseUpdate(new ListSortedEventArgs<T>(
                         Readonly, [.._innerList[index..(index + count - 1)]],
