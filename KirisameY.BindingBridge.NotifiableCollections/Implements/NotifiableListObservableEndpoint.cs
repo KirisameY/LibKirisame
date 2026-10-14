@@ -92,7 +92,7 @@ internal class NotifiableListObservableEndpoint<TList, TItem>(
                 list.ForEach(t => t.movedHandler.Invoke(moved.Items, moved.OldIndexes, moved.NewIndexes));
                 break;
             }
-            case IListSortedEventArgs<TItem> or IListResetEventArgs<TItem>:
+            case IListResetEventArgs<TItem>:
             {
                 list.ForEach(t => t.resetHandler.Invoke(args.ListView));
                 break;
