@@ -255,13 +255,18 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
     ///     <br/>
     ///     The key-value pairs to write.
     /// </param>
+    /// <returns>
+    ///     被替换掉的键值对集合。
+    ///     <br/>
+    ///     The pairs that were replaced.
+    /// </returns>
     /// <remarks>
     ///     可能发出<b>最多两次</b>通知——替换和通知，替换通知总是会早于添加通知被发出。
     ///     <br/>
     ///     <b>Up to two</b> notifications may be raised — one for the replacements, then one for the additions,
     ///     always in that order.
     /// </remarks>
-    public void PutRange(IEnumerable<KeyValuePair<TKey, TValue>> values)
+    public IReadOnlyDictionary<TKey, TValue> PutRange(IEnumerable<KeyValuePair<TKey, TValue>> values)
     {
         List<KeyValuePair<TKey, TValue>> addedValues = [];
         List<KeyValuePair<TKey, TValue>> replacedOldValues = [];
@@ -277,13 +282,17 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
             }
         }
 
+        IReadOnlyDictionary<TKey, TValue> result = ReadOnlyDictionary<TKey, TValue>.Empty;
+
         if (replacedNewValues.Count > 0)
         {
+            var oldValues = replacedOldValues.ToImmutableDictionary();
             RaiseUpdate(new DictionaryItemReplacedEventArgs<TKey, TValue>(
                             Readonly,
-                            replacedOldValues.ToImmutableDictionary(),
+                            oldValues,
                             replacedNewValues.ToImmutableDictionary()
                         ));
+            result = oldValues;
         }
         if (addedValues.Count > 0)
         {
@@ -292,6 +301,8 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
                             addedValues.ToImmutableDictionary()
                         ));
         }
+
+        return result;
     }
 
     /// <inheritdoc cref="Dictionary{TKey,TValue}.Remove(TKey, out TValue)" />
@@ -357,13 +368,25 @@ public class NotifiableDictionary<TKey, TValue> : INotifiableDictionary<TKey, TV
         return dict;
     }
 
-    /// <inheritdoc/>
-    public void Clear()
+    /// <summary>
+    ///     移除字典中的所有键值对。
+    ///     <br/>
+    ///     Remove all KVPs from the dictionary.
+    /// </summary>
+    /// <returns>
+    ///     被移除的键值对集合。
+    ///     <br/>
+    ///     Collection of removed pairs.
+    /// </returns>
+    public IReadOnlyDictionary<TKey, TValue> Clear()
     {
         var before = _innerDict.ToImmutableDictionary();
         _innerDict.Clear();
         RaiseUpdate(new DictionaryItemClearedEventArgs<TKey, TValue>(Readonly, before));
+        return before;
     }
+
+    void ICollection<KeyValuePair<TKey, TValue>>.Clear() => Clear();
 
     #endregion
 

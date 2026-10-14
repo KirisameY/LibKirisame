@@ -121,13 +121,14 @@ public class NotifiableList<T> : INotifiableList<T>
     ///     <br/>
     ///     <paramref name="items"/> containes invalid or duplicated index, or is not ascending ordered by indexes.
     /// </exception>
-    public void MultiInsert(IReadOnlyList<IItemWithIndex<T>> items)
+    public void MultiInsert(IEnumerable<IItemWithIndex<T>> items)
     {
-        foreach (var (i, item) in items.Index())
+        var itemsList = items.ToImmutableArray();
+        foreach (var (i, item) in itemsList.Index())
         {
             try
             {
-                if (i > 0 && item.Index <= items[i - 1].Index)
+                if (i > 0 && item.Index <= itemsList[i - 1].Index)
                 {
                     throw new ArgumentException("Items to insert should be in ascending order and have no duplicated index");
                 }
@@ -138,16 +139,13 @@ public class NotifiableList<T> : INotifiableList<T>
                 // reverse
                 for (int j = i - 1; j >= 0; j--)
                 {
-                    _innerList.RemoveAt(items[j].Index);
+                    _innerList.RemoveAt(itemsList[j].Index);
                 }
                 throw;
             }
         }
-        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, items.ItemsView, items.IndexesView));
+        RaiseUpdate(new ListItemAddedEventArgs<T>(Readonly, itemsList.ItemsView, itemsList.IndexesView));
     }
-
-    /// <inheritdoc cref="MultiInsert(IReadOnlyList{IItemWithIndex{T}})"/>
-    public void MultiInsert(IEnumerable<IItemWithIndex<T>> items) => MultiInsert(items.ToImmutableList());
 
     /// <summary>
     ///     将一组指定索引的项插入列表中。
@@ -172,14 +170,26 @@ public class NotifiableList<T> : INotifiableList<T>
     /// </exception>
     public void MultiInsert(IEnumerable<int> indexes, IEnumerable<T> items) => MultiInsert(indexes.ZipChecked(items, ItemWithIndex.From));
 
-    /// <inheritdoc/>
-    public void Clear()
+    /// <summary>
+    ///     从列表中移除所有项。
+    ///     <br/>
+    ///     Remove all items from the list.
+    /// </summary>
+    /// <returns>
+    ///     被移除的项的列表。
+    ///     <br/>
+    ///     List of removed items.
+    /// </returns>
+    public IReadOnlyList<T> Clear()
     {
-        var before = _innerList.ToImmutableArray();
+        var before = _innerList.ToImmutableList();
         _innerList.Clear();
         // 索引取 0..旧长度-1：升序连续，且与 before 逐位对应
-        RaiseUpdate(new ListItemClearedEventArgs<T>(Readonly, before, [..Enumerable.Range(0, before.Length)]));
+        RaiseUpdate(new ListItemClearedEventArgs<T>(Readonly, before, [..Enumerable.Range(0, before.Count)]));
+        return before;
     }
+
+    void ICollection<T>.Clear() => Clear();
 
     /// <inheritdoc/>
     public bool Remove(T item)
@@ -191,19 +201,36 @@ public class NotifiableList<T> : INotifiableList<T>
         return true;
     }
 
-    /// <inheritdoc/>
-    public void RemoveAt(int index)
+    /// <summary>
+    ///     移除指定位置的列表项。
+    ///     <br/>
+    ///     Remove the list item at the specified index.
+    /// </summary>
+    /// <returns>
+    ///     被移除的项。
+    ///     <br/>
+    ///     Removed item.
+    /// </returns>
+    public T RemoveAt(int index)
     {
         var item = _innerList[index];
         _innerList.RemoveAt(index);
         RaiseUpdate(new ListItemRemovedEventArgs<T>(Readonly, [item], [index]));
+        return item;
     }
+
+    void IList<T>.RemoveAt(int index) => RemoveAt(index);
 
     /// <summary>
     ///     移除指定范围内的元素。
     ///     <br/>
     ///     Removes the elements in the given range.
     /// </summary>
+    /// <returns>
+    ///     被移除的项的列表。
+    ///     <br/>
+    ///     List of removed items.
+    /// </returns>
     public IReadOnlyList<T> RemoveRange(int index, int count)
     {
         var removed = _innerList[index..(index + count)].ToImmutableList();
@@ -266,7 +293,12 @@ public class NotifiableList<T> : INotifiableList<T>
     ///     <br/>
     ///     Removes every element matching the predicate.
     /// </summary>
-    public void RemoveAll(Predicate<T> predicate)
+    /// <returns>
+    ///     被移除的项的列表。
+    ///     <br/>
+    ///     List of removed items.
+    /// </returns>
+    public IReadOnlyList<T> RemoveAll(Predicate<T> predicate)
     {
         // 顺着原索引扫一遍再过滤，天然升序
         var indexes = _innerList.Select((item, index) => predicate.Invoke(item) ? index : -1)
@@ -280,6 +312,7 @@ public class NotifiableList<T> : INotifiableList<T>
             return item;
         }).Reverse().ToImmutableList();
         RaiseUpdate(new ListItemRemovedEventArgs<T>(Readonly, items, indexes));
+        return items;
     }
 
     /// <summary>
@@ -302,14 +335,15 @@ public class NotifiableList<T> : INotifiableList<T>
     ///     <br/>
     ///     <paramref name="items"/> containes invalid or duplicated index, or is not ascending ordered by indexes.
     /// </exception>
-    public IReadOnlyList<T> MultiReplace(IReadOnlyList<IItemWithIndex<T>> items)
+    public IReadOnlyList<T> MultiReplace(IEnumerable<IItemWithIndex<T>> items)
     {
-        var oldItems = new T[items.Count];
-        foreach (var (i, item) in items.Index())
+        var itemsList = items.ToImmutableList();
+        var oldItems = new T[itemsList.Count];
+        foreach (var (i, item) in itemsList.Index())
         {
             try
             {
-                if (i > 0 && item.Index <= items[i - 1].Index)
+                if (i > 0 && item.Index <= itemsList[i - 1].Index)
                 {
                     throw new ArgumentException("Items to replace should be in ascending order and have no duplicated index");
                 }
@@ -321,18 +355,15 @@ public class NotifiableList<T> : INotifiableList<T>
                 // reverse
                 for (int j = i - 1; j >= 0; j--)
                 {
-                    _innerList[items[j].Index] = oldItems[j];
+                    _innerList[itemsList[j].Index] = oldItems[j];
                 }
                 throw;
             }
         }
         var finalOldItems = oldItems.ToImmutableList();
-        RaiseUpdate(new ListItemReplacedEventArgs<T>(Readonly, finalOldItems, items.ItemsView, items.IndexesView));
+        RaiseUpdate(new ListItemReplacedEventArgs<T>(Readonly, finalOldItems, itemsList.ItemsView, itemsList.IndexesView));
         return finalOldItems;
     }
-
-    /// <inheritdoc cref="MultiReplace(IReadOnlyList{IItemWithIndex{T}})"/>
-    public IReadOnlyList<T> MultiReplace(IEnumerable<IItemWithIndex<T>> items) => MultiReplace(items.ToImmutableList());
 
     /// <summary>
     ///     将一组指定索引的项替换至列表中。
