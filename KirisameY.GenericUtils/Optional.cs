@@ -6,8 +6,14 @@ namespace KirisameY.GenericUtils;
 
 public static class Optional
 {
-    [PublicAPI] public static Optional<T> From<T>([DisallowNull] T value) => new Optional<T>(value);
     [PublicAPI] public static Optional<T> Empty<T>() => new Optional<T>();
+
+    [PublicAPI] public static Optional<T> From<T>(T value) => new Optional<T>(value);
+
+    [PublicAPI]
+    public static Optional<T> From<T>(T value, Func<T, bool> predicate) => predicate.Invoke(value)
+        ? new Optional<T>(value)
+        : new Optional<T>();
 
     [PublicAPI]
     public static Optional<T> FromNullable<T>(T? value) => value switch
@@ -19,16 +25,16 @@ public static class Optional
 
 public readonly struct Optional<T> : IEquatable<Optional<T>>
 {
-    [PublicAPI, MemberNotNullWhen(true, nameof(Value))]
+    [PublicAPI]
     public bool HasValue { get; }
 
     [PublicAPI]
-    public T? Value { get; }
+    public T Value => HasValue ? field : throw new InvalidOperationException($"Tried to get value from an empty Optional<{typeof(T)}>");
 
     public Optional()
     {
         HasValue = false;
-        Value    = default;
+        Value    = default!;
     }
 
     internal Optional(T value)
@@ -48,7 +54,7 @@ public readonly struct Optional<T> : IEquatable<Optional<T>>
 
     public override bool Equals(object? obj) => obj is Optional<T> other && Equals(other);
 
-    public override int GetHashCode() => HashCode.Combine(HasValue, Value);
+    public override int GetHashCode() => HasValue ? HashCode.Combine(0, Value) : 0;
 
     public static bool operator ==(Optional<T> a, Optional<T> b) => a.Equals(b);
 
