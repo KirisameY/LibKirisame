@@ -2,22 +2,71 @@ using KirisameY.BindingBridge.CollectionBinding.SimpleCollectionObservers;
 
 namespace KirisameY.BindingBridge.CollectionBinding.Implements;
 
-internal class SimpleListObserverEndpoint<TList, TElement>(
-    Func<TList, ISimpleListObserver<TElement>> observerGetter
-) : IListObserverEndpoint<TList, TElement> where TList : class
+internal class SimpleListObserverEndpoint<TList, TItem>(
+    Func<TList, ISimpleListObserver<TItem>> observerGetter
+) : IListObserverEndpoint<TList, TItem> where TList : class
 {
-    public void ListItemAdded(TList obj, IEnumerable<TElement> added, IEnumerable<int>? indexes) =>
-        observerGetter.Invoke(obj).ListItemAdded(added, indexes);
+    public void ListItemAdded(TList obj, IEnumerable<TItem> added, IEnumerable<int>? indexes)
+    {
+        var observer = observerGetter.Invoke(obj);
+        if (indexes is null)
+        {
+            foreach (var item in added) observer.Add(item);
+        }
+        else
+        {
+            foreach (var (i, item) in indexes.Zip(added)) observer.Insert(i, item);
+        }
+    }
 
-    public void ListItemRemoved(TList obj, IEnumerable<TElement> removed, IEnumerable<int>? indexes) =>
-        observerGetter.Invoke(obj).ListItemRemoved(removed, indexes);
+    public void ListItemRemoved(TList obj, IEnumerable<TItem> removed, IEnumerable<int>? indexes)
+    {
+        var observer = observerGetter.Invoke(obj);
+        if (indexes is not null)
+        {
+            foreach (var i in indexes) observer.RemoveAt(i);
+        }
+        else
+        {
+            foreach (var item in removed)
+            {
+                var i = observer.Find(item);
+                observer.RemoveAt(i);
+            }
+        }
+    }
 
-    public void ListItemReplaced(TList obj, IEnumerable<TElement> oldItems, IEnumerable<TElement> newItems, IEnumerable<int>? indexes) =>
-        observerGetter.Invoke(obj).ListItemReplaced(oldItems, newItems, indexes);
+    public void ListItemReplaced(TList obj, IEnumerable<TItem> oldItems, IEnumerable<TItem> newItems, IEnumerable<int>? indexes)
+    {
+        var observer = observerGetter.Invoke(obj);
+        if (indexes is not null)
+        {
+            foreach (var (i, @new) in indexes.Zip(newItems)) observer.Replace(i, @new);
+        }
+        else
+        {
+            foreach (var (old, @new) in oldItems.Zip(newItems))
+            {
+                var i = observer.Find(old);
+                observer.Replace(i, @new);
+            }
+        }
+    }
 
-    public void ListItemMoved(TList obj, IEnumerable<TElement> items, IEnumerable<int> oldIndexes, IEnumerable<int> newIndexes) =>
-        observerGetter.Invoke(obj).ListItemMoved(items, oldIndexes, newIndexes);
+    public void ListItemMoved(TList obj, IEnumerable<TItem> items, IEnumerable<int> oldIndexes, IEnumerable<int> newIndexes)
+    {
+        var observer = observerGetter.Invoke(obj);
+        foreach (var (from, to, item) in oldIndexes.Zip(newIndexes, items))
+        {
+            observer.RemoveAt(from);
+            observer.Insert(to, item);
+        }
+    }
 
-    public void ListReset(TList obj, IReadOnlyList<TElement> listView) =>
-        observerGetter.Invoke(obj).ListReset(listView);
+    public void ListReset(TList obj, IReadOnlyList<TItem> listView)
+    {
+        var observer = observerGetter.Invoke(obj);
+        observer.Clear();
+        foreach (var item in listView) observer.Add(item);
+    }
 }

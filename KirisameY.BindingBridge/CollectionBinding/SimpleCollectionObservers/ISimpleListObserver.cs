@@ -1,10 +1,13 @@
-﻿namespace KirisameY.BindingBridge.CollectionBinding.SimpleCollectionObservers;
+﻿using KirisameY.GenericUtils;
+
+namespace KirisameY.BindingBridge.CollectionBinding.SimpleCollectionObservers;
 
 public interface ISimpleListObserver<in TItem>
 {
-    void ListItemAdded(IEnumerable<TItem> items, IEnumerable<int>? indexes);
-    void ListItemRemoved(IEnumerable<TItem> items, IEnumerable<int>? indexes);
-    void ListItemReplaced(IEnumerable<TItem> oldItems, IEnumerable<TItem> newItems, IEnumerable<int>? indexes);
-    void ListItemMoved(IEnumerable<TItem> items, IEnumerable<int> oldIndexes, IEnumerable<int> newIndexes);
-    void ListReset(IReadOnlyList<TItem> listView);
+    int Find(TItem item);
+    void Add(TItem item);
+    void Insert(int index, TItem item);
+    void RemoveAt(int index);
+    void Replace(int index, TItem newItem);
+    void Clear();
 }
