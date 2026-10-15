@@ -195,4 +195,46 @@ public class CollectionBindingTests
 
         Assert.Equal(new[] { 1, 3, 4 }, target.OrderBy(v => v));
     }
+
+    // ---------- 一次带多项的通知 ----------
+
+    [Fact]
+    public void ABatchInsertLandsInTheListTargetInSourceOrder()
+    {
+        var source = new RaisableObservableList<int>([1, 2, 3]);
+        var target = new List<int>();
+
+        using var handle = DefaultBinder().BindCollection(source, target, TypeA.Of<int>());
+
+        source.InsertRange(1, [7, 8, 9]);
+
+        // 一次带三项的通知：这些项该按源里的顺序落在同一个位置
+        Assert.Equal(source, target);
+    }
+
+    [Fact]
+    public void ABatchReplaceLandsInTheListTargetInSourceOrder()
+    {
+        var source = new RaisableObservableList<int>([1, 2, 3]);
+        var target = new List<int>();
+
+        using var handle = DefaultBinder().BindCollection(source, target, TypeA.Of<int>());
+
+        source.ReplaceRange(1, [7, 8]);
+
+        Assert.Equal(source, target);
+    }
+
+    [Fact]
+    public void ABatchRemoveTakesOutExactlyWhatTheSourceLost()
+    {
+        var source = new RaisableObservableList<int>([1, 2, 3, 4]);
+        var target = new List<int>();
+
+        using var handle = DefaultBinder().BindCollection(source, target, TypeA.Of<int>());
+
+        source.RemoveRange(1, 2);
+
+        Assert.Equal(source, target);
+    }
 }

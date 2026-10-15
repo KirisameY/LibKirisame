@@ -78,7 +78,7 @@ internal class NotifyListObservableEndpoint<TList, TItem>(
             {
                 list.ForEach(t => t.addHandler.Invoke(
                                  newItems.Cast<TItem>(),
-                                 index < 0 ? null : Enumerable.Repeat(index, newItems.Count)
+                                 index < 0 ? null : Enumerable.Range(index, newItems.Count)
                              ));
                 break;
             }
@@ -86,7 +86,7 @@ internal class NotifyListObservableEndpoint<TList, TItem>(
             {
                 list.ForEach(t => t.removedHandler.Invoke(
                                  removedItems.Cast<TItem>(),
-                                 index < 0 ? null : Enumerable.Repeat(index, removedItems.Count)
+                                 index < 0 ? null : Enumerable.Range(index, removedItems.Count)
                              ));
                 break;
             }
@@ -94,7 +94,7 @@ internal class NotifyListObservableEndpoint<TList, TItem>(
             {
                 list.ForEach(t => t.replacedHandler.Invoke(
                                  oldItems.Cast<TItem>(), newItems.Cast<TItem>(),
-                                 index < 0 ? null : Enumerable.Repeat(index, oldItems.Count)
+                                 index < 0 ? null : Enumerable.Range(index, oldItems.Count)
                              ));
                 break;
             }

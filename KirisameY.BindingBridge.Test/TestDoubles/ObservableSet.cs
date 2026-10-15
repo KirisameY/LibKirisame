@@ -38,6 +38,15 @@ public class ObservableSet<T> : IReadOnlyCollection<T>, INotifyCollectionChanged
         return true;
     }
 
+    /// <summary>换掉一项。标准库的集合没有这个动作，这里补一个是为了造出"带替换的无序集合源"。</summary>
+    public bool Replace(T oldItem, T newItem)
+    {
+        if (!_items.Remove(oldItem)) return false;
+        _items.Add(newItem);
+        Raise(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItem, oldItem));
+        return true;
+    }
+
     public void Clear()
     {
         if (_items.Count == 0) return;

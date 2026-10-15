@@ -24,11 +24,11 @@ internal class SimpleListObserverEndpoint<TList, TItem>(
         var observer = observerGetter.Invoke(obj);
         if (indexes is not null)
         {
-            foreach (var i in indexes) observer.RemoveAt(i);
+            foreach (var i in indexes.Reverse()) observer.RemoveAt(i);
         }
         else
         {
-            foreach (var item in removed)
+            foreach (var item in removed.Reverse())
             {
                 var i = observer.Find(item);
                 if (i >= 0) observer.RemoveAt(i);
