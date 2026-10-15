@@ -2,7 +2,7 @@
 
 namespace KirisameY.BindingBridge.CollectionBinding.Implements;
 
-internal class ModifiableListObservableEndpoint<TList, TItem>(
+internal class ModifiableListObserverEndpoint<TList, TItem>(
     Func<TList, IList<TItem>> listGetter
 ) : IListObserverEndpoint<TList, TItem>
     where TList : class

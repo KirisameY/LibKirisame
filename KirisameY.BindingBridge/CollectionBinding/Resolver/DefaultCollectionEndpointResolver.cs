@@ -1,6 +1,7 @@
 ﻿using System.Collections.Specialized;
 
 using KirisameY.BindingBridge.CollectionBinding.Implements;
+using KirisameY.BindingBridge.CollectionBinding.SimpleCollectionObservers;
 
 namespace KirisameY.BindingBridge.CollectionBinding.Resolver;
 
@@ -35,10 +36,14 @@ public class DefaultCollectionEndpointTargetResolver : ICollectionEndpointTarget
     {
         return typeof(TObject) switch
         {
+            var t when t.IsAssignableTo(typeof(ISimpleListObserver<TElement>)) =>
+                new SimpleListObserverEndpoint<TObject, TElement>(o => (ISimpleListObserver<TElement>)o),
+            var t when t.IsAssignableTo(typeof(ISimpleCollectionObserver<TElement>)) =>
+                new SimpleCollectionObserverEndpoint<TObject, TElement>(o => (ISimpleCollectionObserver<TElement>)o),
             var t when t.IsAssignableTo(typeof(IList<TElement>)) =>
-                new ModifiableListObservableEndpoint<TObject, TElement>(o => (IList<TElement>)o),
+                new ModifiableListObserverEndpoint<TObject, TElement>(o => (IList<TElement>)o),
             var t when t.IsAssignableTo(typeof(ICollection<TElement>)) =>
-                new ModifiableCollectionObservableEndpoint<TObject, TElement>(o => (ICollection<TElement>)o),
+                new ModifiableCollectionObserverEndpoint<TObject, TElement>(o => (ICollection<TElement>)o),
             _ => null
         };
     }

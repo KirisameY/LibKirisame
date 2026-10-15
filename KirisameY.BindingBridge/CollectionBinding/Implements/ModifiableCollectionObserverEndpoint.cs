@@ -2,7 +2,7 @@
 
 namespace KirisameY.BindingBridge.CollectionBinding.Implements;
 
-internal class ModifiableCollectionObservableEndpoint<TCollection, TElement>(
+internal class ModifiableCollectionObserverEndpoint<TCollection, TElement>(
     Func<TCollection, ICollection<TElement>> collectionGetter
 ) : ICollectionObserverEndpoint<TCollection, TElement>
     where TCollection : class
