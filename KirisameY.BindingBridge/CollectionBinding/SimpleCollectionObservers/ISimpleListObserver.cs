@@ -9,5 +9,6 @@ public interface ISimpleListObserver<in TItem>
     void Insert(int index, TItem item);
     void RemoveAt(int index);
     void Replace(int index, TItem newItem);
+    void Move(int oldIndex, int newIndex);
     void Clear();
 }

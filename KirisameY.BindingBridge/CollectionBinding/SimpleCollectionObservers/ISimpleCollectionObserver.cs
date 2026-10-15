@@ -4,5 +4,6 @@ public interface ISimpleCollectionObserver<in TElement>
 {
     void Add(TElement element);
     void Remove(TElement element);
+    void Replace(TElement oldElement, TElement newElement);
     void Clear();
 }

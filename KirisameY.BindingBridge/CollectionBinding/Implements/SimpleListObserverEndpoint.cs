@@ -56,11 +56,7 @@ internal class SimpleListObserverEndpoint<TList, TItem>(
     public void ListItemMoved(TList obj, IEnumerable<TItem> items, IEnumerable<int> oldIndexes, IEnumerable<int> newIndexes)
     {
         var observer = observerGetter.Invoke(obj);
-        foreach (var (from, to, item) in oldIndexes.Zip(newIndexes, items))
-        {
-            observer.RemoveAt(from);
-            observer.Insert(to, item);
-        }
+        foreach (var (from, to) in oldIndexes.Zip(newIndexes)) observer.Move(from, to);
     }
 
     public void ListReset(TList obj, IReadOnlyList<TItem> listView)

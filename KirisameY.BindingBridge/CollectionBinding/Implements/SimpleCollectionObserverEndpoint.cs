@@ -21,11 +21,7 @@ internal class SimpleCollectionObserverEndpoint<TCollection, TElement>(
     public void CollectionItemReplaced(TCollection obj, IEnumerable<TElement> oldElements, IEnumerable<TElement> newElements)
     {
         var observer = observerGetter.Invoke(obj);
-        foreach (var (old, @new) in oldElements.Zip(newElements))
-        {
-            observer.Remove(old);
-            observer.Add(@new);
-        }
+        foreach (var (old, @new) in oldElements.Zip(newElements)) observer.Replace(old, @new);
     }
 
     public void CollectionReset(TCollection obj, IReadOnlyCollection<TElement> collectionView)
