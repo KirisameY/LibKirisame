@@ -31,7 +31,7 @@ internal class SimpleListObserverEndpoint<TList, TItem>(
             foreach (var item in removed)
             {
                 var i = observer.Find(item);
-                observer.RemoveAt(i);
+                if (i >= 0) observer.RemoveAt(i);
             }
         }
     }
@@ -48,7 +48,7 @@ internal class SimpleListObserverEndpoint<TList, TItem>(
             foreach (var (old, @new) in oldItems.Zip(newItems))
             {
                 var i = observer.Find(old);
-                observer.Replace(i, @new);
+                if (i >= 0) observer.Replace(i, @new);
             }
         }
     }
