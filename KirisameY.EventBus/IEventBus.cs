@@ -6,5 +6,5 @@ public interface IEventBus<TBaseEvent> where TBaseEvent : BaseEvent
 
     bool Unsubscribe<TEvent>(Action<TEvent> handler) where TEvent : TBaseEvent;
 
-    void Publish<TEvent>(TEvent @event) where TEvent : TBaseEvent;
+    TEvent Publish<TEvent>(TEvent @event) where TEvent : TBaseEvent;
 }

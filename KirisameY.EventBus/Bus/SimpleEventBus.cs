@@ -31,17 +31,18 @@ public class SimpleEventBus<TBaseEvent> : IEventBus<TBaseEvent>
         return prev.Count > infos.Handlers.Count;
     }
 
-    public void Publish<TEvent>(TEvent @event) where TEvent : TBaseEvent
+    public TEvent Publish<TEvent>(TEvent @event) where TEvent : TBaseEvent
     {
         var type = typeof(TEvent);
         while (type?.IsAssignableTo(typeof(TBaseEvent)) is true)
         {
             if (_handlersDict.TryGetValue(type, out var infos))
             {
-                infos.Handlers.ForEach(t => t.handler.Invoke(@event));
+                foreach (var t in infos.Handlers) t.handler.Invoke(@event);
             }
             type = type.BaseType;
         }
+        return @event;
     }
 
 
