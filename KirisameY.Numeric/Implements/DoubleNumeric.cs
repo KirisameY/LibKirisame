@@ -48,7 +48,7 @@ internal class DoubleNumeric<TOrder>(double baseValue = 0) : IEditableNumeric<do
     }
 
     private readonly SortedList<TOrder, List<INumericModifier<TOrder>>> _modifiers = [];
-    public IReadOnlyCollection<INumericModifier<TOrder>> Modifiers => field ??= CombinedCollectionView<INumericModifier<TOrder>>.Create(_modifiers.Values.AsReadOnly());
+    public IReadOnlyCollection<INumericModifier<TOrder>> Modifiers => field ??= CombinedCollectionView.Create(_modifiers.Values.AsReadOnly());
 
     public void AddModifier(INumericModifier<TOrder> modifier)
     {
