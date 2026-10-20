@@ -1,16 +1,20 @@
 ﻿using System.Collections;
 using System.Collections.Immutable;
 
+using JetBrains.Annotations;
+
 using KirisameY.Relinq.Extensions;
 
 namespace KirisameY.CollectionViews.Combined;
 
-public class CombinedListView<T>(IReadOnlyCollection<IReadOnlyList<T>> lists) : IReadOnlyList<T>
+public abstract class CombinedListView
 {
-    public static CombinedListView<T> Create(IReadOnlyCollection<IReadOnlyList<T>> lists) => new(lists);
-    public static CombinedListView<T> CreateFrozen(IEnumerable<IReadOnlyList<T>> lists) => new([..lists]);
+    [PublicAPI] public static CombinedListView<T> Create<T>(params IReadOnlyCollection<IReadOnlyList<T>> lists) => new(lists);
+    [PublicAPI] public static CombinedListView<T> CreateFrozen<T>(IEnumerable<IReadOnlyList<T>> lists) => new([..lists]);
+}
 
-
+public class CombinedListView<T>(IReadOnlyCollection<IReadOnlyList<T>> lists) : CombinedListView, IReadOnlyList<T>
+{
     public IEnumerator<T> GetEnumerator() => lists.Flatten().GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
