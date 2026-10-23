@@ -24,7 +24,8 @@ public class DictionaryChangeTests
         var dictionary = new NotifiableDictionary<string, int>();
         var updates = NotifiableCollectionsTestUtils.RecordDictionaryUpdates(dictionary);
 
-        dictionary.Add(new KeyValuePair<string, int>("a", 1));
+        // Add(KVP) 已下沉为 ICollection<KVP> 的显式接口实现，具体类型上不再直接可见
+        ((ICollection<KeyValuePair<string, int>>)dictionary).Add(new KeyValuePair<string, int>("a", 1));
 
         var added = Assert.IsAssignableFrom<IDictionaryItemAddedEventArgs<string, int>>(Assert.Single(updates));
         Assert.Equal(1, added.AddedItems["a"]);
@@ -124,7 +125,7 @@ public class DictionaryChangeTests
         var updates = NotifiableCollectionsTestUtils.RecordDictionaryUpdates(dictionary);
 
         // 键对了但值不对：ICollection<KVP>.Remove 要求两者都相等
-        Assert.False(dictionary.Remove(new KeyValuePair<string, int>("a", 2)));
+        Assert.False(((ICollection<KeyValuePair<string, int>>)dictionary).Remove(new KeyValuePair<string, int>("a", 2)));
 
         Assert.Empty(updates);
         Assert.Single(dictionary);
@@ -136,7 +137,7 @@ public class DictionaryChangeTests
         var dictionary = new NotifiableDictionary<string, int> { { "a", 1 } };
         var updates = NotifiableCollectionsTestUtils.RecordDictionaryUpdates(dictionary);
 
-        Assert.True(dictionary.Remove(new KeyValuePair<string, int>("a", 1)));
+        Assert.True(((ICollection<KeyValuePair<string, int>>)dictionary).Remove(new KeyValuePair<string, int>("a", 1)));
 
         var removed = Assert.IsAssignableFrom<IDictionaryItemRemovedEventArgs<string, int>>(Assert.Single(updates));
         Assert.Equal(1, removed.RemovedItems["a"]);

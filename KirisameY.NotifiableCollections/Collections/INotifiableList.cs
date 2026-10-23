@@ -137,8 +137,19 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
     /// </exception>
     [PublicAPI] IReadOnlyList<T> MultiRemove(IEnumerable<int> indexes);
 
+    /// <remarks>
+    ///     以元素值而非索引来定位：对每个元素移除它<b>第一次</b>出现的位置。找不到的元素会被静默跳过，
+    ///     入参里重复出现的元素只移除一次，且入参顺序不限——<see cref="MultiRemove"/> 要求索引升序且不重复，
+    ///     故这里先筛选、去重再排序。
+    ///     <br/>
+    ///     Locates items by value rather than by index: removes the <b>first</b> occurrence of each element.
+    ///     Elements that are not present are skipped silently, a repeated element is removed once, and the
+    ///     argument order does not matter — <see cref="MultiRemove"/> requires ascending, distinct indexes, so
+    ///     the indexes are filtered, deduplicated and sorted first.
+    /// </remarks>
+    // todo: 不巧的是这会让重复元素的行为非预期，回头再修（0.2发布前）
     IReadOnlyCollection<T> INotifiableCollection<T>.RemoveRange(IReadOnlyCollection<T> elements) =>
-        MultiRemove(elements.Select(IndexOf).Where(i => i > 0));
+        MultiRemove(elements.Select(IndexOf).Where(i => i >= 0).Distinct().Order());
 
     /// <summary>
     ///     移除第一个满足条件的元素。
@@ -202,21 +213,35 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
 
     bool INotifiableCollection<T>.Replace(T oldElement, T newElement)
     {
-        if (IndexOf(oldElement) is not (>= 0 and var i)) return false;
-        this[i] = newElement;
+        var index = IndexOf(oldElement);
+        if (index < 0) return false;
+        this[index] = newElement;
         return true;
     }
 
+    /// <remarks>
+    ///     每条指令按 <c>Old</c> 的<b>首次</b>出现位置定位；找不到、或同一个位置被前面某条指令先占用的指令
+    ///     记为失败并原样返回其 <c>New</c>。指令顺序不限——内部会按索引升序重排后再交给
+    ///     <see cref="MultiReplace"/>，而它要求索引升序且不重复。
+    ///     <br/>
+    ///     Each command is located by the <b>first</b> occurrence of its <c>Old</c> value; a command whose target
+    ///     is missing, or whose position was already taken by an earlier command, is reported as failed and its
+    ///     <c>New</c> value is returned as-is. Command order does not matter — internally they are reordered by
+    ///     ascending index before being handed to <see cref="MultiReplace"/>, which requires ascending distinct indexes.
+    /// </remarks>
+    // todo: 这里也是关于重复向的问题，我看迟早得把默认实现摘了
     IReadOnlyCollection<(bool Replaced, T Left)> INotifiableCollection<T>.ReplaceRange(IReadOnlyCollection<(T Old, T New)> replaces)
     {
         List<(bool Replaced, T Left)> result = new(capacity: replaces.Count);
-        List<IItemWithIndex<T>> replace = new(capacity: replaces.Count);
-        foreach (var (index, item) in replaces.Select(r => (IndexOf(r.Old), r.New)))
+        Dictionary<int, T> replacements = new(capacity: replaces.Count);
+        foreach (var (oldElement, newElement) in replaces)
         {
-            if (index <= 0) result.Add((false, item));
-            else replace.Add(item.WithIndex(index));
+            var index = IndexOf(oldElement);
+            if (index < 0 || !replacements.TryAdd(index, newElement)) result.Add((false, newElement));
         }
-        var oldItems = MultiReplace(replace);
+        var oldItems = MultiReplace(
+            replacements.OrderBy(p => p.Key).Select(p => p.Value.WithIndex(p.Key))
+        );
         result.AddRange(oldItems.Select(item => (true, item)));
         return [..result];
     }

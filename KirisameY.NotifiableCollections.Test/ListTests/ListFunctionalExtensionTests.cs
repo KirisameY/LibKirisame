@@ -67,4 +67,28 @@ public class ListFunctionalExtensionTests
         Assert.Equal([2, 3], added.AddedItems);
         Assert.Equal([1, 2], added.Indexes);
     }
+
+    [Fact]
+    public void LazyInsertRangeIsMaterializedBeforeTheListChanges()
+    {
+        var list = new NotifiableList<int> { 1, 4 };
+        var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
+
+        var enumerations = 0;
+        IEnumerable<int> Source()
+        {
+            enumerations++;
+            yield return 2;
+            yield return 3;
+        }
+
+        list.InsertRange(1, Source());
+
+        Assert.Equal(1, enumerations);
+        Assert.Equal([1, 2, 3, 4], list);
+
+        var added = Assert.IsAssignableFrom<IListItemAddedEventArgs<int>>(Assert.Single(updates));
+        Assert.Equal([2, 3], added.AddedItems);
+        Assert.Equal([1, 2], added.Indexes);
+    }
 }

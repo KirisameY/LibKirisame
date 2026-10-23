@@ -91,7 +91,8 @@ public class DictionaryReadTests
         var dictionary = new NotifiableDictionary<string, int> { { "a", 1 } };
         var array = new KeyValuePair<string, int>[2];
 
-        dictionary.CopyTo(array, 1);
+        // CopyTo 现在是 INotifiableCollection<T> 上的默认接口实现，只能通过接口调用
+        ((ICollection<KeyValuePair<string, int>>)dictionary).CopyTo(array, 1);
 
         Assert.Equal(new KeyValuePair<string, int>("a", 1), array[1]);
     }

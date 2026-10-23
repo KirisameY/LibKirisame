@@ -199,16 +199,19 @@ public interface INotifiableDictionary<TKey, TValue> : INotifiableCollection<Key
         return true;
     }
 
+    // todo: 这里也是，下次取消默认实现
     IReadOnlyCollection<(bool Replaced, KeyValuePair<TKey, TValue> Left)> INotifiableCollection<KeyValuePair<TKey, TValue>>.ReplaceRange(
         IReadOnlyCollection<(KeyValuePair<TKey, TValue> Old, KeyValuePair<TKey, TValue> New)> replaces)
     {
         List<(bool Replaced, KeyValuePair<TKey, TValue> Left)> result = new(capacity: replaces.Count);
         List<KeyValuePair<TKey, TValue>> replace = new(capacity: replaces.Count);
+        HashSet<TKey> accepted = new(capacity: replaces.Count);
         foreach (var (old, @new) in replaces)
         {
             if (
                 !EqualityComparer<TKey>.Default.Equals(old.Key, @new.Key) ||
-                !Contains(old)
+                !Contains(old) ||
+                !accepted.Add(old.Key)
             ) result.Add((false, @new));
             else replace.Add(@new);
         }
