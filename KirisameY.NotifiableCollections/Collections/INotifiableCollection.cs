@@ -94,4 +94,13 @@ public interface INotifiableCollection<T> : ICollection<T>, IReadOnlyNotifiableC
     [PublicAPI] IReadOnlyCollection<(bool Replaced, T Left)> ReplaceRange(IReadOnlyCollection<(T Old, T New)> replaces);
 
     #endregion
+
+
+    void ICollection<T>.CopyTo(T[] array, int arrayIndex)
+    {
+        foreach (var (index, element) in this.Index())
+        {
+            array[arrayIndex + index] = element;
+        }
+    }
 }

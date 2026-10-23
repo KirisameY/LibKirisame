@@ -6,17 +6,14 @@ using KirisameY.Relinq.Extensions;
 namespace KirisameY.NotifiableCollections.Collections;
 
 /// <summary>
-///     <see cref="IReadOnlyNotifiableList{T}"/> 的功能性拓展方法：
+///     <see cref="INotifiableList{T}"/> 的功能性拓展方法：
 ///     <br/>
-///     Functional extension methods for <see cref="IReadOnlyNotifiableList{T}"/>.
+///     Functional extension methods for <see cref="INotifiableList{T}"/>.
 /// </summary>
 public static class NotifiableListFunctionalExtensions
 {
     extension<T>(INotifiableList<T> list)
     {
-        /// <inheritdoc cref="INotifiableList{T}.AddRange"/>
-        [PublicAPI] public void AddRange(IEnumerable<T> items) => list.AddRange([..items]);
-
         /// <inheritdoc cref="INotifiableList{T}.InsertRange"/>
         [PublicAPI] public void InsertRange(int index, IEnumerable<T> items) => list.InsertRange(index, [..items]);
 

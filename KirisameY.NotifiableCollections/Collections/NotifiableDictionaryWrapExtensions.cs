@@ -19,7 +19,7 @@ namespace KirisameY.NotifiableCollections.Collections;
 ///     read-only view: the library's own notification model is <c>AsReadOnlyNotifiableDictionary</c>, and the
 ///     observable variant bridging to the standard one is <c>AsReadOnlyObservableDictionary</c>.
 /// </summary>
-public static class NotifiableDictionaryExtensions
+public static class NotifiableDictionaryWrapExtensions
 {
     extension<TKey, TValue>(IReadOnlyNotifiableDictionary<TKey, TValue> dictionary) where TKey : notnull
     {

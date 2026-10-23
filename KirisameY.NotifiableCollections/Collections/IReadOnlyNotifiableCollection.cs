@@ -19,7 +19,7 @@ public interface ICollectionUpdateNotifier<T>
     ///     <br/>
     ///     Raised when the contents of the collection change.
     /// </summary>
-    public event EventHandler<CollectionUpdateEventArgs<T>>? CollectionUpdated;
+    public event EventHandler<CollectionUpdateEventArgs<T>> CollectionUpdated;
 }
 
 /// <summary>
