@@ -17,7 +17,7 @@ public static class CommonCollectionExtensions
         ///     Creates a <see cref="NotifiableList{T}"/> from an <see cref="IEnumerable{T}"/>.
         /// </summary>
         /// <seealso cref="Enumerable.ToList"/>
-        public NotifiableList<T> ToNotifiableList()
+        [PublicAPI] public INotifiableList<T> ToNotifiableList()
         {
             var result = new NotifiableList<T>();
             result.AddRange(source);

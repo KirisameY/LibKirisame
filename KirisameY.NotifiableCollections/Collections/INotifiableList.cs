@@ -1,57 +1,12 @@
-﻿using KirisameY.NotifiableCollections.EventArgs;
+﻿using System.Collections;
+
+using KirisameY.NotifiableCollections.Data;
 
 namespace KirisameY.NotifiableCollections.Collections;
 
 /// <summary>
-///     可订阅列表变更通知的列表。
-///     <br/>
-///     A list whose changes can be subscribed to.
-/// </summary>
-/// <typeparam name="T">
-///     元素类型。
-///     <br/>
-///     The type of the elements.
-/// </typeparam>
-public interface IListUpdateNotifier<T> : ICollectionUpdateNotifier<T>
-{
-    /// <summary>
-    ///     列表内容发生变化时触发。
-    ///     <br/>
-    ///     Raised when the contents of the list change.
-    /// </summary>
-    public event EventHandler<ListUpdateEventArgs<T>>? ListUpdated;
-
-    /// <summary>
-    ///     与 <see cref="ListUpdated"/> 是<b>同一个</b>事件。
-    ///     <br/>
-    ///     This is the <b>same</b> event as <see cref="ListUpdated"/>.
-    /// </summary>
-    /// <remarks>
-    ///     订阅它等价于订阅 <see cref="ListUpdated"/>。
-    ///     <br/>
-    ///     Subscribing to it is equivalent to subscribing to <see cref="ListUpdated"/>.
-    /// </remarks>
-    event EventHandler<CollectionUpdateEventArgs<T>>? ICollectionUpdateNotifier<T>.CollectionUpdated
-    {
-        add => ListUpdated += value;
-        remove => ListUpdated -= value;
-    }
-}
-
-/// <summary>
-///     只读、但可以订阅变更通知的列表。
-///     <br/>
-///     A read-only list whose changes can be subscribed to.
-/// </summary>
-/// <typeparam name="T">
-///     元素类型。
-///     <br/>
-///     The type of the elements.
-/// </typeparam>
-public interface IReadOnlyNotifiableList<T> : IReadOnlyNotifiableCollection<T>, IReadOnlyList<T>, IListUpdateNotifier<T>;
-
-/// <summary>
-///     可读写、且可以订阅变更通知的列表。
+///     可读写、且可以订阅变更通知的列表。在 <see cref="IList{T}"/> 的基础上，
+///     加入了一系列批量操作 API，并会在发生变化时把改动通过 <see cref="IListUpdateNotifier{T}.ListUpdated"/> 事件进行通知。
 ///     <br/>
 ///     A mutable list whose changes can be subscribed to.
 /// </summary>
@@ -62,8 +17,12 @@ public interface IReadOnlyNotifiableList<T> : IReadOnlyNotifiableCollection<T>, 
 /// </typeparam>
 public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadOnlyNotifiableList<T>
 {
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
     /// <inheritdoc cref="INotifiableCollection{T}.Count"/>
     public new int Count { get; }
+
+    bool ICollection<T>.IsReadOnly => false;
 
     /// <summary>
     ///     按索引读写元素。
@@ -87,4 +46,223 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
 
     int ICollection<T>.Count => Count;
     int IReadOnlyCollection<T>.Count => Count;
+
+    #region Updating
+
+    /// <summary>
+    ///     在末尾追加一批元素。
+    ///     <br/>
+    ///     Appends a batch of elements.
+    /// </summary>
+    void AddRange(ICollection<T> items);
+
+    /// <summary>
+    ///     从指定位置起插入一批元素。
+    ///     <br/>
+    ///     Inserts a batch of elements at the given position.
+    /// </summary>
+    void InsertRange(int index, ICollection<T> items);
+
+    /// <summary>
+    ///     将一组指定索引的项插入列表中。
+    ///     <br/>
+    ///     Inserts a batch of items with given index into the list.
+    /// </summary>
+    /// <param name="items">
+    ///     要加入的项和要加入至的索引的集合，应当按照索引被升序排列且没有重复索引项。
+    ///     <br/>
+    ///     A collection of items and their indexes to insert, should be ascending ordered by indexes and have no duplicated indexes.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    ///     <paramref name="items"/> 中存在非法或重复的的索引项，或未按照索引被升序排列。
+    ///     <br/>
+    ///     <paramref name="items"/> containes invalid or duplicated index, or is not ascending ordered by indexes.
+    /// </exception>
+    void MultiInsert(IEnumerable<IItemWithIndex<T>> items);
+
+    /// <summary>
+    ///     从列表中移除所有项。
+    ///     <br/>
+    ///     Remove all items from the list.
+    /// </summary>
+    /// <returns>
+    ///     被移除的项的列表。
+    ///     <br/>
+    ///     List of removed items.
+    /// </returns>
+    new IReadOnlyList<T> Clear();
+
+    void ICollection<T>.Clear() => Clear();
+
+    /// <summary>
+    ///     移除指定位置的列表项。
+    ///     <br/>
+    ///     Remove the list item at the specified index.
+    /// </summary>
+    /// <returns>
+    ///     被移除的项。
+    ///     <br/>
+    ///     Removed item.
+    /// </returns>
+    new T RemoveAt(int index);
+
+    void IList<T>.RemoveAt(int index) => RemoveAt(index);
+
+    /// <summary>
+    ///     移除指定范围内的元素。
+    ///     <br/>
+    ///     Removes the elements in the given range.
+    /// </summary>
+    /// <returns>
+    ///     被移除的项的列表。
+    ///     <br/>
+    ///     List of removed items.
+    /// </returns>
+    IReadOnlyList<T> RemoveRange(int index, int count);
+
+    /// <summary>
+    ///     从列表中指定的一组指定的索引处移除相应的值。
+    ///     <br/>
+    ///     Remove the elements in a given batch of indexes.
+    /// </summary>
+    /// <param name="indexes">
+    ///     要移除的索引的集合，应当按照索引被升序排列且没有重复索引项。
+    ///     <br/>
+    ///     A collection of indexes to remove, should be ascending ordered and have no duplicated indexes.
+    /// </param>
+    /// <returns>
+    ///     被移除的项的列表，与 <paramref name="indexes"/> 逐位对齐。
+    ///     <br/>
+    ///     A list of removed items, aligned in the same order with <paramref name="indexes"/>.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    ///     <paramref name="indexes"/> 中存在非法或重复的的索引项，或未被升序排列。
+    ///     <br/>
+    ///     <paramref name="indexes"/> containes invalid or duplicated index, or is not ascending ordered.
+    /// </exception>
+    IReadOnlyList<T> MultiRemove(IEnumerable<int> indexes);
+
+    /// <summary>
+    ///     移除第一个满足条件的元素。
+    ///     <br/>
+    ///     Removes first element matching the predicate.
+    /// </summary>
+    /// <returns>
+    ///     被移除的项。
+    ///     <br/>
+    ///     Removed item.
+    /// </returns>
+    T? RemoveFirst(Predicate<T> predicate);
+
+    /// <summary>
+    ///     移除最后一个满足条件的元素。
+    ///     <br/>
+    ///     Removes last element matching the predicate.
+    /// </summary>
+    /// <returns>
+    ///     被移除的项。
+    ///     <br/>
+    ///     Removed item.
+    /// </returns>
+    T? RemoveLast(Predicate<T> predicate);
+
+    /// <summary>
+    ///     移除所有满足条件的元素。
+    ///     <br/>
+    ///     Removes every element matching the predicate.
+    /// </summary>
+    /// <returns>
+    ///     被移除的项的列表。
+    ///     <br/>
+    ///     List of removed items.
+    /// </returns>
+    IReadOnlyList<T> RemoveAll(Predicate<T> predicate);
+
+    /// <summary>
+    ///     将一组指定索引的项替换至列表中。
+    ///     <br/>
+    ///     Replace list items with a batch of items with given index.
+    /// </summary>
+    /// <param name="items">
+    ///     要替换的项和相应索引的集合，应当按照索引被升序排列且没有重复索引项。
+    ///     <br/>
+    ///     A collection of items and their indexes to replace, should be ascending ordered by indexes and have no duplicated indexes.
+    /// </param>
+    /// <returns>
+    ///     被替换的项的列表，与 <paramref name="items"/> 逐位对齐。
+    ///     <br/>
+    ///     A list of replaced items, aligned in the same order with <paramref name="items"/>.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    ///     <paramref name="items"/> 中存在非法或重复的的索引项，或未按照索引被升序排列。
+    ///     <br/>
+    ///     <paramref name="items"/> containes invalid or duplicated index, or is not ascending ordered by indexes.
+    /// </exception>
+    IReadOnlyList<T> MultiReplace(IEnumerable<IItemWithIndex<T>> items);
+
+    /// <summary>
+    ///     将指定索引的列表项移动至另一索引。
+    ///     <br/>
+    ///     Move the list item at the specified index to another index.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     源索引或目标索引不合法。
+    ///     <br/>
+    ///     Origin index or target index is invalid.
+    /// </exception>
+    void Move(int index, int to);
+
+    /// <summary>
+    ///     将指定范围内的列表项移动至从另一索引起始处。
+    ///     <br/>
+    ///     Move the list items at the given range to a position starting from another index.
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    ///     源范围或目标索引不合法。
+    ///     <br/>
+    ///     Origin range or target index is invalid.
+    /// </exception>
+    void MoveRange(int index, int count, int to);
+
+    /// <summary>
+    ///     按照给定的一组源索引与目标索引移动列表中的元素。
+    ///     <br/>
+    ///     Move items by a set of given origin and target index.
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    ///     <paramref name="steps"/> 中存在非法的索引项。
+    ///     <br/>
+    ///     <paramref name="steps"/> contains invalid index.
+    /// </exception>
+    void MultiMove(IEnumerable<(int From, int To)> steps);
+
+    /// <summary>
+    ///     按给定比较器就地排序。
+    ///     <br/>
+    ///     Sorts in place using the given comparer.
+    /// </summary>
+    void Sort(IComparer<T> comparer);
+
+    /// <summary>
+    ///     对指定范围就地排序。
+    ///     <br/>
+    ///     Sorts the given range in place.
+    /// </summary>
+    void Sort(int index, int count, IComparer<T> comparer);
+
+    /// <summary>
+    ///     就地反转整个列表。
+    ///     <br/>
+    ///     Reverses the whole list in place.
+    /// </summary>
+    void Reverse();
+
+    /// <summary>
+    ///     就地反转指定范围。
+    ///     <br/>
+    ///     Reverses the given range in place.
+    /// </summary>
+    void Reverse(int index, int count);
+
+    #endregion
 }

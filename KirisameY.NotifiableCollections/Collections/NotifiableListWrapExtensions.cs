@@ -19,7 +19,7 @@ namespace KirisameY.NotifiableCollections.Collections;
 ///     the library's own notification model is <c>AsReadOnlyNotifiableList</c>, and the observable variant
 ///     bridging to the standard one is <c>AsReadOnlyObservableCollection</c>.
 /// </summary>
-public static class NotifiableListExtensions
+public static class NotifiableListWrapExtensions
 {
     extension<T>(IReadOnlyNotifiableList<T> list)
     {

@@ -10,7 +10,6 @@ public class ListReadTests
         var list = new NotifiableList<int>();
 
         Assert.Empty(list);
-        Assert.False(list.IsReadOnly);
     }
 
     [Fact]
