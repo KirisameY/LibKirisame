@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 
+using JetBrains.Annotations;
+
 using KirisameY.NotifiableCollections.Data;
 
 namespace KirisameY.NotifiableCollections.Collections;
@@ -50,18 +52,11 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
     #region Updating
 
     /// <summary>
-    ///     在末尾追加一批元素。
-    ///     <br/>
-    ///     Appends a batch of elements.
-    /// </summary>
-    void AddRange(ICollection<T> items);
-
-    /// <summary>
     ///     从指定位置起插入一批元素。
     ///     <br/>
     ///     Inserts a batch of elements at the given position.
     /// </summary>
-    void InsertRange(int index, ICollection<T> items);
+    [PublicAPI] void InsertRange(int index, IReadOnlyCollection<T> items);
 
     /// <summary>
     ///     将一组指定索引的项插入列表中。
@@ -78,7 +73,7 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
     ///     <br/>
     ///     <paramref name="items"/> containes invalid or duplicated index, or is not ascending ordered by indexes.
     /// </exception>
-    void MultiInsert(IEnumerable<IItemWithIndex<T>> items);
+    [PublicAPI] void MultiInsert(IEnumerable<IItemWithIndex<T>> items);
 
     /// <summary>
     ///     从列表中移除所有项。
@@ -90,9 +85,9 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
     ///     <br/>
     ///     List of removed items.
     /// </returns>
-    new IReadOnlyList<T> Clear();
+    [PublicAPI] new IReadOnlyList<T> Clear();
 
-    void ICollection<T>.Clear() => Clear();
+    [PublicAPI] void ICollection<T>.Clear() => Clear();
 
     /// <summary>
     ///     移除指定位置的列表项。
@@ -104,9 +99,9 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
     ///     <br/>
     ///     Removed item.
     /// </returns>
-    new T RemoveAt(int index);
+    [PublicAPI] new T RemoveAt(int index);
 
-    void IList<T>.RemoveAt(int index) => RemoveAt(index);
+    [PublicAPI] void IList<T>.RemoveAt(int index) => RemoveAt(index);
 
     /// <summary>
     ///     移除指定范围内的元素。
@@ -118,7 +113,7 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
     ///     <br/>
     ///     List of removed items.
     /// </returns>
-    IReadOnlyList<T> RemoveRange(int index, int count);
+    [PublicAPI] IReadOnlyList<T> RemoveRange(int index, int count);
 
     /// <summary>
     ///     从列表中指定的一组指定的索引处移除相应的值。
@@ -140,7 +135,10 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
     ///     <br/>
     ///     <paramref name="indexes"/> containes invalid or duplicated index, or is not ascending ordered.
     /// </exception>
-    IReadOnlyList<T> MultiRemove(IEnumerable<int> indexes);
+    [PublicAPI] IReadOnlyList<T> MultiRemove(IEnumerable<int> indexes);
+
+    IReadOnlyCollection<T> INotifiableCollection<T>.RemoveRange(IReadOnlyCollection<T> elements) =>
+        MultiRemove(elements.Select(IndexOf).Where(i => i > 0));
 
     /// <summary>
     ///     移除第一个满足条件的元素。
@@ -152,7 +150,7 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
     ///     <br/>
     ///     Removed item.
     /// </returns>
-    T? RemoveFirst(Predicate<T> predicate);
+    [PublicAPI] T? RemoveFirst(Predicate<T> predicate);
 
     /// <summary>
     ///     移除最后一个满足条件的元素。
@@ -164,19 +162,21 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
     ///     <br/>
     ///     Removed item.
     /// </returns>
-    T? RemoveLast(Predicate<T> predicate);
+    [PublicAPI] T? RemoveLast(Predicate<T> predicate);
 
     /// <summary>
-    ///     移除所有满足条件的元素。
+    ///     移除所有满足条件的项。
     ///     <br/>
-    ///     Removes every element matching the predicate.
+    ///     Removes every item matching the predicate.
     /// </summary>
     /// <returns>
     ///     被移除的项的列表。
     ///     <br/>
     ///     List of removed items.
     /// </returns>
-    IReadOnlyList<T> RemoveAll(Predicate<T> predicate);
+    [PublicAPI] new IReadOnlyList<T> RemoveAll(Predicate<T> predicate);
+
+    IReadOnlyCollection<T> INotifiableCollection<T>.RemoveAll(Predicate<T> predicate) => RemoveAll(predicate);
 
     /// <summary>
     ///     将一组指定索引的项替换至列表中。
@@ -198,7 +198,28 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
     ///     <br/>
     ///     <paramref name="items"/> containes invalid or duplicated index, or is not ascending ordered by indexes.
     /// </exception>
-    IReadOnlyList<T> MultiReplace(IEnumerable<IItemWithIndex<T>> items);
+    [PublicAPI] IReadOnlyList<T> MultiReplace(IEnumerable<IItemWithIndex<T>> items);
+
+    bool INotifiableCollection<T>.Replace(T oldElement, T newElement)
+    {
+        if (IndexOf(oldElement) is not (>= 0 and var i)) return false;
+        this[i] = newElement;
+        return true;
+    }
+
+    IReadOnlyCollection<(bool Replaced, T Left)> INotifiableCollection<T>.ReplaceRange(IReadOnlyCollection<(T Old, T New)> replaces)
+    {
+        List<(bool Replaced, T Left)> result = new(capacity: replaces.Count);
+        List<IItemWithIndex<T>> replace = new(capacity: replaces.Count);
+        foreach (var (index, item) in replaces.Select(r => (IndexOf(r.Old), r.New)))
+        {
+            if (index <= 0) result.Add((false, item));
+            else replace.Add(item.WithIndex(index));
+        }
+        var oldItems = MultiReplace(replace);
+        result.AddRange(oldItems.Select(item => (true, item)));
+        return [..result];
+    }
 
     /// <summary>
     ///     将指定索引的列表项移动至另一索引。
@@ -210,7 +231,7 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
     ///     <br/>
     ///     Origin index or target index is invalid.
     /// </exception>
-    void Move(int index, int to);
+    [PublicAPI] void Move(int index, int to);
 
     /// <summary>
     ///     将指定范围内的列表项移动至从另一索引起始处。
@@ -222,7 +243,7 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
     ///     <br/>
     ///     Origin range or target index is invalid.
     /// </exception>
-    void MoveRange(int index, int count, int to);
+    [PublicAPI] void MoveRange(int index, int count, int to);
 
     /// <summary>
     ///     按照给定的一组源索引与目标索引移动列表中的元素。
@@ -234,35 +255,35 @@ public interface INotifiableList<T> : INotifiableCollection<T>, IList<T>, IReadO
     ///     <br/>
     ///     <paramref name="steps"/> contains invalid index.
     /// </exception>
-    void MultiMove(IEnumerable<(int From, int To)> steps);
+    [PublicAPI] void MultiMove(IEnumerable<(int From, int To)> steps);
 
     /// <summary>
     ///     按给定比较器就地排序。
     ///     <br/>
     ///     Sorts in place using the given comparer.
     /// </summary>
-    void Sort(IComparer<T> comparer);
+    [PublicAPI] void Sort(IComparer<T> comparer);
 
     /// <summary>
     ///     对指定范围就地排序。
     ///     <br/>
     ///     Sorts the given range in place.
     /// </summary>
-    void Sort(int index, int count, IComparer<T> comparer);
+    [PublicAPI] void Sort(int index, int count, IComparer<T> comparer);
 
     /// <summary>
     ///     就地反转整个列表。
     ///     <br/>
     ///     Reverses the whole list in place.
     /// </summary>
-    void Reverse();
+    [PublicAPI] void Reverse();
 
     /// <summary>
     ///     就地反转指定范围。
     ///     <br/>
     ///     Reverses the given range in place.
     /// </summary>
-    void Reverse(int index, int count);
+    [PublicAPI] void Reverse(int index, int count);
 
     #endregion
 }

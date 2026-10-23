@@ -258,7 +258,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
     }
 
     /// <inheritdoc/>
-    public void AddRange(ICollection<T> items)
+    public void AddRange(IReadOnlyCollection<T> items)
     {
         var fromIndex = View.Count;
         InsertItems(fromIndex, items);
@@ -273,7 +273,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
     }
 
     /// <inheritdoc/>
-    public void InsertRange(int index, ICollection<T> items)
+    public void InsertRange(int index, IReadOnlyCollection<T> items)
     {
         InsertItems(index, items);
         RaiseUpdate(new ListItemAddedEventArgs<T>(View, [..items], [..Enumerable.Range(index, items.Count)]));
