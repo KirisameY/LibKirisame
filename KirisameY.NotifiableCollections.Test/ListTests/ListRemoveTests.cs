@@ -105,6 +105,70 @@ public class ListRemoveTests
     }
 
     [Fact]
+    public void RemoveAtReturnsTheRemovedItem()
+    {
+        var list = new NotifiableList<int> { 1, 2, 3 };
+
+        Assert.Equal(2, list.RemoveAt(1));
+        Assert.Equal([1, 3], list);
+    }
+
+    [Fact]
+    public void RemoveFirstDropsTheFirstMatchAndReturnsIt()
+    {
+        var list = new NotifiableList<int> { 1, 2, 3, 2 };
+        var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
+
+        var removed = list.RemoveFirst(i => i == 2);
+
+        Assert.Equal(2, removed);
+        Assert.Equal([1, 3, 2], list);
+
+        var removedArgs = Assert.IsAssignableFrom<IListItemRemovedEventArgs<int>>(Assert.Single(updates));
+        Assert.Equal([2], removedArgs.RemovedItems);
+        Assert.Equal([1], removedArgs.Indexes);
+    }
+
+    [Fact]
+    public void RemoveLastDropsTheLastMatchAndReturnsIt()
+    {
+        var list = new NotifiableList<int> { 1, 2, 3, 2 };
+        var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
+
+        var removed = list.RemoveLast(i => i == 2);
+
+        Assert.Equal(2, removed);
+        Assert.Equal([1, 2, 3], list);
+
+        var removedArgs = Assert.IsAssignableFrom<IListItemRemovedEventArgs<int>>(Assert.Single(updates));
+        Assert.Equal([2], removedArgs.RemovedItems);
+        Assert.Equal([3], removedArgs.Indexes);
+    }
+
+    [Fact]
+    public void RemoveFirstAndLastWithNoMatchReturnDefaultAndRaiseNothing()
+    {
+        var list = new NotifiableList<int> { 1, 3 };
+        var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
+
+        Assert.Equal(0, list.RemoveFirst(i => i == 2));
+        Assert.Equal(0, list.RemoveLast(i => i == 2));
+
+        Assert.Equal([1, 3], list);
+        Assert.Empty(updates);
+    }
+
+    [Fact]
+    public void RemoveFirstAndLastWithNoMatchReturnNullForReferenceTypes()
+    {
+        var list = new NotifiableList<string> { "a", "b" };
+
+        Assert.Null(list.RemoveFirst(s => s == "c"));
+        Assert.Null(list.RemoveLast(s => s == "c"));
+        Assert.Equal(["a", "b"], list);
+    }
+
+    [Fact]
     public void ClearReportsTheWholeOldListWithContiguousIndexes()
     {
         var list = new NotifiableList<int> { 1, 2, 3 };

@@ -179,7 +179,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
         array.Sort(comparer);
         for (int i = 0; i < count; i++)
         {
-            SetItem(index + 1, array[i]);
+            SetItem(index + i, array[i]);
         }
     }
 
@@ -254,7 +254,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
     {
         var target = View.Count;
         InsertItem(target, item);
-        RaiseUpdate(new ListItemAddedEventArgs<T>(View, [item], [target - 1]));
+        RaiseUpdate(new ListItemAddedEventArgs<T>(View, [item], [target]));
     }
 
     /// <inheritdoc/>
@@ -453,7 +453,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
         var item = View[index];
         RemoveItem(index);
         try { InsertItem(to, item); }
-        catch (ArgumentOutOfRangeException)
+        catch (ArgumentException)
         {
             InsertItem(index, item);
             throw;
@@ -545,7 +545,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
     public void Reverse()
     {
         if (View.Count == 0) return;
-        RemoveItems(0, View.Count);
+        ReverseItems(0, View.Count);
         RaiseUpdate(new ListSortedEventArgs<T>(
                         View, [..View.SkipLast(1)],
                         [..Enumerable.Repeat(View.Count - 1, View.Count - 1)],
