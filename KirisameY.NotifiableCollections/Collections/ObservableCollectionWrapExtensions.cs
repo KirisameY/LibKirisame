@@ -1,4 +1,5 @@
 ﻿using System.Collections.Specialized;
+using System.Runtime.CompilerServices;
 
 using JetBrains.Annotations;
 
@@ -13,8 +14,19 @@ namespace KirisameY.NotifiableCollections.Collections;
 ///     Extension methods that wrap a standard library-style <see cref="INotifyCollectionChanged"/>
 ///     collection into a read-only Notifiable view.
 /// </summary>
-public static class ObservableCollectionExtensions
+public static class ObservableCollectionWrapExtensions
 {
+    private static class Cache<T>
+    {
+        public static readonly ConditionalWeakTable<object, IReadOnlyNotifiableCollection<T>> Collections = [];
+        public static readonly ConditionalWeakTable<object, IReadOnlyNotifiableList<T>> Lists = [];
+    }
+
+    private static class Cache<TKey, TValue>
+    {
+        public static readonly ConditionalWeakTable<object, IReadOnlyNotifiableDictionary<TKey, TValue>> Dictionaries = [];
+    }
+
     extension<TElement, TCollection>(TCollection collection) where TCollection : IReadOnlyCollection<TElement>, INotifyCollectionChanged
     {
         /// <summary>
@@ -32,10 +44,10 @@ public static class ObservableCollectionExtensions
         /// </returns>
         [PublicAPI]
         public IReadOnlyNotifiableCollection<TElement> AsNotifiableCollection(TypeA<TElement> elementType = default) =>
-            new NotifiableCollectionWrapper<TElement, TCollection>(collection);
+            Cache<TElement>.Collections.GetOrAdd(collection, c => new NotifiableCollectionWrapper<TElement, TCollection>((TCollection)c));
     }
 
-    extension<TItem, TList>(TList collection) where TList : IReadOnlyList<TItem>, INotifyCollectionChanged
+    extension<TItem, TList>(TList list) where TList : IReadOnlyList<TItem>, INotifyCollectionChanged
     {
         /// <summary>
         ///     将给定的任意实现了 <see cref="INotifyCollectionChanged"/> 的 <see cref="IReadOnlyList{T}"/> 包装为 <see cref="IReadOnlyNotifiableList{T}"/>，
@@ -52,10 +64,10 @@ public static class ObservableCollectionExtensions
         /// </returns>
         [PublicAPI]
         public IReadOnlyNotifiableList<TItem> AsNotifiableList(TypeA<TItem> itemType = default) =>
-            new NotifiableListWrapper<TItem, TList>(collection);
+            Cache<TItem>.Lists.GetOrAdd(list, l => new NotifiableListWrapper<TItem, TList>((TList)l));
     }
 
-    extension<TKey, TValue, TDictionary>(TDictionary collection)
+    extension<TKey, TValue, TDictionary>(TDictionary dict)
         where TKey : notnull
         where TDictionary : IReadOnlyDictionary<TKey, TValue>, INotifyCollectionChanged
     {
@@ -74,6 +86,6 @@ public static class ObservableCollectionExtensions
         /// </returns>
         [PublicAPI]
         public IReadOnlyNotifiableDictionary<TKey, TValue> AsNotifiableDictionary(TypeA<TKey> keyType = default, TypeA<TValue> valueType = default) =>
-            new NotifiableDictionaryWrapper<TKey, TValue, TDictionary>(collection);
+            Cache<TKey, TValue>.Dictionaries.GetOrAdd(dict, d => new NotifiableDictionaryWrapper<TKey, TValue, TDictionary>((TDictionary)d));
     }
 }

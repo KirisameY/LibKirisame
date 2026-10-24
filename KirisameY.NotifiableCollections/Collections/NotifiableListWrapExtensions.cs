@@ -21,6 +21,23 @@ namespace KirisameY.NotifiableCollections.Collections;
 /// </summary>
 public static class NotifiableListWrapExtensions
 {
+    private static class Cache<T>
+    {
+        public static readonly ConditionalWeakTable<
+            IReadOnlyNotifiableList<T>, IReadOnlyNotifiableList<T>
+        > ReadOnlyWrappers = [];
+        public static readonly ConditionalWeakTable<
+            IReadOnlyNotifiableList<T>, Dictionary<int, IReadOnlyObservableList<T>>
+        > ObservableWrappers = [];
+    }
+
+    private static class Cache<TSource, TResult>
+    {
+        public static readonly ConditionalWeakTable<
+            IReadOnlyNotifiableList<TSource>, IReadOnlyNotifiableList<TResult>
+        > ConvertWrappers = [];
+    }
+
     extension<T>(IReadOnlyNotifiableList<T> list)
     {
         /// <summary>
@@ -34,7 +51,8 @@ public static class NotifiableListWrapExtensions
         ///     A read-only view kept in sync with source list.
         /// </returns>
         [PublicAPI]
-        public IReadOnlyNotifiableList<T> AsReadOnlyNotifiableList() => new NotifiableListReadonlyView<T>(list);
+        public IReadOnlyNotifiableList<T> AsReadOnlyNotifiableList() => list is NotifiableListReadOnlyView<T> ? list :
+            Cache<T>.ReadOnlyWrappers.GetOrAdd(list, l => new NotifiableListReadOnlyView<T>(l));
 
         /// <summary>
         ///     将给定的任意 <see cref="IReadOnlyNotifiableList{T}"/> 包装为 <see cref="IReadOnlyObservableList{T}"/>，
@@ -152,8 +170,16 @@ public static class NotifiableListWrapExtensions
         ///     </para>
         /// </remarks>
         [PublicAPI]
-        public IReadOnlyObservableList<T> AsReadOnlyObservableCollection(int notifyThreshold = -1) =>
-            new ObservableListWrapper<T>(list, notifyThreshold);
+        public IReadOnlyObservableList<T> AsReadOnlyObservableCollection(int notifyThreshold = -1)
+        {
+            if (notifyThreshold < 0) notifyThreshold = -1;
+            var dict = Cache<T>.ObservableWrappers.GetOrAdd(list, _ => []);
+            if (!dict.TryGetValue(notifyThreshold, out var value))
+            {
+                dict[notifyThreshold] = value = new ObservableListWrapper<T>(list, notifyThreshold);
+            }
+            return value;
+        }
     }
 
     extension<TSource, TValue>(IReadOnlyNotifiableList<TSource> list)
@@ -197,7 +223,7 @@ public static class NotifiableListWrapExtensions
         /// </remarks>
         [PublicAPI]
         public IReadOnlyNotifiableList<TValue> AsReadOnlyNotifiableList(Func<TSource, TValue> valueSelector) =>
-            new NotifiableListReadonlyView<TSource, TValue>(list, valueSelector);
+            new NotifiableListReadOnlyView<TSource, TValue>(list, valueSelector);
     }
 
     extension<TSource, TValue>(IReadOnlyNotifiableList<TSource> list) where TSource : TValue
@@ -220,7 +246,10 @@ public static class NotifiableListWrapExtensions
         ///     A read-only view of <typeparamref name="TValue"/> elements.
         /// </returns>
         [PublicAPI]
-        public IReadOnlyNotifiableList<TValue> AsReadOnlyNotifiableList(TypeA<TValue> type = default) =>
-            new NotifiableListReadonlyView<TSource, TValue>(list, static v => v);
+        public IReadOnlyNotifiableList<TValue> AsReadOnlyNotifiableList(
+            TypeA<TValue> type = default
+        ) => Cache<TSource, TValue>.ConvertWrappers.GetOrAdd(
+            list, l => new NotifiableListReadOnlyView<TSource, TValue>(l, static v => v)
+        );
     }
 }

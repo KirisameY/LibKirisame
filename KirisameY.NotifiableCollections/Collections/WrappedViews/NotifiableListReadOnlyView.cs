@@ -5,7 +5,7 @@ using KirisameY.NotifiableCollections.EventArgs;
 
 namespace KirisameY.NotifiableCollections.Collections.WrappedViews;
 
-internal class NotifiableListReadonlyView<T>(IReadOnlyNotifiableList<T> list) : IReadOnlyNotifiableList<T>
+internal class NotifiableListReadOnlyView<T>(IReadOnlyNotifiableList<T> list) : IReadOnlyNotifiableList<T>
 {
     public IEnumerator<T> GetEnumerator() => list.GetEnumerator();
 
@@ -55,7 +55,7 @@ internal class NotifiableListReadonlyView<T>(IReadOnlyNotifiableList<T> list) : 
     });
 }
 
-internal class NotifiableListReadonlyView<TSource, TValue>(
+internal class NotifiableListReadOnlyView<TSource, TValue>(
     IReadOnlyNotifiableList<TSource> list, Func<TSource, TValue> valueSelector
 ) : IReadOnlyNotifiableList<TValue>
 {

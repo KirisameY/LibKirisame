@@ -21,6 +21,23 @@ namespace KirisameY.NotifiableCollections.Collections;
 /// </summary>
 public static class NotifiableDictionaryWrapExtensions
 {
+    private static class Cache<TKey, TValue>
+    {
+        public static readonly ConditionalWeakTable<
+            IReadOnlyNotifiableDictionary<TKey, TValue>, IReadOnlyNotifiableDictionary<TKey, TValue>
+        > ReadOnlyWrappers = [];
+        public static readonly ConditionalWeakTable<
+            IReadOnlyNotifiableDictionary<TKey, TValue>, Dictionary<int, IReadOnlyObservableDictionary<TKey, TValue>>
+        > ObservableWrappers = [];
+    }
+
+    private static class Cache<TKey, TSource, TResult>
+    {
+        public static readonly ConditionalWeakTable<
+            IReadOnlyNotifiableDictionary<TKey, TSource>, IReadOnlyNotifiableDictionary<TKey, TResult>
+        > ConvertWrappers = [];
+    }
+
     extension<TKey, TValue>(IReadOnlyNotifiableDictionary<TKey, TValue> dictionary) where TKey : notnull
     {
         /// <summary>
@@ -34,8 +51,13 @@ public static class NotifiableDictionaryWrapExtensions
         ///     A read-only view kept in sync with source dictionary.
         /// </returns>
         [PublicAPI]
-        public IReadOnlyNotifiableDictionary<TKey, TValue> AsReadOnlyNotifiableDictionary() =>
-            new NotifiableDictionaryReadonlyView<TKey, TValue>(dictionary);
+        public IReadOnlyNotifiableDictionary<TKey, TValue> AsReadOnlyNotifiableDictionary()
+        {
+            if (dictionary is NotifiableDictionaryReadOnlyView<TKey, TValue>) return dictionary;
+            return Cache<TKey, TValue>.ReadOnlyWrappers.GetOrAdd(
+                dictionary, d => new NotifiableDictionaryReadOnlyView<TKey, TValue>(d)
+            );
+        }
 
         /// <summary>
         ///     将给定的任意 <see cref="IReadOnlyNotifiableDictionary{TKey, TValue}"/> 包装为
@@ -159,8 +181,16 @@ public static class NotifiableDictionaryWrapExtensions
         ///     </para>
         /// </remarks>
         [PublicAPI]
-        public IReadOnlyObservableDictionary<TKey, TValue> AsReadOnlyObservableDictionary(int notifyThreshold = -1) =>
-            new ObservableDictionaryWrapper<TKey, TValue>(dictionary, notifyThreshold);
+        public IReadOnlyObservableDictionary<TKey, TValue> AsReadOnlyObservableDictionary(int notifyThreshold = -1)
+        {
+            if (notifyThreshold < 0) notifyThreshold = -1;
+            var dict = Cache<TKey, TValue>.ObservableWrappers.GetOrAdd(dictionary, _ => []);
+            if (!dict.TryGetValue(notifyThreshold, out var value))
+            {
+                dict[notifyThreshold] = value = new ObservableDictionaryWrapper<TKey, TValue>(dictionary, notifyThreshold);
+            }
+            return value;
+        }
     }
 
     extension<TKey, TSourceValue, TValue>(IReadOnlyNotifiableDictionary<TKey, TSourceValue> dictionary)
@@ -229,7 +259,11 @@ public static class NotifiableDictionaryWrapExtensions
         ///     A read-only view with unchanged keys and <typeparamref name="TValue"/> values.
         /// </returns>
         [PublicAPI]
-        public IReadOnlyNotifiableDictionary<TKey, TValue> AsReadOnlyNotifiableDictionary(TypeA<TValue> type = default) =>
-            new NotifiableDictionaryReadOnlyView<TKey, TSourceValue, TValue>(dictionary, static s => s);
+        public IReadOnlyNotifiableDictionary<TKey, TValue> AsReadOnlyNotifiableDictionary(
+            TypeA<TValue> type = default
+        ) => Cache<TKey, TSourceValue, TValue>.ConvertWrappers.GetOrAdd(
+            dictionary,
+            d => new NotifiableDictionaryReadOnlyView<TKey, TSourceValue, TValue>(d, static s => s)
+        );
     }
 }

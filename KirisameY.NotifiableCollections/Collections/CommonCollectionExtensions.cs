@@ -30,7 +30,7 @@ public static class CommonCollectionExtensions
         ///     Creates a <see cref="NotifiableDictionary{TKey, TValue}"/> from an <see cref="IEnumerable{T}"/>.
         /// </summary>
         /// <seealso cref="Enumerable.ToDictionary{TSource, TKey, TElement}(IEnumerable{TSource}, Func{TSource,TKey}, Func{TSource,TElement})"/>
-        public NotifiableDictionary<TKey, TValue> ToNotifiableDictionary<TKey, TValue>(
+        [PublicAPI] public INotifiableDictionary<TKey, TValue> ToNotifiableDictionary<TKey, TValue>(
             Func<T, TKey> keySelector, Func<T, TValue> valueSelector
         ) where TKey : notnull
         {
@@ -48,11 +48,10 @@ public static class CommonCollectionExtensions
         ///     Creates a <see cref="NotifiableDictionary{TKey, TValue}"/> from an <see cref="IEnumerable{T}"/>.
         /// </summary>
         /// <seealso cref="Enumerable.ToDictionary{TKey, TValue}(IEnumerable{KeyValuePair{TKey, TValue}})"/>
-        public NotifiableDictionary<TKey, TValue> ToNotifiableDictionary()
+        [PublicAPI] public INotifiableDictionary<TKey, TValue> ToNotifiableDictionary()
         {
             var result = new NotifiableDictionary<TKey, TValue>();
             result.AddRange(source);
-            source.ToDictionary();
             return result;
         }
     }

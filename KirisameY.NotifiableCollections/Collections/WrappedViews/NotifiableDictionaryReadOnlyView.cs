@@ -6,7 +6,7 @@ using KirisameY.NotifiableCollections.EventArgs;
 
 namespace KirisameY.NotifiableCollections.Collections.WrappedViews;
 
-internal class NotifiableDictionaryReadonlyView<TKey, TValue>(IReadOnlyNotifiableDictionary<TKey, TValue> dictionary)
+internal class NotifiableDictionaryReadOnlyView<TKey, TValue>(IReadOnlyNotifiableDictionary<TKey, TValue> dictionary)
     : IReadOnlyNotifiableDictionary<TKey, TValue>
     where TKey : notnull
 {

@@ -19,8 +19,25 @@ namespace KirisameY.NotifiableCollections.Collections;
 ///     view: the library's own notification model is <c>AsReadOnlyNotifiableCollection</c>, and the observable
 ///     variant bridging to the standard one is <c>AsReadOnlyObservableCollection</c>.
 /// </summary>
-public static class NotifiableCollectionExtensions
+public static class NotifiableCollectionWrapExtensions
 {
+    private static class Cache<T>
+    {
+        public static readonly ConditionalWeakTable<
+            IReadOnlyNotifiableCollection<T>, IReadOnlyNotifiableCollection<T>
+        > ReadOnlyWrappers = [];
+        public static readonly ConditionalWeakTable<
+            IReadOnlyNotifiableCollection<T>, Dictionary<int, IReadOnlyObservableCollection<T>>
+        > ObservableWrappers = [];
+    }
+
+    private static class Cache<TSource, TResult>
+    {
+        public static readonly ConditionalWeakTable<
+            IReadOnlyNotifiableCollection<TSource>, IReadOnlyNotifiableCollection<TResult>
+        > ConvertWrappers = [];
+    }
+
     extension<T>(IReadOnlyNotifiableCollection<T> source)
     {
         /// <summary>
@@ -34,7 +51,8 @@ public static class NotifiableCollectionExtensions
         ///     A read-only view kept in sync with source collection.
         /// </returns>
         [PublicAPI]
-        public IReadOnlyNotifiableCollection<T> AsReadOnlyNotifiableCollection() => new NotifiableCollectionReadonlyView<T>(source);
+        public IReadOnlyNotifiableCollection<T> AsReadOnlyNotifiableCollection() => source is NotifiableCollectionReadOnlyView<T> ? source :
+            Cache<T>.ReadOnlyWrappers.GetOrAdd(source, c => new NotifiableCollectionReadOnlyView<T>(c));
 
         /// <summary>
         ///     将给定的任意 <see cref="IReadOnlyNotifiableCollection{T}"/> 包装为 <see cref="IReadOnlyObservableCollection{T}"/>，
@@ -139,8 +157,16 @@ public static class NotifiableCollectionExtensions
         ///     </para>
         /// </remarks>
         [PublicAPI]
-        public IReadOnlyObservableCollection<T> AsReadOnlyObservableCollection(int notifyThreshold = -1) =>
-            new ObservableCollectionWrapper<T>(source, notifyThreshold);
+        public IReadOnlyObservableCollection<T> AsReadOnlyObservableCollection(int notifyThreshold = -1)
+        {
+            if (notifyThreshold < 0) notifyThreshold = -1;
+            var dict = Cache<T>.ObservableWrappers.GetOrAdd(source, _ => []);
+            if (!dict.TryGetValue(notifyThreshold, out var value))
+            {
+                dict[notifyThreshold] = value = new ObservableCollectionWrapper<T>(source, notifyThreshold);
+            }
+            return value;
+        }
     }
 
     extension<TSource, TValue>(IReadOnlyNotifiableCollection<TSource> source)
@@ -180,7 +206,7 @@ public static class NotifiableCollectionExtensions
         /// </remarks>
         [PublicAPI]
         public IReadOnlyNotifiableCollection<TValue> AsReadOnlyNotifiableCollection(Func<TSource, TValue> valueSelector) =>
-            new NotifiableCollectionReadonlyView<TSource, TValue>(source, valueSelector);
+            new NotifiableCollectionReadOnlyView<TSource, TValue>(source, valueSelector);
     }
 
     extension<TSource, TValue>(IReadOnlyNotifiableCollection<TSource> source) where TSource : TValue
@@ -203,7 +229,10 @@ public static class NotifiableCollectionExtensions
         ///     A read-only view of <typeparamref name="TValue"/> elements.
         /// </returns>
         [PublicAPI]
-        public IReadOnlyNotifiableCollection<TValue> AsReadOnlyNotifiableCollection(TypeA<TValue> type = default) =>
-            new NotifiableCollectionReadonlyView<TSource, TValue>(source, static v => v);
+        public IReadOnlyNotifiableCollection<TValue> AsReadOnlyNotifiableCollection(
+            TypeA<TValue> type = default
+        ) => Cache<TSource, TValue>.ConvertWrappers.GetOrAdd(
+            source, c => new NotifiableCollectionReadOnlyView<TSource, TValue>(c, static v => v)
+        );
     }
 }
