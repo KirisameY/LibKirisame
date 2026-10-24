@@ -118,6 +118,41 @@ public class ListSimpleBaseTests
     }
 
     [Fact]
+    public void RemoveRangeByValuesThroughTheBaseRemovesRepeatedOccurrencesInListOrder()
+    {
+        var list = new MinimalNotifiableList<int> { 10, 20, 20, 30, 20 };
+        var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
+        IReadOnlyCollection<int> toRemove = [20, 20];
+
+        // 基类实现按值扫描、按出现次数消费入参；最小子类不重写这些成员也必须得到同样的语义
+        var removed = list.RemoveRange(toRemove);
+
+        Assert.Equal([20, 20], removed);
+        Assert.Equal([10, 30, 20], list);
+
+        var removedArgs = Assert.IsAssignableFrom<IListItemRemovedEventArgs<int>>(Assert.Single(updates));
+        Assert.Equal([1, 2], removedArgs.Indexes);
+        Assert.Equal([20, 20], removedArgs.RemovedItems);
+    }
+
+    [Fact]
+    public void ReplaceRangeThroughTheBasePairsRepeatedCommandsWithSuccessiveOccurrences()
+    {
+        var list = new MinimalNotifiableList<int> { 10, 20, 20, 30 };
+        var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
+
+        var results = list.ReplaceRange([(20, 22), (20, 21)]);
+
+        Assert.Equal([(true, 20), (true, 20)], results);
+        Assert.Equal([10, 22, 21, 30], list);
+
+        var replaced = Assert.IsAssignableFrom<IListItemReplacedEventArgs<int>>(Assert.Single(updates));
+        Assert.Equal([20, 20], replaced.OldItems);
+        Assert.Equal([22, 21], replaced.NewItems);
+        Assert.Equal([1, 2], replaced.Indexes);
+    }
+
+    [Fact]
     public void SortThroughTheBaseUsesTheDefaultSortItems()
     {
         var list = new MinimalNotifiableList<int> { 3, 1, 2 };

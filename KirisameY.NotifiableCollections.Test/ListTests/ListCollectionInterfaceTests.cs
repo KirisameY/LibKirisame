@@ -13,15 +13,20 @@ namespace KirisameY.NotifiableCollections.Test.ListTests;
 /// </summary>
 /// <remarks>
 ///     <para>
-///         这些成员在 <see cref="INotifiableList{T}"/> 上都有显式接口实现：按值移除 / 替换要先
-///         <see cref="IList{T}.IndexOf"/> 定位，再转交给列表自己的批量索引操作。所以下面重点钉三件事：
-///         索引 0 也必须能被找到、入参顺序不应影响结果、重复入参不应把列表搞崩。
+///         这些按值的批量操作不再由 <see cref="INotifiableList{T}"/> 提供默认实现，而是落在
+///         <see cref="NotifiableListSimpleBase{T}"/>：先按值扫描列表、收集要作用的位置，
+///         再交给 <see cref="INotifiableList{T}.MultiRemove"/> / <see cref="INotifiableList{T}.MultiReplace"/>。
+///         扫描时按列表顺序消费入参，重复入参对应重复出现，而不是先去重。所以下面重点钉四件事：
+///         索引 0 也必须能被找到、入参顺序不应影响结果、重复入参按出现次数生效、入参比出现次数多时静默跳过多余部分。
 ///     </para>
 ///     <para>
-///         These members are implemented explicitly on <see cref="INotifiableList{T}"/>: value-based removal and
-///         replacement first locate the item with <see cref="IList{T}.IndexOf"/> and then delegate to the list's own
-///         index-based batch operations. The tests below therefore pin three things: index 0 must be found, the
-///         argument order must not matter, and duplicate arguments must not break the list.
+///         These value-based batch operations are no longer default interface implementations on
+///         <see cref="INotifiableList{T}"/>; they live on <see cref="NotifiableListSimpleBase{T}"/>, which scans the
+///         list in order, collects the affected positions and then delegates to
+///         <see cref="INotifiableList{T}.MultiRemove"/> / <see cref="INotifiableList{T}.MultiReplace"/>. The scan
+///         consumes the arguments in list order, so a repeated argument means a repeated occurrence rather than a
+///         deduplicated one. The tests below therefore pin four things: index 0 must be found, the argument order must
+///         not matter, repeated arguments must apply once per occurrence, and surplus arguments must be skipped silently.
 ///     </para>
 /// </remarks>
 public class ListCollectionInterfaceTests
@@ -93,7 +98,8 @@ public class ListCollectionInterfaceTests
         // 集合语义下入参顺序没有意义；不存在的元素静默跳过
         var removed = collection.RemoveRange([30, 99, 10]);
 
-        Assert.Equal([10, 30], removed.Order());
+        // 返回值与事件里的项都按列表原顺序排列，而不是按入参顺序
+        Assert.Equal([10, 30], removed);
         Assert.Equal([20], list);
 
         var removedArgs = Assert.IsAssignableFrom<IListItemRemovedEventArgs<int>>(Assert.Single(updates));
@@ -102,13 +108,48 @@ public class ListCollectionInterfaceTests
     }
 
     [Fact]
-    public void RemoveRangeByValuesRemovesARepeatedElementOnlyOnce()
+    public void RemoveRangeByValuesRemovesOneOccurrencePerRepeatedEntry()
+    {
+        var list = new NotifiableList<int> { 10, 20, 20, 30 };
+        INotifiableCollection<int> collection = list;
+        var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
+
+        // 重复入参不再先去重：两个 20 从前往后各移除一次
+        var removed = collection.RemoveRange([20, 20]);
+
+        Assert.Equal([20, 20], removed);
+        Assert.Equal([10, 30], list);
+
+        var removedArgs = Assert.IsAssignableFrom<IListItemRemovedEventArgs<int>>(Assert.Single(updates));
+        Assert.Equal([20, 20], removedArgs.RemovedItems);
+        Assert.Equal([1, 2], removedArgs.Indexes);
+    }
+
+    [Fact]
+    public void RemoveRangeByValuesRemovesOnlyTheFirstOccurrenceOfASingleEntry()
+    {
+        var list = new NotifiableList<int> { 20, 10, 20 };
+        INotifiableCollection<int> collection = list;
+        var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
+
+        // 一条入参只消费一个位置，不会把后面同值的项一起带走
+        var removed = collection.RemoveRange([20]);
+
+        Assert.Equal([20], removed);
+        Assert.Equal([10, 20], list);
+
+        var removedArgs = Assert.IsAssignableFrom<IListItemRemovedEventArgs<int>>(Assert.Single(updates));
+        Assert.Equal([0], removedArgs.Indexes);
+    }
+
+    [Fact]
+    public void RemoveRangeByValuesSkipsRepeatedEntriesOnceOccurrencesRunOut()
     {
         var list = new NotifiableList<int> { 10, 20, 30 };
         INotifiableCollection<int> collection = list;
         var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
 
-        // 重复的入参只能命中同一个位置，不应产生重复索引把 MultiRemove 弄崩
+        // 入参比实际出现次数多时，多出来的那份静默跳过，仍只移除一个 20
         var removed = collection.RemoveRange([20, 20]);
 
         Assert.Equal([20], removed);
@@ -219,29 +260,81 @@ public class ListCollectionInterfaceTests
         var results = collection.ReplaceRange([(30, 33), (10, 11)]);
 
         Assert.Equal([true, true], results.Select(r => r.Replaced));
-        Assert.Equal([10, 30], results.Select(r => r.Left).Order());
+        // 成功项按列表索引升序返回，入参顺序不影响结果顺序
+        Assert.Equal([10, 30], results.Select(r => r.Left));
         Assert.Equal([11, 20, 33], list);
         Assert.Single(updates);
     }
 
     [Fact]
-    public void ReplaceRangeReportsOnlyTheFirstCommandForTheSameElement()
+    public void ReplaceRangeReplacesOnlyOneOccurrencePerCommand()
+    {
+        var list = new NotifiableList<int> { 20, 10, 20 };
+        INotifiableCollection<int> collection = list;
+        var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
+
+        // 一条指令只替换一个位置，后面同值的项保持原样
+        var results = collection.ReplaceRange([(20, 21)]);
+
+        Assert.Equal([(true, 20)], results);
+        Assert.Equal([21, 10, 20], list);
+
+        var replaced = Assert.IsAssignableFrom<IListItemReplacedEventArgs<int>>(Assert.Single(updates));
+        Assert.Equal([0], replaced.Indexes);
+    }
+
+    [Fact]
+    public void ReplaceRangePairsRepeatedCommandsWithSuccessiveOccurrences()
+    {
+        var list = new NotifiableList<int> { 10, 20, 20, 30 };
+        INotifiableCollection<int> collection = list;
+        var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
+
+        // 同一个旧值出现几次就消费几条指令，并按列表顺序配对；命令顺序决定新值落在哪个位置
+        var results = collection.ReplaceRange([(20, 22), (20, 21)]);
+
+        Assert.Equal([(true, 20), (true, 20)], results);
+        Assert.Equal([10, 22, 21, 30], list);
+
+        var replaced = Assert.IsAssignableFrom<IListItemReplacedEventArgs<int>>(Assert.Single(updates));
+        Assert.Equal([20, 20], replaced.OldItems);
+        Assert.Equal([22, 21], replaced.NewItems);
+        Assert.Equal([1, 2], replaced.Indexes);
+    }
+
+    [Fact]
+    public void ReplaceRangeReportsExtraCommandsOnceOccurrencesRunOut()
     {
         var list = new NotifiableList<int> { 10, 20, 30 };
         INotifiableCollection<int> collection = list;
         var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
 
-        // 两条指令都指向同一个旧元素：第一条生效，第二条按失败返回它的新元素
+        // 两条指令都指向 20，但列表里只有一个 20：第一条生效，第二条按失败返回它的新元素
         var results = collection.ReplaceRange([(20, 21), (20, 22)]);
 
-        Assert.Contains((false, 22), results);
-        Assert.Contains((true, 20), results);
+        Assert.Equal([(true, 20), (false, 22)], results);
         Assert.Equal([10, 21, 30], list);
 
         var replaced = Assert.IsAssignableFrom<IListItemReplacedEventArgs<int>>(Assert.Single(updates));
         Assert.Equal([20], replaced.OldItems);
         Assert.Equal([21], replaced.NewItems);
         Assert.Equal([1], replaced.Indexes);
+    }
+
+    [Fact]
+    public void ReplaceRangeReportsEveryCommandThatFoundNoOccurrence()
+    {
+        var list = new NotifiableList<int> { 20 };
+        INotifiableCollection<int> collection = list;
+        var updates = NotifiableCollectionsTestUtils.RecordListUpdates(list);
+
+        // 列表里只有一个 20：第一条指令生效，其余都按失败返回，且一条都不能丢
+        var results = collection.ReplaceRange([(20, 21), (20, 22), (20, 23)]);
+
+        Assert.Equal([(true, 20)], results.Where(r => r.Replaced));
+        Assert.Equal([22, 23], results.Where(r => !r.Replaced).Select(r => r.Left).Order());
+        Assert.Equal([21], list);
+        Assert.Single(updates);
     }
 
     [Fact]

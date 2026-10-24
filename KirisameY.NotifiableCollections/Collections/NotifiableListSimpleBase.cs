@@ -490,7 +490,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
         return
         [
             ..MultiReplace(replaceList).Select(o => (true, o)),
-            ..replaceInfo.SelectMany(p => p.Value).Select(n => (false, n))
+            ..replaceInfo.SelectMany(p => ((IEnumerable<T>)p.Value).Reverse()).Select(n => (false, n))
         ];
     }
 
