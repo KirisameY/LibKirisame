@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 
+using KirisameY.GenericUtils;
 using KirisameY.NotifiableCollections.Data;
 using KirisameY.NotifiableCollections.EventArgs;
 
@@ -339,13 +340,32 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
     /// <inheritdoc/>
     public IReadOnlyList<T> RemoveRange(int index, int count)
     {
-        // var removed = View[index..(index + count)].ToImmutableList(); // 沟槽的IReadOnlyList真就什么都没有，现在也没有 indexer extension
         var removed = GetItems(index, count);
         // 升序连续，且与 removed 逐位对应
         var removedIndexes = Enumerable.Range(index, count).ToImmutableList();
         RemoveItems(index, count);
         RaiseUpdate(new ListItemRemovedEventArgs<T>(View, removed, removedIndexes));
         return removed;
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyCollection<T> RemoveRange(IReadOnlyCollection<T> items)
+    {
+        var removeInfo = items.GroupBy(
+            item => item, (item, c) => KeyValuePair.Create(Optional.FromNullable(item), c.Count())
+        ).ToDictionary();
+        List<int> removes = new(capacity: items.Count);
+        foreach (var (i, item) in View.Index()) // 升序遍历保证序列顺序
+        {
+            if (removeInfo.Count == 0) break;
+            var key = Optional.FromNullable(item);
+            if (!removeInfo.TryGetValue(key, out var c)) continue;
+
+            if (c > 1) removeInfo[key] = c - 1;
+            else removeInfo.Remove(key);
+            removes.Add(i);
+        }
+        return MultiRemove(removes);
     }
 
     /// <inheritdoc/>
@@ -443,6 +463,35 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
         var finalOldItems = oldItems.ToImmutableList();
         RaiseUpdate(new ListItemReplacedEventArgs<T>(View, finalOldItems, itemsList.ItemsView, itemsList.IndexesView));
         return finalOldItems;
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyCollection<(bool Replaced, T Left)> ReplaceRange(IReadOnlyCollection<(T Old, T New)> replaces)
+    {
+        var replaceInfo = replaces.GroupBy(
+            t => t.Old,
+            (old, c) => KeyValuePair.Create(Optional.FromNullable(old), c.Select(t => t.New).Reverse().ToList())
+        ).ToDictionary();
+        List<IItemWithIndex<T>> replaceList = new(capacity: replaces.Count);
+
+        foreach (var (index, item) in View.Index()) // 升序遍历保证序列顺序
+        {
+            if (replaceInfo.Count == 0) break;
+            var key = Optional.FromNullable(item);
+            if (!replaceInfo.TryGetValue(key, out var news)) continue;
+            // 从字典中移除匹配项
+            var @new = news[^1];
+            news.RemoveAt(news.Count - 1);
+            if (news.Count == 0) replaceInfo.Remove(key);
+
+            replaceList.Add(@new.WithIndex(index));
+        }
+
+        return
+        [
+            ..MultiReplace(replaceList).Select(o => (true, o)),
+            ..replaceInfo.SelectMany(p => p.Value).Select(n => (false, n))
+        ];
     }
 
     /// <inheritdoc/>
