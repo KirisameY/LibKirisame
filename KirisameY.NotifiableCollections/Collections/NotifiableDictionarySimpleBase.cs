@@ -127,10 +127,10 @@ public abstract class NotifiableDictionarySimpleBase<TKey, TValue> : INotifiable
     /// <inheritdoc cref="INotifiableDictionary{TKey,TValue}.TryGetValue"/>
     public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value) => View.TryGetValue(key, out value);
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="INotifiableDictionary{TKey,TValue}.Keys"/>
     public IReadOnlyNotifiableCollection<TKey> Keys => field ??= new NotifiableDictionaryKeySet<TKey, TValue>(this);
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="INotifiableDictionary{TKey,TValue}.Values"/>
     public IReadOnlyNotifiableCollection<TValue> Values => field ??= this.AsReadOnlyNotifiableCollection(p => p.Value);
 
     ICollection<TKey> IDictionary<TKey, TValue>.Keys => field ??= new KeyCollection(this);

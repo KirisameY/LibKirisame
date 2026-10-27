@@ -242,4 +242,13 @@ public interface INotifiableDictionary<TKey, TValue> : INotifiableCollection<Key
 
     bool IReadOnlyDictionary<TKey, TValue>.TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value) => TryGetValue(key, out value);
     bool IDictionary<TKey, TValue>.TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value) => TryGetValue(key, out value);
+
+    /// <inheritdoc cref="IReadOnlyNotifiableDictionary{TKey,TValue}.Keys"/>
+    public new IReadOnlyNotifiableCollection<TKey> Keys { get; }
+    IReadOnlyNotifiableCollection<TKey> IReadOnlyNotifiableDictionary<TKey, TValue>.Keys => Keys;
+
+
+    /// <inheritdoc cref="IReadOnlyNotifiableDictionary{TKey,TValue}.Values"/>
+    public new IReadOnlyNotifiableCollection<TValue> Values { get; }
+    IReadOnlyNotifiableCollection<TValue> IReadOnlyNotifiableDictionary<TKey, TValue>.Values => Values;
 }
