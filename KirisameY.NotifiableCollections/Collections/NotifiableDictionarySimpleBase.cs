@@ -3,6 +3,8 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 
+using JetBrains.Annotations;
+
 using KirisameY.NotifiableCollections.Collections.WrappedViews;
 using KirisameY.NotifiableCollections.EventArgs;
 
@@ -150,19 +152,19 @@ public abstract class NotifiableDictionarySimpleBase<TKey, TValue> : INotifiable
             if (View.TryGetValue(key, out var oldValue))
             {
                 SetValue(key, value);
-                RaiseUpdate(new DictionaryItemReplacedEventArgs<TKey, TValue>(
-                                View,
-                                new Dictionary<TKey, TValue> { { key, oldValue } }.AsReadOnly(),
-                                new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
-                            ));
+                OnDictionaryUpdated(new DictionaryItemReplacedEventArgs<TKey, TValue>(
+                                        View,
+                                        new Dictionary<TKey, TValue> { { key, oldValue } }.AsReadOnly(),
+                                        new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
+                                    ));
             }
             else
             {
                 SetValue(key, value);
-                RaiseUpdate(new DictionaryItemAddedEventArgs<TKey, TValue>(
-                                View,
-                                new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
-                            ));
+                OnDictionaryUpdated(new DictionaryItemAddedEventArgs<TKey, TValue>(
+                                        View,
+                                        new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
+                                    ));
             }
         }
     }
@@ -171,10 +173,10 @@ public abstract class NotifiableDictionarySimpleBase<TKey, TValue> : INotifiable
     public void Add(TKey key, TValue value)
     {
         AddValue(key, value);
-        RaiseUpdate(new DictionaryItemAddedEventArgs<TKey, TValue>(
-                        View,
-                        new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
-                    ));
+        OnDictionaryUpdated(new DictionaryItemAddedEventArgs<TKey, TValue>(
+                                View,
+                                new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
+                            ));
     }
 
 
@@ -197,19 +199,19 @@ public abstract class NotifiableDictionarySimpleBase<TKey, TValue> : INotifiable
                 throw;
             }
         }
-        RaiseUpdate(new DictionaryItemAddedEventArgs<TKey, TValue>(
-                        View, dict
-                    ));
+        OnDictionaryUpdated(new DictionaryItemAddedEventArgs<TKey, TValue>(
+                                View, dict
+                            ));
     }
 
     /// <inheritdoc/>
     public bool TryAdd(TKey key, TValue value)
     {
         if (!TryAddValue(key, value)) return false;
-        RaiseUpdate(new DictionaryItemAddedEventArgs<TKey, TValue>(
-                        View,
-                        new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
-                    ));
+        OnDictionaryUpdated(new DictionaryItemAddedEventArgs<TKey, TValue>(
+                                View,
+                                new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
+                            ));
         return true;
     }
 
@@ -226,9 +228,9 @@ public abstract class NotifiableDictionarySimpleBase<TKey, TValue> : INotifiable
 
         var dict = addedValues.ToImmutableDictionary();
 
-        RaiseUpdate(new DictionaryItemAddedEventArgs<TKey, TValue>(
-                        View, dict
-                    ));
+        OnDictionaryUpdated(new DictionaryItemAddedEventArgs<TKey, TValue>(
+                                View, dict
+                            ));
         return dict;
     }
 
@@ -254,19 +256,19 @@ public abstract class NotifiableDictionarySimpleBase<TKey, TValue> : INotifiable
         if (replacedNewValues.Count > 0)
         {
             var oldValues = replacedOldValues.ToImmutableDictionary();
-            RaiseUpdate(new DictionaryItemReplacedEventArgs<TKey, TValue>(
-                            View,
-                            oldValues,
-                            replacedNewValues.ToImmutableDictionary()
-                        ));
+            OnDictionaryUpdated(new DictionaryItemReplacedEventArgs<TKey, TValue>(
+                                    View,
+                                    oldValues,
+                                    replacedNewValues.ToImmutableDictionary()
+                                ));
             result = oldValues;
         }
         if (addedValues.Count > 0)
         {
-            RaiseUpdate(new DictionaryItemAddedEventArgs<TKey, TValue>(
-                            View,
-                            addedValues.ToImmutableDictionary()
-                        ));
+            OnDictionaryUpdated(new DictionaryItemAddedEventArgs<TKey, TValue>(
+                                    View,
+                                    addedValues.ToImmutableDictionary()
+                                ));
         }
 
         return result;
@@ -276,10 +278,10 @@ public abstract class NotifiableDictionarySimpleBase<TKey, TValue> : INotifiable
     public bool Remove(TKey key, [MaybeNullWhen(false)] out TValue value)
     {
         if (!RemoveValue(key, out value)) return false;
-        RaiseUpdate(new DictionaryItemRemovedEventArgs<TKey, TValue>(
-                        View,
-                        new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
-                    ));
+        OnDictionaryUpdated(new DictionaryItemRemovedEventArgs<TKey, TValue>(
+                                View,
+                                new Dictionary<TKey, TValue> { { key, value } }.AsReadOnly()
+                            ));
         return true;
     }
 
@@ -295,9 +297,9 @@ public abstract class NotifiableDictionarySimpleBase<TKey, TValue> : INotifiable
 
         if (removed.Count == 0) return ReadOnlyDictionary<TKey, TValue>.Empty;
         var dict = removed.ToImmutableDictionary();
-        RaiseUpdate(new DictionaryItemRemovedEventArgs<TKey, TValue>(
-                        View, dict
-                    ));
+        OnDictionaryUpdated(new DictionaryItemRemovedEventArgs<TKey, TValue>(
+                                View, dict
+                            ));
         return dict;
     }
 
@@ -306,7 +308,7 @@ public abstract class NotifiableDictionarySimpleBase<TKey, TValue> : INotifiable
     {
         var result = View.Where(predicate.Invoke).ToImmutableDictionary();
         foreach (var (key, _) in result) RemoveValue(key);
-        RaiseUpdate(new DictionaryItemRemovedEventArgs<TKey, TValue>(View, result));
+        OnDictionaryUpdated(new DictionaryItemRemovedEventArgs<TKey, TValue>(View, result));
         return result;
     }
 
@@ -315,7 +317,7 @@ public abstract class NotifiableDictionarySimpleBase<TKey, TValue> : INotifiable
     {
         var before = View.ToImmutableDictionary();
         ClearValues();
-        RaiseUpdate(new DictionaryItemClearedEventArgs<TKey, TValue>(View, before));
+        OnDictionaryUpdated(new DictionaryItemClearedEventArgs<TKey, TValue>(View, before));
         return before;
     }
 
@@ -323,6 +325,22 @@ public abstract class NotifiableDictionarySimpleBase<TKey, TValue> : INotifiable
 
 
     #region Event
+
+    /// <summary>
+    ///     引发 <see cref="DictionaryUpdated"/> 事件。
+    ///     <br/>
+    ///     Raise the <see cref="DictionaryUpdated"/> event.
+    /// </summary>
+    /// <remarks>
+    ///     覆写该方法时，应当调用 <c>base.OnDictionaryUpdated(e)</c> 以保证事件处理器能够接收到通知。
+    ///     <br/>
+    ///     When overriding, it's recommended to call <c>base.OnDictionaryUpdated(e)</c>
+    ///     to ensure that event handlers can receive the notification.
+    /// </remarks>
+    [PublicAPI] protected virtual void OnDictionaryUpdated(DictionaryUpdateEventArgs<TKey, TValue> args)
+    {
+        RaiseUpdate(args);
+    }
 
     private ImmutableList<EventHandler<DictionaryUpdateEventArgs<TKey, TValue>>> _updatedEventHandlers = [];
 

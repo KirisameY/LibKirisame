@@ -1,5 +1,7 @@
 ﻿using System.Collections.Immutable;
 
+using JetBrains.Annotations;
+
 using KirisameY.GenericUtils;
 using KirisameY.NotifiableCollections.Data;
 using KirisameY.NotifiableCollections.EventArgs;
@@ -246,7 +248,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
         {
             var old = GetItem(index);
             SetItem(index, value);
-            RaiseUpdate(new ListItemReplacedEventArgs<T>(View, [old], [value], [index]));
+            OnListUpdated(new ListItemReplacedEventArgs<T>(View, [old], [value], [index]));
         }
     }
 
@@ -255,7 +257,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
     {
         var target = View.Count;
         InsertItem(target, item);
-        RaiseUpdate(new ListItemAddedEventArgs<T>(View, [item], [target]));
+        OnListUpdated(new ListItemAddedEventArgs<T>(View, [item], [target]));
     }
 
     /// <inheritdoc/>
@@ -263,21 +265,21 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
     {
         var fromIndex = View.Count;
         InsertItems(fromIndex, items);
-        RaiseUpdate(new ListItemAddedEventArgs<T>(View, [..items], [..Enumerable.Range(fromIndex, items.Count)]));
+        OnListUpdated(new ListItemAddedEventArgs<T>(View, [..items], [..Enumerable.Range(fromIndex, items.Count)]));
     }
 
     /// <inheritdoc/>
     public void Insert(int index, T item)
     {
         InsertItem(index, item);
-        RaiseUpdate(new ListItemAddedEventArgs<T>(View, [item], [index]));
+        OnListUpdated(new ListItemAddedEventArgs<T>(View, [item], [index]));
     }
 
     /// <inheritdoc/>
     public void InsertRange(int index, IReadOnlyCollection<T> items)
     {
         InsertItems(index, items);
-        RaiseUpdate(new ListItemAddedEventArgs<T>(View, [..items], [..Enumerable.Range(index, items.Count)]));
+        OnListUpdated(new ListItemAddedEventArgs<T>(View, [..items], [..Enumerable.Range(index, items.Count)]));
     }
 
 
@@ -305,7 +307,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
                 throw;
             }
         }
-        RaiseUpdate(new ListItemAddedEventArgs<T>(View, itemsList.ItemsView, itemsList.IndexesView));
+        OnListUpdated(new ListItemAddedEventArgs<T>(View, itemsList.ItemsView, itemsList.IndexesView));
     }
 
     /// <inheritdoc/>
@@ -314,7 +316,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
         var before = View.ToImmutableList();
         ClearItems();
         // 索引取 0..旧长度-1：升序连续，且与 before 逐位对应
-        RaiseUpdate(new ListItemClearedEventArgs<T>(View, before, [..Enumerable.Range(0, before.Count)]));
+        OnListUpdated(new ListItemClearedEventArgs<T>(View, before, [..Enumerable.Range(0, before.Count)]));
         return before;
     }
 
@@ -324,7 +326,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
         var index = IndexOf(item);
         if (index < 0) return false;
         RemoveItem(index);
-        RaiseUpdate(new ListItemRemovedEventArgs<T>(View, [item], [index]));
+        OnListUpdated(new ListItemRemovedEventArgs<T>(View, [item], [index]));
         return true;
     }
 
@@ -333,7 +335,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
     {
         var item = View[index];
         RemoveItem(index);
-        RaiseUpdate(new ListItemRemovedEventArgs<T>(View, [item], [index]));
+        OnListUpdated(new ListItemRemovedEventArgs<T>(View, [item], [index]));
         return item;
     }
 
@@ -344,7 +346,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
         // 升序连续，且与 removed 逐位对应
         var removedIndexes = Enumerable.Range(index, count).ToImmutableList();
         RemoveItems(index, count);
-        RaiseUpdate(new ListItemRemovedEventArgs<T>(View, removed, removedIndexes));
+        OnListUpdated(new ListItemRemovedEventArgs<T>(View, removed, removedIndexes));
         return removed;
     }
 
@@ -392,7 +394,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
             }
         }
         var finalRemoved = removed.ToImmutableList();
-        RaiseUpdate(new ListItemRemovedEventArgs<T>(View, finalRemoved, indexesList.ToImmutableList()));
+        OnListUpdated(new ListItemRemovedEventArgs<T>(View, finalRemoved, indexesList.ToImmutableList()));
         return finalRemoved;
     }
 
@@ -402,7 +404,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
         var (i, item) = View.Index().FirstOrDefault(t => predicate.Invoke(t.Item), (-1, default!));
         if (i < 0) return default;
         RemoveItem(i);
-        RaiseUpdate(new ListItemRemovedEventArgs<T>(View, [item], [i]));
+        OnListUpdated(new ListItemRemovedEventArgs<T>(View, [item], [i]));
         return item;
     }
 
@@ -412,7 +414,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
         var (i, item) = View.Index().LastOrDefault(t => predicate.Invoke(t.Item), (-1, default!));
         if (i < 0) return default;
         RemoveItem(i);
-        RaiseUpdate(new ListItemRemovedEventArgs<T>(View, [item], [i]));
+        OnListUpdated(new ListItemRemovedEventArgs<T>(View, [item], [i]));
         return item;
     }
 
@@ -430,7 +432,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
             RemoveItem(i);
             return item;
         }).Reverse().ToImmutableList();
-        RaiseUpdate(new ListItemRemovedEventArgs<T>(View, items, indexes));
+        OnListUpdated(new ListItemRemovedEventArgs<T>(View, items, indexes));
         return items;
     }
 
@@ -461,7 +463,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
             }
         }
         var finalOldItems = oldItems.ToImmutableList();
-        RaiseUpdate(new ListItemReplacedEventArgs<T>(View, finalOldItems, itemsList.ItemsView, itemsList.IndexesView));
+        OnListUpdated(new ListItemReplacedEventArgs<T>(View, finalOldItems, itemsList.ItemsView, itemsList.IndexesView));
         return finalOldItems;
     }
 
@@ -508,7 +510,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
             throw;
         }
 
-        RaiseUpdate(new ListItemMovedEventArgs<T>(View, [item], [index], [to]));
+        OnListUpdated(new ListItemMovedEventArgs<T>(View, [item], [index], [to]));
     }
 
     /// <inheritdoc/>
@@ -529,7 +531,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
         var (fromIndexes, toIndexes) = index < to
             ? (Enumerable.Repeat(index, count), Enumerable.Repeat(to + count - 1, count))
             : (Enumerable.Repeat(index + count - 1, count), Enumerable.Repeat(to, count));
-        RaiseUpdate(new ListItemMovedEventArgs<T>(View, items, [..fromIndexes], [..toIndexes]));
+        OnListUpdated(new ListItemMovedEventArgs<T>(View, items, [..fromIndexes], [..toIndexes]));
     }
 
     /// <inheritdoc/>
@@ -565,7 +567,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
             }
         }
 
-        RaiseUpdate(
+        OnListUpdated(
             new ListItemMovedEventArgs<T>(
                 View, [..movedItems],
                 [..stepsList.Select(t => t.From)],
@@ -579,7 +581,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
     {
         var snapshot = View.ToImmutableList();
         SortItems(0, View.Count, comparer);
-        RaiseUpdate(ListSortedEventArgs<T>.From(View, snapshot));
+        OnListUpdated(ListSortedEventArgs<T>.From(View, snapshot));
     }
 
     /// <inheritdoc/>
@@ -587,7 +589,7 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
     {
         var snapshot = View.ToArray();
         SortItems(index, count, comparer);
-        RaiseUpdate(ListSortedEventArgs<T>.From(View, snapshot));
+        OnListUpdated(ListSortedEventArgs<T>.From(View, snapshot));
     }
 
     /// <inheritdoc/>
@@ -595,11 +597,11 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
     {
         if (View.Count == 0) return;
         ReverseItems(0, View.Count);
-        RaiseUpdate(new ListSortedEventArgs<T>(
-                        View, [..View.SkipLast(1)],
-                        [..Enumerable.Repeat(View.Count - 1, View.Count - 1)],
-                        [..Enumerable.Range(0, View.Count - 1)]
-                    ));
+        OnListUpdated(new ListSortedEventArgs<T>(
+                          View, [..View.SkipLast(1)],
+                          [..Enumerable.Repeat(View.Count - 1, View.Count - 1)],
+                          [..Enumerable.Range(0, View.Count - 1)]
+                      ));
     }
 
     /// <inheritdoc/>
@@ -608,17 +610,33 @@ public abstract class NotifiableListSimpleBase<T> : INotifiableList<T>
         if (count == 0) return;
 
         ReverseItems(index, count);
-        RaiseUpdate(new ListSortedEventArgs<T>(
-                        View, GetItems(index, count - 1),
-                        [..Enumerable.Repeat(index + count - 1, count - 1)],
-                        [..Enumerable.Range(index, count - 1)]
-                    ));
+        OnListUpdated(new ListSortedEventArgs<T>(
+                          View, GetItems(index, count - 1),
+                          [..Enumerable.Repeat(index + count - 1, count - 1)],
+                          [..Enumerable.Range(index, count - 1)]
+                      ));
     }
 
     #endregion
 
 
     #region Event
+
+    /// <summary>
+    ///     引发 <see cref="ListUpdated"/> 事件。
+    ///     <br/>
+    ///     Raise the <see cref="ListUpdated"/> event.
+    /// </summary>
+    /// <remarks>
+    ///     覆写该方法时，应当调用 <c>base.OnListUpdated(e)</c> 以保证事件处理器能够接收到通知。
+    ///     <br/>
+    ///     When overriding, it's recommended to call <c>base.OnListUpdated(e)</c>
+    ///     to ensure that event handlers can receive the notification.
+    /// </remarks>
+    [PublicAPI] protected virtual void OnListUpdated(ListUpdateEventArgs<T> args)
+    {
+        RaiseUpdate(args);
+    }
 
     private ImmutableList<EventHandler<ListUpdateEventArgs<T>>> _updatedEventHandlers = [];
 
