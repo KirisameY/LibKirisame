@@ -11,6 +11,7 @@
         <Project Path="KirisameY.EventBus/KirisameY.EventBus.csproj" />
         <Project Path="KirisameY.NotifiableCollections/KirisameY.NotifiableCollections.csproj" />
         <Project Path="KirisameY.Numeric/KirisameY.Numeric.csproj" />
+        <Project Path="KirisameY.Randomizer/KirisameY.Randomizer.csproj" />
         <Project Path="KirisameY.Registration/KirisameY.Registration.csproj" />
         <Project Path="KirisameY.SyncOrder/KirisameY.SyncOrder.csproj" />
     </Folder>
