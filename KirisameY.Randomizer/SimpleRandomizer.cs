@@ -20,7 +20,7 @@ public abstract class SimpleRandomizer : IRandomizer
     public long NextI64() => (long)(NextU64() & (ulong.MaxValue >>> 1));
 
 
-    public double NextDouble() => (double)NextU64() / ulong.MaxValue;
+    public double NextDouble() => NextU64() * 5.4210108624275218E-20;
 
-    public float NextSingle() => (float)NextDouble();
+    public float NextSingle() => NextU64() * 5.4210107E-20f;
 }

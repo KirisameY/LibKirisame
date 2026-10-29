@@ -1,4 +1,4 @@
-﻿<Solution>
+<Solution>
     <Folder Name="/A0.Base/">
         <Project Path="KirisameY.CollectionViews/KirisameY.CollectionViews.csproj" />
         <Project Path="KirisameY.GenericUtils/KirisameY.GenericUtils.csproj" />
@@ -20,6 +20,7 @@
         <Project Path="KirisameY.EventBus.Test/KirisameY.EventBus.Test.csproj" />
         <Project Path="KirisameY.NotifiableCollections.Test/KirisameY.NotifiableCollections.Test.csproj" />
         <Project Path="KirisameY.Numeric.Test/KirisameY.Numeric.Test.csproj" />
+        <Project Path="KirisameY.Randomizer.Test/KirisameY.Randomizer.Test.csproj" />
         <Project Path="KirisameY.SyncOrder.Test/KirisameY.SyncOrder.Test.csproj" />
     </Folder>
     <Folder Name="/B1.FrameExtension/">
