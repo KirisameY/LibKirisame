@@ -23,8 +23,9 @@ internal class PreFrozenRegisterProxy<T> : IEnumerableRegistry<T>
     public IEnumerable<T> Values => InnerRegister.Values;
     public int Count => InnerRegister.Count;
 
-    public T GetItem(RegKey id) => InnerRegister.GetItem(id);
-    public bool ItemRegistered(RegKey id) => InnerRegister.ItemRegistered(id);
+    public T GetItem(RegKey key) => InnerRegister.GetItem(key);
+    public T GetItem(RegKey key, out bool succeed) => InnerRegister.GetItem(key, out succeed);
+    public bool ItemRegistered(RegKey key) => InnerRegister.ItemRegistered(key);
     public bool TryGetValue(RegKey key, [MaybeNullWhen(false)] out T value) => InnerRegister.TryGetValue(key, out value);
 
     public IEnumerator<KeyValuePair<RegKey, T>> GetEnumerator() => InnerRegister.GetEnumerator();

@@ -21,14 +21,10 @@ public class FrozenRegistry<T>(IDictionary<RegKey, T> regDict, Func<RegKey, T> f
 {
     private readonly FrozenDictionary<RegKey, T> _regDict = regDict.ToFrozenDictionary();
 
-    public T this[RegKey key] => GetItem(key);
-    public IEnumerable<RegKey> Keys => _regDict.Keys;
-    public IEnumerable<T> Values => _regDict.Values;
-    public int Count => _regDict.Count;
-
-    public T GetItem(RegKey key)
+    public T GetItem(RegKey key, out bool succeed)
     {
-        if (!_regDict.TryGetValue(key, out var value))
+        succeed = _regDict.TryGetValue(key, out var value);
+        if (!succeed)
         {
             try { value = fallback(key); }
             catch (Exception e)
@@ -37,25 +33,24 @@ public class FrozenRegistry<T>(IDictionary<RegKey, T> regDict, Func<RegKey, T> f
             }
         }
 
-        return value;
+        return value!;
     }
 
-    public bool ItemRegistered(RegKey id) => _regDict.ContainsKey(id);
+    public bool ItemRegistered(RegKey key) => _regDict.ContainsKey(key);
 
-    public bool TryGetValue(RegKey key, out T value)
-    {
-        bool result = _regDict.TryGetValue(key, out var item);
-        try
-        {
-            value = result ? item! : fallback(key);
-            return result;
-        }
-        catch (Exception e)
-        {
-            throw new GettingFallbackValueFailedException(this, key, e);
-        }
-    }
 
     public IEnumerator<KeyValuePair<RegKey, T>> GetEnumerator() => _regDict.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public bool TryGetValue(RegKey key, out T value)
+    {
+        value = GetItem(key, out var succeed);
+        return succeed;
+    }
+
+    public int Count => _regDict.Count;
+
+    public T this[RegKey key] => GetItem(key, out _);
+    public IEnumerable<RegKey> Keys => _regDict.Keys;
+    public IEnumerable<T> Values => _regDict.Values;
 }

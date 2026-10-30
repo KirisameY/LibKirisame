@@ -36,10 +36,11 @@ public class MutableRegistry<T>(Func<RegKey, T> fallback) : IRegisterTarget<T>, 
         _regDict[key] = item;
     }
 
-    public T GetItem(RegKey key)
+    public T GetItem(RegKey key, out bool succeed)
     {
         if (_frozen) throw new RegisterTargetUnavailableException();
-        if (!_regDict.TryGetValue(key, out var value))
+        succeed = _regDict.TryGetValue(key, out var value);
+        if (!succeed)
         {
             try { value = fallback(key); }
             catch (Exception e)
@@ -48,7 +49,7 @@ public class MutableRegistry<T>(Func<RegKey, T> fallback) : IRegisterTarget<T>, 
             }
         }
 
-        return value;
+        return value!;
     }
 
     public bool ItemRegistered(RegKey key)
@@ -81,19 +82,17 @@ public class MutableRegistry<T>(Func<RegKey, T> fallback) : IRegisterTarget<T>, 
         return _regDict.GetEnumerator();
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public int Count => _regDict.Count;
+
     public bool TryGetValue(RegKey key, [MaybeNullWhen(false)] out T value)
     {
-        throw new NotImplementedException();
+        value = GetItem(key, out bool succeed);
+        return succeed;
     }
 
-    public T this[RegKey key] => throw new NotImplementedException();
+    public T this[RegKey key] => GetItem(key, out _);
     public IEnumerable<RegKey> Keys => _regDict.Keys;
     public IEnumerable<T> Values => _regDict.Values;
 }
-
