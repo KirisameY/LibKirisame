@@ -1,5 +1,7 @@
 ﻿using JetBrains.Annotations;
 
+using KirisameY.GenericUtils;
+
 namespace KirisameY.Relinq.Extensions;
 
 public static class EnumerableExtensions
@@ -48,6 +50,10 @@ public static class EnumerableExtensions
     {
         [PublicAPI, Pure, LinqTunnel]
         public IEnumerable<TResult> SelectExist<TResult>(Func<TSource, TResult?> selector) => source.Select(selector).OfType<TResult>();
+
+        [PublicAPI, Pure, LinqTunnel]
+        public IEnumerable<TResult> SelectExist<TResult>(Func<TSource, Optional<TResult>> selector) =>
+            source.Select(selector).Where(opt => opt.HasValue).Select(opt => opt.Value);
 
         [PublicAPI, LinqTunnel]
         public IEnumerable<TSource> SelectSelf(Action<TSource> selector) => source.Select(e =>
