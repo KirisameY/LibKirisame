@@ -4,10 +4,10 @@ namespace KirisameY.Relinq.Extensions;
 
 public static class EnumerableExtensions
 {
-    extension<TSource>(IEnumerable<TSource> source)
+    extension<TSource>([InstantHandle] IEnumerable<TSource> source)
     {
         [PublicAPI]
-        public void ForEach(Action<TSource> action)
+        public void ForEach([InstantHandle] Action<TSource> action)
         {
             foreach (var entry in source)
             {
@@ -16,7 +16,7 @@ public static class EnumerableExtensions
         }
 
         [PublicAPI]
-        public void ForEach(Action<int, TSource> action)
+        public void ForEach([InstantHandle] Action<int, TSource> action)
         {
             foreach (var (index, item) in source.Index())
             {
@@ -24,31 +24,12 @@ public static class EnumerableExtensions
             }
         }
 
-        [PublicAPI, Pure]
-        public IEnumerable<TResult> SelectExist<TResult>(Func<TSource, TResult?> selector) => source.Select(selector).OfType<TResult>();
-
-        [PublicAPI]
-        public IEnumerable<TSource> SelectSelf(Action<TSource> selector) => source.Select(e =>
-        {
-            selector.Invoke(e);
-            return e;
-        });
 
         [PublicAPI, Pure]
-        public IEnumerable<TResult> SelectWhile<TResult>(WhileSelector<TSource, TResult> selector)
-        {
-            foreach (var item in source)
-            {
-                if (!selector.Invoke(item, out var result)) yield break;
-                yield return result;
-            }
-        }
+        public bool ContainsAny([InstantHandle] ICollection<TSource> items) => source.Any(items.Contains); // 应该是反过来但这样更合适
 
         [PublicAPI, Pure]
-        public bool ContainsAny(ICollection<TSource> items) => source.Any(items.Contains); // 应该是反过来但这样更合适
-
-        [PublicAPI, Pure]
-        public bool ContainsAll(ICollection<TSource> items)
+        public bool ContainsAll([InstantHandle] ICollection<TSource> items)
         {
             if (items.Count == 0) return true;
 
@@ -61,32 +42,55 @@ public static class EnumerableExtensions
 
             return false;
         }
+    }
 
-        [PublicAPI, Pure]
+    extension<TSource>(IEnumerable<TSource> source)
+    {
+        [PublicAPI, Pure, LinqTunnel]
+        public IEnumerable<TResult> SelectExist<TResult>(Func<TSource, TResult?> selector) => source.Select(selector).OfType<TResult>();
+
+        [PublicAPI, LinqTunnel]
+        public IEnumerable<TSource> SelectSelf(Action<TSource> selector) => source.Select(e =>
+        {
+            selector.Invoke(e);
+            return e;
+        });
+
+        [PublicAPI, Pure, LinqTunnel]
+        public IEnumerable<TResult> SelectWhile<TResult>(WhileSelector<TSource, TResult> selector)
+        {
+            foreach (var item in source)
+            {
+                if (!selector.Invoke(item, out var result)) yield break;
+                yield return result;
+            }
+        }
+
+        [PublicAPI, Pure, LinqTunnel]
         public IEnumerable<int> FindAll(TSource find) =>
             source.Index().Where(t => Equals(t.Item, find)).Select(t => t.Index);
 
-        [PublicAPI, Pure]
+        [PublicAPI, Pure, LinqTunnel]
         public IEnumerable<int> FindAll(Func<TSource, bool> predicate) =>
             source.Index().Where(t => predicate(t.Item)).Select(t => t.Index);
 
-        [PublicAPI, Pure]
+        [PublicAPI, Pure, LinqTunnel]
         public IEnumerable<(TSource, TSecond)> CrossJoin<TSecond>(IEnumerable<TSecond> second) => source.CrossJoin(second, (x, y) => (x, y));
 
-        [PublicAPI, Pure]
+        [PublicAPI, Pure, LinqTunnel]
         public IEnumerable<TResult> CrossJoin<TSecond, TResult>(IEnumerable<TSecond> second, Func<TSource, TSecond, TResult> resultSelector) =>
             from x in source
             from y in second
             select resultSelector(x, y);
 
-        [PublicAPI, Pure]
+        [PublicAPI, Pure, LinqTunnel]
         public IEnumerable<TResult> Zip<TSecond, TThird, TResult>(
             IEnumerable<TSecond> second, IEnumerable<TThird> third,
             Func<TSource, TSecond, TThird, TResult> resultSelector
         ) => source.Zip(second, third)
                    .Select(t => resultSelector.Invoke(t.First, t.Second, t.Third));
 
-        [PublicAPI, Pure]
+        [PublicAPI, Pure, LinqTunnel]
         public IEnumerable<TResult> ZipChecked<TSecond, TResult>(IEnumerable<TSecond> second, Func<TSource, TSecond, TResult> resultSelector)
         {
             using var sourceEnumerator = source.GetEnumerator();
@@ -102,11 +106,11 @@ public static class EnumerableExtensions
             }
         }
 
-        [PublicAPI, Pure]
+        [PublicAPI, Pure, LinqTunnel]
         public IEnumerable<(TSource, TSecond)> ZipChecked<TSecond>(IEnumerable<TSecond> second) =>
             source.ZipChecked(second, (f, s) => (f, s));
 
-        [PublicAPI, Pure]
+        [PublicAPI, Pure, LinqTunnel]
         public IEnumerable<TResult> ZipChecked<TSecond, TThird, TResult>(
             IEnumerable<TSecond> second, IEnumerable<TThird> third,
             Func<TSource, TSecond, TThird, TResult> resultSelector
@@ -126,7 +130,7 @@ public static class EnumerableExtensions
             }
         }
 
-        [PublicAPI, Pure]
+        [PublicAPI, Pure, LinqTunnel]
         public IEnumerable<(TSource, TSecond, TThird)> ZipChecked<TSecond, TThird>(
             IEnumerable<TSecond> second, IEnumerable<TThird> third
         ) => source.ZipChecked(second, third, (f, s, t) => (f, s, t));
@@ -134,7 +138,7 @@ public static class EnumerableExtensions
 
     extension<TSource>(IEnumerable<IEnumerable<TSource>> source)
     {
-        [PublicAPI, Pure]
+        [PublicAPI, Pure, LinqTunnel]
         public IEnumerable<TSource> Flatten() => source.SelectMany(x => x);
     }
 }

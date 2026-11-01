@@ -8,7 +8,7 @@ public static class EnumerableStaticExtensions
 {
     extension(Enumerable)
     {
-        [PublicAPI, Pure]
+        [PublicAPI, Pure, LinqTunnel]
         public static IEnumerable<T> Flatten<T>(params IEnumerable<IEnumerable<T>> source) => source.Flatten();
 
         [PublicAPI, Pure]
