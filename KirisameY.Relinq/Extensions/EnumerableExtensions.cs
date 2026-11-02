@@ -80,6 +80,16 @@ public static class EnumerableExtensions
         public IEnumerable<int> FindAll(Func<TSource, bool> predicate) =>
             source.Index().Where(t => predicate(t.Item)).Select(t => t.Index);
 
+
+        [PublicAPI, Pure, LinqTunnel]
+        public IEnumerable<TSource> ReplaceAll(Predicate<TSource> predicate, Func<TSource, TSource> replacer) =>
+            source.Select(item => predicate(item) ? replacer(item) : item);
+
+        [PublicAPI, Pure, LinqTunnel]
+        public IEnumerable<TSource> ReplaceAll(TSource target, TSource with) =>
+            source.ReplaceAll(item => Equals(item, target), _ => with);
+
+
         [PublicAPI, Pure, LinqTunnel]
         public IEnumerable<(TSource, TSecond)> CrossJoin<TSecond>(IEnumerable<TSecond> second) => source.CrossJoin(second, (x, y) => (x, y));
 
