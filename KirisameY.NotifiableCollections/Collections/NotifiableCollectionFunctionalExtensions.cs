@@ -25,7 +25,7 @@ public static class NotifiableSetFunctionalExtensions
 {
     extension<T>(INotifiableSet<T> set)
     {
-        /// <inheritdoc cref="INotifiableSet{T}.TryAddRange"/>
-        [PublicAPI] public IReadOnlyCollection<T> TryAddRange(IEnumerable<T> items) => set.TryAddRange([..items]);
+        /// <inheritdoc cref="INotifiableSet{T}.UnionWith(IReadOnlyCollection{T})"/>
+        [PublicAPI] public IReadOnlyCollection<T> UnionWith(IEnumerable<T> items) => set.UnionWith([..items]);
     }
 }

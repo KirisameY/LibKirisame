@@ -1,9 +1,11 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Frozen;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 
 using JetBrains.Annotations;
 
 using KirisameY.NotifiableCollections.EventArgs;
+using KirisameY.NotifiableCollections.Utils;
 
 namespace KirisameY.NotifiableCollections.Collections;
 
@@ -26,7 +28,7 @@ public abstract class NotifiableSetSimpleBase<T> : INotifiableSet<T>
     ///     <br/>
     ///     Read-only wrapped view of this list.
     /// </summary>
-    protected abstract IReadOnlyCollection<T> View { get; }
+    protected abstract IReadOnlySet<T> View { get; }
 
     /// <summary>
     ///     尝试向集合中添加一个元素。
@@ -49,6 +51,13 @@ public abstract class NotifiableSetSimpleBase<T> : INotifiableSet<T>
     /// </summary>
     protected abstract void ClearElements();
 
+    /// <summary>
+    ///     用于比较元素相等性的比较器。
+    ///     <br/>
+    ///     Comparer that used to compare elements in the set.
+    /// </summary>
+    protected abstract IEqualityComparer<T> EqualityComparer { get; }
+
     #endregion
 
 
@@ -60,27 +69,50 @@ public abstract class NotifiableSetSimpleBase<T> : INotifiableSet<T>
     /// <inheritdoc cref="INotifiableCollection{T}.Count" />
     public int Count => View.Count;
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="INotifiableSet{T}.Contains" />
     public bool Contains(T item) => View.Contains(item);
+
+    /// <inheritdoc cref="INotifiableSet{T}.IsSubsetOf" />
+    public bool IsSubsetOf(IEnumerable<T> other) => View.IsSubsetOf(other);
+
+    /// <inheritdoc cref="INotifiableSet{T}.IsSupersetOf" />
+    public bool IsSupersetOf(IEnumerable<T> other) => View.IsSupersetOf(other);
+
+    /// <inheritdoc cref="INotifiableSet{T}.IsProperSubsetOf"/>
+    public bool IsProperSubsetOf(IEnumerable<T> other) => View.IsProperSubsetOf(other);
+
+    /// <inheritdoc cref="INotifiableSet{T}.IsProperSupersetOf" />
+    public bool IsProperSupersetOf(IEnumerable<T> other) => View.IsProperSupersetOf(other);
+
+    /// <inheritdoc cref="INotifiableSet{T}.Overlaps" />
+    public bool Overlaps(IEnumerable<T> other) => View.Overlaps(other);
+
+    /// <inheritdoc cref="INotifiableSet{T}.SetEquals" />
+    public bool SetEquals(IEnumerable<T> other) => View.SetEquals(other);
 
     #endregion
 
 
     #region Writing
 
-    /// <inheritdoc />
-    public bool TryAdd(T element)
+    /// <inheritdoc cref="INotifiableCollection{T}.Add" />
+    public bool Add(T element)
     {
         var result = AddElement(element);
-        if (result) OnCollectionUpdated(new CollectionItemAddedEventArgs<T>(View, [element]));
+        if (result) OnSetUpdated(new SetElementAddedEventArgs<T>(View, FrozenSet.Create(element)));
         return result;
     }
 
-    /// <inheritdoc/>
-    void ICollection<T>.Add(T element) => TryAdd(element);
+    /// <inheritdoc />
+    public bool Remove(T element)
+    {
+        if (!RemoveElement(element)) return false;
+        OnSetUpdated(new SetElementRemovedEventArgs<T>(View, FrozenSet.Create(element)));
+        return true;
+    }
 
     /// <inheritdoc />
-    public IReadOnlyCollection<T> TryAddRange(IReadOnlyCollection<T> elements)
+    public IReadOnlySet<T> UnionWith(IReadOnlyCollection<T> elements)
     {
         List<T> added = new(capacity: elements.Count);
         foreach (var element in elements)
@@ -88,41 +120,75 @@ public abstract class NotifiableSetSimpleBase<T> : INotifiableSet<T>
             if (AddElement(element)) added.Add(element);
         }
 
-        if (added.Count == 0) return ReadOnlyCollection<T>.Empty;
-        var finalAdded = added.ToImmutableList();
-        OnCollectionUpdated(new CollectionItemAddedEventArgs<T>(View, finalAdded));
+        if (added.Count == 0) return ReadOnlySet<T>.Empty;
+        var finalAdded = added.ToFrozenSet();
+        OnSetUpdated(new SetElementAddedEventArgs<T>(View, finalAdded));
         return finalAdded;
     }
 
     /// <inheritdoc />
-    void INotifiableCollection<T>.AddRange(IReadOnlyCollection<T> elements) => TryAddRange(elements);
-
-    /// <inheritdoc />
-    public bool Remove(T element)
+    public IReadOnlySet<T> ExceptWith(IReadOnlyCollection<T> elements)
     {
-        if (!RemoveElement(element)) return false;
-        OnCollectionUpdated(new CollectionItemRemovedEventArgs<T>(View, [element]));
-        return true;
-    }
-
-    /// <inheritdoc />
-    public IReadOnlyCollection<T> RemoveRange(IReadOnlyCollection<T> elements)
-    {
-        var removed = elements.Where(RemoveElement).ToImmutableList();
-        if (removed.Count > 0) OnCollectionUpdated(new CollectionItemRemovedEventArgs<T>(View, removed));
+        var removed = elements.Where(RemoveElement).ToFrozenSet(comparer: EqualityComparer);
+        if (removed.Count > 0) OnSetUpdated(new SetElementRemovedEventArgs<T>(View, removed));
         return removed;
     }
 
     /// <inheritdoc />
-    public IReadOnlyCollection<T> RemoveAll(Predicate<T> predicate) => RemoveRange(View.Where(predicate.Invoke).ToArray());
+    public IReadOnlySet<T> IntersectWith(IEnumerable<T> other)
+    {
+        var toRemove = View.ToHashSet(comparer: EqualityComparer);
+        toRemove.ExceptWith(other);
+        return ExceptWith(toRemove);
+    }
+
+    /// <inheritdoc />
+    public (IReadOnlySet<T> Added, IReadOnlySet<T> Removed) SymmetricExceptWith(IEnumerable<T> other)
+    {
+        HashSet<T> added = new(comparer: EqualityComparer),
+                   removed = new(comparer: EqualityComparer);
+        foreach (var element in other.Distinct(comparer: EqualityComparer))
+        {
+            if (AddElement(element))
+            {
+                added.Add(element);
+            }
+            else
+            {
+                RemoveElement(element);
+                removed.Add(element);
+            }
+        }
+
+        var finalAdded = added.ToFrozenSet();
+        var finalRemoved = removed.ToFrozenSet();
+
+        if (finalAdded.Count > 0) OnSetUpdated(new SetElementAddedEventArgs<T>(View, finalAdded));
+        if (finalRemoved.Count > 0) OnSetUpdated(new SetElementRemovedEventArgs<T>(View, finalRemoved));
+
+        return (finalAdded, finalRemoved);
+    }
+
+    /// <inheritdoc />
+    public IReadOnlySet<T> RemoveAll(Predicate<T> predicate) => ExceptWith(View.Where(predicate.Invoke).ToArray());
 
     /// <inheritdoc />
     public bool Replace(T oldElement, T newElement)
     {
         if (!RemoveElement(oldElement)) return false;
-        if (!AddElement(newElement)) OnCollectionUpdated(new CollectionItemRemovedEventArgs<T>(View, [oldElement]));
-        else OnCollectionUpdated(new CollectionItemReplacedEventArgs<T>(View, [oldElement], [newElement]));
+        if (!AddElement(newElement))
+            OnSetUpdated(new SetElementRemovedByReplaceEventArgs<T>(View, NullableFrozenDictionary.From((oldElement, newElement))));
+        else
+            OnSetUpdated(new SetElementReplacedEventArgs<T>(View, [oldElement], [newElement]));
         return true;
+    }
+
+    /// <inheritdoc />
+    public void Clear()
+    {
+        var snapshot = View.ToFrozenSet();
+        ClearElements();
+        OnSetUpdated(new SetElementClearedEventArgs<T>(View, snapshot));
     }
 
     /// <inheritdoc />
@@ -130,7 +196,7 @@ public abstract class NotifiableSetSimpleBase<T> : INotifiableSet<T>
     {
         List<(bool Replaced, T Left)> result = new(capacity: replaces.Count);
         List<(T Old, T New)> replaced = new(capacity: replaces.Count);
-        List<T> removed = new(capacity: replaces.Count);
+        List<(T Old, T New)> removed = new(capacity: replaces.Count);
 
         foreach (var (oldElement, newElement) in replaces)
         {
@@ -139,15 +205,15 @@ public abstract class NotifiableSetSimpleBase<T> : INotifiableSet<T>
             {
                 result.Add((true, oldElement));
                 if (AddElement(newElement)) replaced.Add((oldElement, newElement));
-                else removed.Add(oldElement);
+                else removed.Add((oldElement, newElement));
             }
         }
 
-        if (removed.Count > 0) OnCollectionUpdated(new CollectionItemRemovedEventArgs<T>(View, [..removed]));
+        if (removed.Count > 0) OnSetUpdated(new SetElementRemovedByReplaceEventArgs<T>(View, NullableFrozenDictionary.From(removed)));
         if (replaced.Count > 0)
         {
-            OnCollectionUpdated(
-                new CollectionItemReplacedEventArgs<T>(
+            OnSetUpdated(
+                new SetElementReplacedEventArgs<T>(
                     View, [..replaced.Select(t => t.Old)], [..replaced.Select(t => t.New)]
                 )
             );
@@ -156,44 +222,36 @@ public abstract class NotifiableSetSimpleBase<T> : INotifiableSet<T>
         return [..result];
     }
 
-    /// <inheritdoc />
-    public void Clear()
-    {
-        ImmutableList<T> snapshot = [..View];
-        ClearElements();
-        OnCollectionUpdated(new CollectionItemClearedEventArgs<T>(View, snapshot));
-    }
-
     #endregion
 
 
     #region Event
 
     /// <summary>
-    ///     引发 <see cref="CollectionUpdated"/> 事件。
+    ///     引发 <see cref="SetUpdated"/> 事件。
     ///     <br/>
-    ///     Raise the <see cref="CollectionUpdated"/> event.
+    ///     Raise the <see cref="SetUpdated"/> event.
     /// </summary>
     /// <remarks>
-    ///     覆写该方法时，应当调用 <c>base.OnCollectionUpdated(e)</c> 以保证事件处理器能够接收到通知。
+    ///     覆写该方法时，应当调用 <c>base.OnSetUpdated(e)</c> 以保证事件处理器能够接收到通知。
     ///     <br/>
-    ///     When overriding, it's recommended to call <c>base.OnCollectionUpdated(e)</c>
+    ///     When overriding, it's recommended to call <c>base.OnSetUpdated(e)</c>
     ///     to ensure that event handlers can receive the notification.
     /// </remarks>
-    [PublicAPI] protected virtual void OnCollectionUpdated(CollectionUpdateEventArgs<T> args)
+    [PublicAPI] protected virtual void OnSetUpdated(SetUpdateEventArgs<T> args)
     {
         RaiseUpdate(args);
     }
 
-    private ImmutableList<EventHandler<CollectionUpdateEventArgs<T>>> _updatedEventHandlers = [];
+    private ImmutableList<EventHandler<SetUpdateEventArgs<T>>> _updatedEventHandlers = [];
 
-    private void RaiseUpdate(CollectionUpdateEventArgs<T> args)
+    private void RaiseUpdate(SetUpdateEventArgs<T> args)
     {
         foreach (var eventHandler in _updatedEventHandlers) eventHandler.Invoke(this, args);
     }
 
     /// <inheritdoc/>
-    public event EventHandler<CollectionUpdateEventArgs<T>> CollectionUpdated
+    public event EventHandler<SetUpdateEventArgs<T>> SetUpdated
     {
         add => _updatedEventHandlers = _updatedEventHandlers.Add(value);
         remove => _updatedEventHandlers = _updatedEventHandlers.Remove(value);
