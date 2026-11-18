@@ -33,3 +33,5 @@ public interface ICollectionUpdateNotifier<T>
 ///     The type of the collection's elements.
 /// </typeparam>
 public interface IReadOnlyNotifiableCollection<T> : IReadOnlyCollection<T>, ICollectionUpdateNotifier<T>;
+
+// todo: 用语统一：Set用Element，Collection和List都改成Item。表示「集合的元素」也可以用element
